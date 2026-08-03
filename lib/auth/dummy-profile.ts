@@ -2,7 +2,7 @@ import type { ProfileWithOrg } from "@/lib/types/database";
 
 export const DUMMY_PROFILE: ProfileWithOrg = {
   id: "00000000-0000-4000-8000-000000000001",
-  email: "jude@celerey.co",
+  email: "jude@jagroup.co",
   first_name: "Jude",
   last_name: "Preview",
   preferred_name: "Jude",
