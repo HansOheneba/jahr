@@ -21,4 +21,4 @@ where email = 'hansoheneba.io@gmail.com'
 
 update public.profiles
 set role = 'ceo'
-where email = 'jude@jagroup.co';
+where email = 'jude@celerey.co';
