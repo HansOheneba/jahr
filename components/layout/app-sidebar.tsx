@@ -1,6 +1,7 @@
 "use client";
 
 import type { ComponentType } from "react";
+import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,15 +13,26 @@ import {
   LayoutDashboard,
   LogOut,
   Network,
-  Search,
   Settings,
   Users,
   Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { signOut } from "@/lib/auth/actions";
 import {
@@ -106,19 +118,6 @@ export function AppSidebar({ profile }: AppSidebarProps) {
         </Link>
       </div>
 
-      <div className="px-3 pb-2">
-        <button
-          type="button"
-          className="flex h-8 w-full items-center gap-2 rounded-md border border-border bg-card px-2.5 text-left text-xs text-muted-foreground transition-colors hover:bg-secondary"
-        >
-          <Search className="size-3.5" />
-          <span className="flex-1">Find…</span>
-          <kbd className="rounded border border-border px-1 py-px text-[10px]">
-            F
-          </kbd>
-        </button>
-      </div>
-
       <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-2 pb-3">
         <NavSection items={employeeNav} pathname={pathname} />
 
@@ -177,19 +176,52 @@ export function AppSidebar({ profile }: AppSidebarProps) {
             </p>
           </div>
         </div>
-        <form action={signOut}>
-          <Button
-            type="submit"
-            variant="outline"
-            size="sm"
-            className="w-full justify-start gap-2"
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2"
+              />
+            }
           >
             <LogOut className="size-3.5" />
             Sign out
-          </Button>
-        </form>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Sign out?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You&apos;ll need to sign in again to access your workspace.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <form action={signOut}>
+                <SignOutConfirmButton />
+              </form>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </aside>
+  );
+}
+
+function SignOutConfirmButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <AlertDialogAction
+      type="submit"
+      variant="destructive"
+      disabled={pending}
+      className="w-full sm:w-auto"
+    >
+      {pending ? <Spinner className="mr-1" /> : null}
+      Sign out
+    </AlertDialogAction>
   );
 }
 

@@ -1,15 +1,18 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   sendLoginOtp,
   verifyLoginOtp,
   type AuthActionState,
 } from "@/lib/auth/actions";
+import { AuthEntryTransition } from "@/components/auth/auth-entry-transition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { AUTH_ENTRY_FLAG } from "@/lib/auth/entry-flag";
 
 const initialState: AuthActionState = {
   error: null,
@@ -17,6 +20,7 @@ const initialState: AuthActionState = {
 };
 
 export function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
 
@@ -38,6 +42,33 @@ export function LoginForm() {
 
   const error = otpSent ? verifyState.error : sendState.error;
   const pending = sendPending || verifyPending;
+  /** Once sign-in starts (or succeeds), stay on the cover — never show the form again. */
+  const leavingLogin = verifyPending || verifyState.success;
+
+  const handleEntryComplete = useCallback(() => {
+    try {
+      sessionStorage.setItem(AUTH_ENTRY_FLAG, "1");
+    } catch {
+      // ignore — dashboard still loads without the entrance flag
+    }
+    // Hard navigation keeps the cover painted until the dashboard document loads.
+    window.location.assign("/dashboard");
+  }, []);
+
+  useEffect(() => {
+    if (leavingLogin) {
+      router.prefetch("/dashboard");
+    }
+  }, [leavingLogin, router]);
+
+  if (leavingLogin) {
+    return (
+      <AuthEntryTransition
+        ready={verifyState.success}
+        onComplete={handleEntryComplete}
+      />
+    );
+  }
 
   if (!otpSent) {
     return (

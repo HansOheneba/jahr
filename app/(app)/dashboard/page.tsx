@@ -1,13 +1,13 @@
 import { cookies } from "next/headers";
 import { format, getMonth, parseISO } from "date-fns";
+import { DashboardView } from "@/components/dashboard/dashboard-view";
 import {
   DASHBOARD_COLORS,
-  DashboardView,
   leaveTypeLabel,
   type DashboardKpi,
   type DashboardLeaveItem,
   type DashboardTeamMember,
-} from "@/components/dashboard/dashboard-view";
+} from "@/components/dashboard/shared";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { getEmployeeRecord } from "@/lib/employees/get-employee-record";
 import { summarizeLeaveBalance } from "@/lib/leave/balance";

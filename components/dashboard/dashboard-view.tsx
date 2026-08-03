@@ -1,4 +1,12 @@
-import type { ComponentType, ReactNode } from "react";
+"use client";
+
+import {
+  useEffect,
+  useState,
+  type ComponentType,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { parseISO } from "date-fns";
 import {
@@ -15,65 +23,31 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { LEAVE_TYPES } from "@/lib/leave/types";
+import {
+  CountUp,
+  parseCountableValue,
+} from "@/components/dashboard/count-up";
+import {
+  DASHBOARD_COLORS,
+  type DashboardBirthday,
+  type DashboardHoliday,
+  type DashboardKpi,
+  type DashboardLeaveItem,
+  type DashboardTeamMember,
+} from "@/components/dashboard/shared";
+import { usePostLoginEntrance } from "@/components/dashboard/use-post-login-entrance";
 import {
   formatLeaveDateRange,
   workingHoursFromDays,
 } from "@/lib/leave/working-days";
 import { cn } from "@/lib/utils";
 
-const LEAVE = "#2EC4B6";
-const PAYROLL = "#FF7A59";
-const DOCS = "#55A8FD";
-const PEOPLE = "#F6B93B";
-const DEVICES = "#8B7CF8";
-const BLUE = "#0070F3";
-
-export interface DashboardKpi {
-  label: string;
-  value: string;
-  hint?: string;
-  href?: string;
-  icon: "leave" | "people" | "docs" | "payroll" | "devices" | "approvals";
-  accent: string;
-  progress?: number;
-}
-
-export interface DashboardLeaveItem {
-  id: string;
-  name: string;
-  avatarUrl: string | null;
-  gender: string | null;
-  typeLabel: string;
-  status: "pending" | "approved";
-  startDate: string;
-  endDate: string;
-  workingDays: number;
-  isSelf: boolean;
-}
-
-export interface DashboardTeamMember {
-  id: string;
-  name: string;
-  jobTitle: string | null;
-  avatarUrl: string | null;
-  gender: string | null;
-  remaining: number;
-  entitlement: number;
-}
-
-export interface DashboardBirthday {
-  id: string;
-  name: string;
-  avatarUrl: string | null;
-  gender: string | null;
-  dateLabel: string;
-}
-
-export interface DashboardHoliday {
-  name: string;
-  dateLabel: string;
-}
+const LEAVE = DASHBOARD_COLORS.leave;
+const PAYROLL = DASHBOARD_COLORS.payroll;
+const DOCS = DASHBOARD_COLORS.docs;
+const PEOPLE = DASHBOARD_COLORS.people;
+const DEVICES = DASHBOARD_COLORS.devices;
+const BLUE = DASHBOARD_COLORS.blue;
 
 function tint(color: string, percent: number): string {
   return `color-mix(in srgb, ${color} ${percent}%, white)`;
@@ -105,6 +79,33 @@ function KpiIcon({
   );
 }
 
+function Enter({
+  active,
+  delayMs = 0,
+  className,
+  children,
+}: {
+  active: boolean;
+  delayMs?: number;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={cn(active && "motion-safe:animate-dash-enter", className)}
+      style={
+        active
+          ? ({
+              animationDelay: `${delayMs}ms`,
+            } satisfies CSSProperties)
+          : undefined
+      }
+    >
+      {children}
+    </div>
+  );
+}
+
 function Section({
   title,
   description,
@@ -112,6 +113,8 @@ function Section({
   children,
   icon: Icon,
   accent,
+  enter,
+  delayMs = 0,
 }: {
   title: string;
   description?: string;
@@ -119,9 +122,21 @@ function Section({
   children: ReactNode;
   icon?: ComponentType<{ className?: string }>;
   accent?: string;
+  enter?: boolean;
+  delayMs?: number;
 }) {
   return (
-    <section className="rounded-xl border border-border bg-card">
+    <section
+      className={cn(
+        "rounded-xl border border-border bg-card",
+        enter && "motion-safe:animate-dash-enter",
+      )}
+      style={
+        enter
+          ? ({ animationDelay: `${delayMs}ms` } satisfies CSSProperties)
+          : undefined
+      }
+    >
       <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div className="flex min-w-0 items-start gap-2.5">
           {Icon && accent ? (
@@ -207,61 +222,91 @@ export function DashboardView({
   canApprove: boolean;
   isAdmin: boolean;
 }) {
+  const enter = usePostLoginEntrance();
+  const [metersOn, setMetersOn] = useState(true);
+
+  useEffect(() => {
+    if (!enter) return;
+    setMetersOn(false);
+    const timer = window.setTimeout(() => setMetersOn(true), 40);
+    return () => window.clearTimeout(timer);
+  }, [enter]);
+
   const leavePct =
     leaveEntitlement <= 0
       ? 0
       : Math.min(100, Math.round((leaveRemaining / leaveEntitlement) * 100));
+  const ringPct = metersOn ? leavePct : 0;
 
   return (
     <div className="flex w-full flex-col gap-5">
-      <div
-        className="relative overflow-hidden rounded-xl border border-border px-5 py-5 sm:px-6"
-        style={{
-          background: `linear-gradient(135deg, ${tint(BLUE, 8)} 0%, #ffffff 55%, ${tint(LEAVE, 6)} 100%)`,
-        }}
-      >
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-1">
-            <p className="text-xs font-medium tracking-wide text-[#0B4FBF] uppercase">
-              Dashboard
-            </p>
-            <h1 className="text-xl font-medium tracking-tight sm:text-2xl">
-              {greeting}, {firstName}
-            </h1>
-            <p className="text-sm text-muted-foreground">{subtitle}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/leave"
-              className={cn(buttonVariants({ size: "sm" }), "gap-1.5")}
-            >
-              <CalendarDays className="size-3.5" />
-              Request leave
-            </Link>
-            {canApprove ? (
+      <Enter active={enter} delayMs={0}>
+        <div
+          className="relative overflow-hidden rounded-xl border border-border px-5 py-5 sm:px-6"
+          style={{
+            background: `linear-gradient(135deg, ${tint(BLUE, 8)} 0%, #ffffff 55%, ${tint(LEAVE, 6)} 100%)`,
+          }}
+        >
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-xs font-medium tracking-wide text-[#0B4FBF] uppercase">
+                Dashboard
+              </p>
+              <h1 className="text-xl font-medium tracking-tight sm:text-2xl">
+                {greeting}, {firstName}
+              </h1>
+              <p className="text-sm text-muted-foreground">{subtitle}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
               <Link
-                href="/approvals"
-                className={cn(
-                  buttonVariants({ size: "sm", variant: "outline" }),
-                  "gap-1.5 border-transparent bg-white/80",
-                )}
+                href="/leave"
+                className={cn(buttonVariants({ size: "sm" }), "gap-1.5")}
               >
-                Review requests
+                <CalendarDays className="size-3.5" />
+                Request leave
               </Link>
-            ) : null}
+              {canApprove ? (
+                <Link
+                  href="/approvals"
+                  className={cn(
+                    buttonVariants({ size: "sm", variant: "outline" }),
+                    "gap-1.5 border-transparent bg-white/80",
+                  )}
+                >
+                  Review requests
+                </Link>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
+      </Enter>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {kpis.map((kpi) => {
+        {kpis.map((kpi, index) => {
+          const countable = parseCountableValue(kpi.value);
           const inner = (
-            <div className="flex h-full flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-transparent">
+            <div
+              className={cn(
+                "flex h-full flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-transparent",
+                enter && "motion-safe:animate-dash-enter",
+              )}
+              style={
+                enter
+                  ? ({
+                      animationDelay: `${80 + index * 70}ms`,
+                    } satisfies CSSProperties)
+                  : undefined
+              }
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">{kpi.label}</p>
-                  <p className="text-2xl font-medium tracking-tight">
-                    {kpi.value}
+                  <p className="text-2xl font-medium tracking-tight tabular-nums">
+                    {countable !== null ? (
+                      <CountUp value={countable} enabled={enter} />
+                    ) : (
+                      kpi.value
+                    )}
                   </p>
                 </div>
                 <KpiIcon name={kpi.icon} accent={kpi.accent} />
@@ -270,10 +315,11 @@ export function DashboardView({
                 <div className="space-y-1.5">
                   <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
                     <div
-                      className="h-full rounded-full transition-[width] duration-300"
+                      className="h-full rounded-full transition-[width] duration-700 ease-dash"
                       style={{
-                        width: `${kpi.progress}%`,
+                        width: `${metersOn ? kpi.progress : 0}%`,
                         background: kpi.accent,
+                        transitionDelay: enter ? `${120 + index * 70}ms` : "0ms",
                       }}
                     />
                   </div>
@@ -310,6 +356,8 @@ export function DashboardView({
             description="Annual entitlement on a 9–5 working-day calendar."
             icon={CalendarDays}
             accent={LEAVE}
+            enter={enter}
+            delayMs={320}
             action={
               <Link
                 href="/leave"
@@ -341,12 +389,16 @@ export function DashboardView({
                     strokeWidth="3"
                     strokeLinecap="round"
                     pathLength={100}
-                    strokeDasharray={`${leavePct} ${100 - leavePct}`}
+                    strokeDasharray={`${ringPct} ${100 - ringPct}`}
+                    className="transition-[stroke-dasharray] duration-700 ease-dash"
+                    style={{
+                      transitionDelay: enter ? "200ms" : "0ms",
+                    }}
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-medium tracking-tight">
-                    {leaveRemaining}
+                  <span className="text-2xl font-medium tracking-tight tabular-nums">
+                    <CountUp value={leaveRemaining} enabled={enter} />
                   </span>
                   <span className="text-[11px] text-muted-foreground">days</span>
                 </div>
@@ -354,18 +406,20 @@ export function DashboardView({
               <div className="grid flex-1 gap-3 sm:grid-cols-3">
                 <div className="rounded-md border border-border px-3 py-2.5">
                   <p className="text-xs text-muted-foreground">Entitlement</p>
-                  <p className="mt-0.5 text-sm font-medium">
-                    {leaveEntitlement} days
+                  <p className="mt-0.5 text-sm font-medium tabular-nums">
+                    <CountUp value={leaveEntitlement} enabled={enter} /> days
                   </p>
                 </div>
                 <div className="rounded-md border border-border px-3 py-2.5">
                   <p className="text-xs text-muted-foreground">Used</p>
-                  <p className="mt-0.5 text-sm font-medium">{leaveUsed} days</p>
+                  <p className="mt-0.5 text-sm font-medium tabular-nums">
+                    <CountUp value={leaveUsed} enabled={enter} /> days
+                  </p>
                 </div>
                 <div className="rounded-md border border-border px-3 py-2.5">
                   <p className="text-xs text-muted-foreground">Pending</p>
-                  <p className="mt-0.5 text-sm font-medium">
-                    {leavePending} days
+                  <p className="mt-0.5 text-sm font-medium tabular-nums">
+                    <CountUp value={leavePending} enabled={enter} /> days
                   </p>
                 </div>
               </div>
@@ -377,6 +431,8 @@ export function DashboardView({
             description="Approved and pending time off on your calendar."
             icon={PartyPopper}
             accent={LEAVE}
+            enter={enter}
+            delayMs={400}
           >
             {upcomingLeave.length === 0 ? (
               <p className="text-sm text-muted-foreground">
@@ -438,6 +494,8 @@ export function DashboardView({
               description="Annual days left for people who report to you."
               icon={Users}
               accent={PEOPLE}
+              enter={enter}
+              delayMs={480}
               action={
                 canApprove ? (
                   <Link
@@ -479,15 +537,16 @@ export function DashboardView({
                           </p>
                         </div>
                         <p className="text-sm font-medium tabular-nums">
-                          {person.remaining}
+                          <CountUp value={person.remaining} enabled={enter} />
                         </p>
                       </div>
                       <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-secondary">
                         <div
-                          className="h-full rounded-full"
+                          className="h-full rounded-full transition-[width] duration-700 ease-dash"
                           style={{
-                            width: `${pct}%`,
+                            width: `${metersOn ? pct : 0}%`,
                             background: LEAVE,
+                            transitionDelay: enter ? "280ms" : "0ms",
                           }}
                         />
                       </div>
@@ -500,7 +559,13 @@ export function DashboardView({
         </div>
 
         <div className="flex flex-col gap-4">
-          <Section title="Quick links" icon={ArrowRight} accent={BLUE}>
+          <Section
+            title="Quick links"
+            icon={ArrowRight}
+            accent={BLUE}
+            enter={enter}
+            delayMs={360}
+          >
             <div className="grid gap-2">
               <QuickLink
                 href="/leave"
@@ -558,6 +623,8 @@ export function DashboardView({
             description="Public holidays, birthdays, and your reporting line."
             icon={Gift}
             accent={PAYROLL}
+            enter={enter}
+            delayMs={440}
           >
             <div className="space-y-4">
               <div className="rounded-md border border-border px-3 py-2.5">
@@ -635,17 +702,4 @@ export function DashboardView({
       </div>
     </div>
   );
-}
-
-export const DASHBOARD_COLORS = {
-  leave: LEAVE,
-  payroll: PAYROLL,
-  docs: DOCS,
-  people: PEOPLE,
-  devices: DEVICES,
-  blue: BLUE,
-} as const;
-
-export function leaveTypeLabel(type: string): string {
-  return LEAVE_TYPES.find((option) => option.id === type)?.label ?? type;
 }

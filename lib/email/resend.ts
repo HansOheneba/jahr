@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Resend } from "resend";
 
 const resendApiKey = process.env.RESEND_API_KEY;
@@ -15,6 +16,7 @@ export interface SendEmailInput {
   to: string;
   subject: string;
   text: string;
+  react?: ReactNode;
 }
 
 /** Fire-and-forget transactional email. Never throws - leave flow must not fail on mail. */
@@ -31,6 +33,7 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
       to: input.to,
       subject: input.subject,
       text: input.text,
+      ...(input.react ? { react: input.react } : {}),
     });
 
     if (error) {

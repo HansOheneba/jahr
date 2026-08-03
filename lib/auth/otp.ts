@@ -1,4 +1,5 @@
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
+import { LoginOtpEmail } from "@/emails/login-otp";
 import { sendEmail } from "@/lib/email/resend";
 import { createAdminClient } from "@/utils/supabase/admin";
 
@@ -123,6 +124,11 @@ export async function issueLoginOtp(emailInput: string): Promise<OtpResult> {
       "",
       "It expires in 10 minutes. If you didn’t request this, you can ignore this email.",
     ].join("\n"),
+    react: LoginOtpEmail({
+      displayName,
+      code,
+      expiresInMinutes: 10,
+    }),
   });
 
   return { ok: true };

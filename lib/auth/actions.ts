@@ -61,7 +61,8 @@ export async function verifyLoginOtp(
     return { error: error.message, success: false };
   }
 
-  redirect("/dashboard");
+  // Client shows a branded entry transition, then navigates to the dashboard.
+  return { error: null, success: true };
 }
 
 export async function signOut(): Promise<void> {
