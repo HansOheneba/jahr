@@ -1,0 +1,258 @@
+import { createHash, randomInt, timingSafeEqual } from "node:crypto";
+import { sendEmail } from "@/lib/email/resend";
+import { createAdminClient } from "@/utils/supabase/admin";
+
+const OTP_LENGTH = 6;
+const OTP_TTL_MS = 10 * 60 * 1000;
+const RESEND_COOLDOWN_MS = 60 * 1000;
+const MAX_ATTEMPTS = 5;
+
+export type OtpResult =
+  | { ok: true }
+  | { ok: false; error: string; status?: number };
+
+function otpPepper(): string {
+  return (
+    process.env.AUTH_OTP_SECRET ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    "jahr-dev-otp-pepper"
+  );
+}
+
+export function hashOtp(email: string, code: string): string {
+  return createHash("sha256")
+    .update(`${otpPepper()}:${email.trim().toLowerCase()}:${code}`)
+    .digest("hex");
+}
+
+function generateOtpCode(): string {
+  const max = 10 ** OTP_LENGTH;
+  return String(randomInt(0, max)).padStart(OTP_LENGTH, "0");
+}
+
+function codesMatch(a: string, b: string): boolean {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  if (left.length !== right.length) {
+    return false;
+  }
+  return timingSafeEqual(left, right);
+}
+
+export async function issueLoginOtp(emailInput: string): Promise<OtpResult> {
+  const email = emailInput.trim().toLowerCase();
+
+  if (!email || !email.includes("@")) {
+    return { ok: false, error: "Enter a valid work email.", status: 400 };
+  }
+
+  const admin = createAdminClient();
+
+  const { data: profile, error: profileError } = await admin
+    .from("profiles")
+    .select("id, email, status, first_name, preferred_name")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (profileError) {
+    return { ok: false, error: profileError.message, status: 500 };
+  }
+
+  if (!profile || profile.status !== "active") {
+    return {
+      ok: false,
+      error: "No account found for that email. Ask an admin to invite you.",
+      status: 404,
+    };
+  }
+
+  const { data: latest } = await admin
+    .from("login_otps")
+    .select("created_at")
+    .eq("email", email)
+    .is("consumed_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (latest?.created_at) {
+    const age = Date.now() - new Date(latest.created_at).getTime();
+    if (age < RESEND_COOLDOWN_MS) {
+      const waitSeconds = Math.ceil((RESEND_COOLDOWN_MS - age) / 1000);
+      return {
+        ok: false,
+        error: `Wait ${waitSeconds}s before requesting another code.`,
+        status: 429,
+      };
+    }
+  }
+
+  const code = generateOtpCode();
+  const codeHash = hashOtp(email, code);
+  const expiresAt = new Date(Date.now() + OTP_TTL_MS).toISOString();
+
+  // Invalidate previous unused codes for this email
+  await admin
+    .from("login_otps")
+    .update({ consumed_at: new Date().toISOString() })
+    .eq("email", email)
+    .is("consumed_at", null);
+
+  const { error: insertError } = await admin.from("login_otps").insert({
+    email,
+    code_hash: codeHash,
+    expires_at: expiresAt,
+  });
+
+  if (insertError) {
+    return { ok: false, error: insertError.message, status: 500 };
+  }
+
+  const displayName =
+    profile.preferred_name?.trim() ||
+    profile.first_name?.trim() ||
+    "there";
+
+  await sendEmail({
+    to: email,
+    subject: `${code} is your JA Group HR sign-in code`,
+    text: [
+      `Hi ${displayName},`,
+      "",
+      `Your one-time sign-in code is: ${code}`,
+      "",
+      "It expires in 10 minutes. If you didn’t request this, you can ignore this email.",
+    ].join("\n"),
+  });
+
+  return { ok: true };
+}
+
+export type VerifyOtpResult =
+  | { ok: true; userId: string }
+  | { ok: false; error: string; status?: number };
+
+export async function verifyLoginOtpCode(
+  emailInput: string,
+  codeInput: string,
+): Promise<VerifyOtpResult> {
+  const email = emailInput.trim().toLowerCase();
+  const code = codeInput.trim();
+
+  if (!email || !code) {
+    return {
+      ok: false,
+      error: "Email and verification code are required.",
+      status: 400,
+    };
+  }
+
+  const admin = createAdminClient();
+
+  const { data: profile, error: profileError } = await admin
+    .from("profiles")
+    .select("id, status")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (profileError) {
+    return { ok: false, error: profileError.message, status: 500 };
+  }
+
+  if (!profile || profile.status !== "active") {
+    return {
+      ok: false,
+      error: "No account found for that email. Ask an admin to invite you.",
+      status: 404,
+    };
+  }
+
+  const { data: otpRow, error: otpError } = await admin
+    .from("login_otps")
+    .select("id, code_hash, expires_at, attempts, consumed_at")
+    .eq("email", email)
+    .is("consumed_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (otpError) {
+    return { ok: false, error: otpError.message, status: 500 };
+  }
+
+  if (!otpRow) {
+    return {
+      ok: false,
+      error: "No active code. Request a new one.",
+      status: 400,
+    };
+  }
+
+  if (new Date(otpRow.expires_at).getTime() < Date.now()) {
+    await admin
+      .from("login_otps")
+      .update({ consumed_at: new Date().toISOString() })
+      .eq("id", otpRow.id);
+    return {
+      ok: false,
+      error: "That code has expired. Request a new one.",
+      status: 400,
+    };
+  }
+
+  if (otpRow.attempts >= MAX_ATTEMPTS) {
+    await admin
+      .from("login_otps")
+      .update({ consumed_at: new Date().toISOString() })
+      .eq("id", otpRow.id);
+    return {
+      ok: false,
+      error: "Too many attempts. Request a new code.",
+      status: 429,
+    };
+  }
+
+  const expected = otpRow.code_hash;
+  const actual = hashOtp(email, code);
+
+  if (!codesMatch(expected, actual)) {
+    await admin
+      .from("login_otps")
+      .update({ attempts: otpRow.attempts + 1 })
+      .eq("id", otpRow.id);
+    return { ok: false, error: "Invalid verification code.", status: 401 };
+  }
+
+  await admin
+    .from("login_otps")
+    .update({ consumed_at: new Date().toISOString() })
+    .eq("id", otpRow.id);
+
+  return { ok: true, userId: profile.id };
+}
+
+/**
+ * After our OTP succeeds, return a one-time token_hash the cookie-bound
+ * Supabase client can exchange via verifyOtp - so session cookies are written
+ * through @supabase/ssr the way Next expects.
+ */
+export async function createSessionTokenHash(
+  email: string,
+): Promise<{ ok: true; tokenHash: string } | { ok: false; error: string }> {
+  const admin = createAdminClient();
+
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: "magiclink",
+    email: email.trim().toLowerCase(),
+  });
+
+  const tokenHash = data?.properties?.hashed_token;
+  if (error || !tokenHash) {
+    return {
+      ok: false,
+      error: error?.message ?? "Could not create a session.",
+    };
+  }
+
+  return { ok: true, tokenHash };
+}

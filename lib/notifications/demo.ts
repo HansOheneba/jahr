@@ -1,0 +1,91 @@
+import type { NotificationItem } from "@/lib/notifications/types";
+
+/** Demo feed for managers / org admins until a notifications table exists. */
+export const DEMO_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: "n-1",
+    kind: "leave_request",
+    unread: true,
+    createdAt: hoursAgo(0.5),
+    actor: { name: "Ama Boateng", gender: "female" },
+    subject: "Ama Boateng",
+    body: "submitted a time off request for Aug 12 – Aug 16 (4 working days).",
+    actions: ["approve", "decline"],
+    href: "/approvals",
+  },
+  {
+    id: "n-2",
+    kind: "performance_review",
+    unread: true,
+    createdAt: hoursAgo(2),
+    actor: null,
+    subject: null,
+    body: "Q3 performance review cycle opens Monday. Confirm goals for your direct reports.",
+    href: "/dashboard",
+  },
+  {
+    id: "n-3",
+    kind: "leave_request",
+    unread: true,
+    createdAt: hoursAgo(5),
+    actor: { name: "Kofi Mensah", gender: "male" },
+    subject: "Kofi Mensah",
+    body: "requested sick leave for today.",
+    actions: ["approve", "decline"],
+    href: "/approvals",
+  },
+  {
+    id: "n-4",
+    kind: "document",
+    unread: true,
+    createdAt: hoursAgo(8),
+    actor: { name: "Esi Owusu", gender: "female" },
+    subject: "Esi Owusu",
+    body: "shared an updated employee handbook with the People team.",
+    href: "/documents",
+  },
+  {
+    id: "n-5",
+    kind: "leave_decision",
+    unread: false,
+    createdAt: hoursAgo(26),
+    actor: { name: "Hans Oheneba", gender: "male" },
+    subject: "Hans Oheneba",
+    body: "approved your annual leave for Sep 2 – Sep 6.",
+    href: "/leave",
+  },
+  {
+    id: "n-6",
+    kind: "performance_review",
+    unread: false,
+    createdAt: hoursAgo(30),
+    actor: { name: "Nana Yeboah", gender: "male" },
+    subject: "Nana Yeboah",
+    body: "scheduled a mid-year check-in with you for Thursday, 10:00 AM.",
+    href: "/dashboard",
+  },
+  {
+    id: "n-7",
+    kind: "reminder",
+    unread: false,
+    createdAt: hoursAgo(34),
+    actor: null,
+    subject: null,
+    body: "Two leave requests in your queue still need a decision.",
+    href: "/approvals",
+  },
+  {
+    id: "n-8",
+    kind: "announcement",
+    unread: false,
+    createdAt: hoursAgo(48),
+    actor: { name: "Jude Addo", gender: "male" },
+    subject: "Jude Addo",
+    body: "posted a company update on Independence Day office hours.",
+    href: "/dashboard",
+  },
+];
+
+function hoursAgo(hours: number): string {
+  return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+}

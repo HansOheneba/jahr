@@ -39,3 +39,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local / agent tooling (not shipped)
+/docs
+/.agents
+/.cursor
+/skills-lock.json
+AGENTS.md
+CLAUDE.md
+
+# one-off local seed & data scripts (run manually; not part of the app)
+/scripts
+
+# supabase local seeds (migrations ship; seeds stay local)
+/supabase/seed_*.sql
