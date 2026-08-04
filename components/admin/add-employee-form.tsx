@@ -35,6 +35,15 @@ import type {
 } from "@/lib/types/employee";
 import { cn } from "@/lib/utils";
 
+const HIRE_STATUS_OPTIONS: Array<{
+  value: "active" | "onboarding" | "inactive";
+  label: string;
+}> = [
+  { value: "active", label: "Active (can sign in)" },
+  { value: "onboarding", label: "Onboarding" },
+  { value: "inactive", label: "Inactive" },
+];
+
 interface OrgOptions {
   businessUnits: Array<{ id: string; name: string }>;
   departments: Array<{ id: string; name: string; business_unit_id: string }>;
@@ -79,6 +88,8 @@ export function AddEmployeeForm({
   const [jobTitle, setJobTitle] = useState("");
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [tags, setTags] = useState<PermissionTagSlug[]>([]);
+  const [status, setStatus] =
+    useState<"active" | "onboarding" | "inactive">("active");
   const [employeeCategory, setEmployeeCategory] =
     useState<EmployeeCategory>("employee");
   const [workType, setWorkType] = useState<WorkType>("hybrid");
@@ -144,6 +155,7 @@ export function AddEmployeeForm({
         jobTitle,
         employeeNumber,
         tags,
+        status,
         employeeCategory,
         workType,
         employmentType,
@@ -309,6 +321,14 @@ export function AddEmployeeForm({
               })}
             </div>
           </div>
+          <SelectField
+            label="Status"
+            value={status}
+            onChange={(value) =>
+              setStatus(value as "active" | "onboarding" | "inactive")
+            }
+            items={HIRE_STATUS_OPTIONS}
+          />
           <SelectField
             label="Employee category"
             value={employeeCategory}

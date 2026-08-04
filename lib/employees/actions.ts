@@ -54,6 +54,7 @@ export interface CreateEmployeeInput {
   jobTitle: string;
   employeeNumber: string;
   tags: PermissionTagSlug[];
+  status: "active" | "inactive" | "onboarding";
   employeeCategory: EmployeeCategory;
   workType: WorkType;
   employmentType: EmploymentType;
@@ -69,7 +70,7 @@ export interface CreateEmployeeInput {
   emergencyPhone: string;
 }
 
-export type UpdateEmployeeInput = Omit<CreateEmployeeInput, "email"> & {
+export type UpdateEmployeeInput = Omit<CreateEmployeeInput, "email" | "status"> & {
   employeeId: string;
   status: "active" | "inactive" | "onboarding" | "terminated";
   terminationDate: string;
@@ -81,6 +82,8 @@ export interface OffboardEmployeeInput {
   terminationDate: string;
   leavingReason: string;
 }
+
+const HIRE_STATUSES = ["active", "inactive", "onboarding"] as const;
 
 const EDITABLE_STATUSES = [
   "active",
@@ -296,6 +299,9 @@ export async function createEmployee(
   if (tagError) {
     return { error: tagError };
   }
+  if (!(HIRE_STATUSES as readonly string[]).includes(input.status)) {
+    return { error: "Select a valid employment status." };
+  }
 
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
@@ -345,7 +351,7 @@ export async function createEmployee(
       job_title: jobTitle,
       employee_number: employeeNumber,
       role: legacyRole,
-      status: "onboarding",
+      status: input.status,
       employee_category: input.employeeCategory,
       work_type: input.workType,
       employment_type: input.employmentType,
