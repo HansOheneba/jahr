@@ -3,8 +3,8 @@ export const OFFICE_LOCATIONS = [
   "London",
   "Geneva",
   "Cayman Islands",
-  "Realty — Offsite",
-  "Elements — Offsite",
+  "Realty - Offsite",
+  "Elements - Offsite",
 ] as const;
 
 export type OfficeLocation = (typeof OFFICE_LOCATIONS)[number];

@@ -17,7 +17,7 @@ export function usePostLoginEntrance(): boolean {
         setActive(true);
       }
     } catch {
-      // private mode / blocked storage — skip entrance
+      // private mode / blocked storage: skip entrance
     }
   }, []);
 

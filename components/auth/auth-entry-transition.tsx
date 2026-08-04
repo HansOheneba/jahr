@@ -8,7 +8,7 @@ const MIN_VISIBLE_MS = 1200;
 const SUCCESS_SETTLE_MS = 380;
 
 type AuthEntryTransitionProps = {
-  /** Auth finished successfully — finish the sequence and call onComplete. */
+  /** Auth finished successfully: finish the sequence and call onComplete. */
   ready: boolean;
   onComplete: () => void;
 };

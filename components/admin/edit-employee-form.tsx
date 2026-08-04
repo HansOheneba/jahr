@@ -300,7 +300,7 @@ export function EditEmployeeForm({
             value={nationalId}
             onChange={setNationalId}
             placeholder="GHA-XXXXXXXXX-X"
-            hint="Optional — not required for staff outside Ghana."
+            hint="Optional. Not required for staff outside Ghana."
           />
           <Field
             label="SSNIT number"

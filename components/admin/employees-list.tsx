@@ -3,7 +3,14 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, Mars, MoreHorizontal, Venus, Wallet } from "lucide-react";
+import {
+  Eye,
+  GraduationCap,
+  Mars,
+  MoreHorizontal,
+  Venus,
+  Wallet,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -111,11 +118,64 @@ export function EmployeesList({
   );
 
   if (employees.length === 0) {
+    if (isAlumni) {
+      return (
+        <div className="rounded-xl border border-border bg-card px-6 py-12">
+          <div className="mx-auto flex max-w-md flex-col items-center text-center">
+            <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-[color-mix(in_srgb,#2EC4B6_10%,white)] text-[#0F766E]">
+              <GraduationCap className="size-6" />
+            </div>
+            <p className="text-sm font-medium tracking-tight">
+              No alumni yet
+            </p>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              When someone leaves JA Group, offboard them from their employee
+              profile. They&apos;ll move here automatically and drop out of the
+              active directory.
+            </p>
+            <ol className="mt-6 w-full space-y-2.5 rounded-xl border border-border bg-background px-4 py-4 text-left text-sm">
+              <li className="flex gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-secondary text-xs font-medium text-foreground">
+                  1
+                </span>
+                <span className="pt-0.5 text-muted-foreground">
+                  Open the person from{" "}
+                  <span className="font-medium text-foreground">Employees</span>
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-secondary text-xs font-medium text-foreground">
+                  2
+                </span>
+                <span className="pt-0.5 text-muted-foreground">
+                  Click{" "}
+                  <span className="font-medium text-foreground">Offboard</span>{" "}
+                  on their profile
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-secondary text-xs font-medium text-foreground">
+                  3
+                </span>
+                <span className="pt-0.5 text-muted-foreground">
+                  Set their last day and reason for leaving, then confirm
+                </span>
+              </li>
+            </ol>
+            <Link
+              href="/admin/employees"
+              className={cn(buttonVariants(), "mt-6")}
+            >
+              Go to Employees
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <p className="py-10 text-center text-sm text-muted-foreground">
-        {isAlumni
-          ? "No alumni yet. Offboard an employee to move them here."
-          : "No employees visible for your account."}
+        No employees visible for your account.
       </p>
     );
   }

@@ -25,8 +25,9 @@ export default async function AlumniAdminPage() {
       <div className="space-y-1">
         <h1 className="text-xl font-medium tracking-tight">Alumni</h1>
         <p className="text-sm text-muted-foreground">
-          Past employees who have left JA Group. Offboard someone from their
-          employee profile to move them here.
+          Past employees who have left JA Group. Use Offboard on an employee
+          profile to move them here. They leave the active directory
+          automatically.
         </p>
       </div>
 

@@ -42,14 +42,14 @@ export function LoginForm() {
 
   const error = otpSent ? verifyState.error : sendState.error;
   const pending = sendPending || verifyPending;
-  /** Once sign-in starts (or succeeds), stay on the cover — never show the form again. */
+  /** Once sign-in starts (or succeeds), stay on the cover. Never show the form again. */
   const leavingLogin = verifyPending || verifyState.success;
 
   const handleEntryComplete = useCallback(() => {
     try {
       sessionStorage.setItem(AUTH_ENTRY_FLAG, "1");
     } catch {
-      // ignore — dashboard still loads without the entrance flag
+      // ignore: dashboard still loads without the entrance flag
     }
     // Hard navigation keeps the cover painted until the dashboard document loads.
     window.location.assign("/dashboard");
