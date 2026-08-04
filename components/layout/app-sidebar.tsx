@@ -10,6 +10,7 @@ import {
   CalendarDays,
   FileText,
   GraduationCap,
+  IdCard,
   Laptop,
   LayoutDashboard,
   LogOut,
@@ -84,6 +85,11 @@ export function AppSidebar({ profile }: AppSidebarProps) {
             href: "/admin/payroll",
             label: "Payroll",
             icon: Wallet,
+          },
+          {
+            href: "/admin/permits",
+            label: "Work permits",
+            icon: IdCard,
           },
           {
             href: "/admin/devices",
