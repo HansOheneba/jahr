@@ -352,7 +352,7 @@ export function PayslipDocument({
             <Field label="SSNIT No." value={employee.ssnit_number ?? ""} />
             <Field label="TIN No." value={employee.tin_number ?? ""} />
             <Field
-              label="Ghana Card No."
+              label="National ID No."
               value={employee.national_id ?? ""}
             />
           </View>

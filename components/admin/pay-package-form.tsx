@@ -227,7 +227,7 @@ export function PayPackageForm({
             onChange={(event) => setTinNumber(event.target.value)}
           />
         </Field>
-        <Field label="Ghana Card no.">
+        <Field label="National ID no.">
           <Input
             value={nationalId}
             onChange={(event) => setNationalId(event.target.value)}

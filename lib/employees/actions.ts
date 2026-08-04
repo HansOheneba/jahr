@@ -156,15 +156,21 @@ async function nextEmployeeNumber(
   return `JA-${String(max + 1).padStart(4, "0")}`;
 }
 
+/**
+ * Sync tags via service role after the server action has already verified
+ * the viewer is an org admin. Delete-then-insert under the user session
+ * breaks self-edits: removing your own admin tags makes RLS reject the
+ * following insert.
+ */
 async function replaceProfileTags(options: {
-  client: ReturnType<typeof createAdminClient> | ReturnType<typeof createClient>;
   profileId: string;
   tags: PermissionTagSlug[];
   assignedBy: string;
 }): Promise<string | null> {
-  const { client, profileId, tags, assignedBy } = options;
+  const { profileId, tags, assignedBy } = options;
+  const admin = createAdminClient();
 
-  const { data: catalogue, error: catalogueError } = await client
+  const { data: catalogue, error: catalogueError } = await admin
     .from("permission_tags")
     .select("id, slug");
 
@@ -176,40 +182,64 @@ async function replaceProfileTags(options: {
     (catalogue ?? []).map((row) => [row.slug as string, row.id as string]),
   );
 
-  const { error: deleteError } = await client
+  const { data: existingRows, error: existingError } = await admin
     .from("profile_permission_tags")
-    .delete()
+    .select("tag_id")
     .eq("profile_id", profileId);
 
-  if (deleteError) {
-    return deleteError.message;
+  if (existingError) {
+    return existingError.message;
   }
 
-  if (tags.length === 0) {
-    return null;
-  }
+  const desiredTagIds = new Set(
+    tags.flatMap((slug) => {
+      const tagId = idBySlug.get(slug);
+      return tagId ? [tagId] : [];
+    }),
+  );
 
-  const rows = tags.flatMap((slug) => {
-    const tagId = idBySlug.get(slug);
-    if (!tagId) return [];
-    return [
-      {
-        profile_id: profileId,
-        tag_id: tagId,
-        assigned_by: assignedBy,
-      },
-    ];
-  });
-
-  if (rows.length === 0) {
+  if (tags.length > 0 && desiredTagIds.size === 0) {
     return "Could not resolve permission tags.";
   }
 
-  const { error: insertError } = await client
-    .from("profile_permission_tags")
-    .insert(rows);
+  const existingTagIds = new Set(
+    (existingRows ?? []).map((row) => row.tag_id as string),
+  );
 
-  return insertError?.message ?? null;
+  const toInsert = [...desiredTagIds]
+    .filter((tagId) => !existingTagIds.has(tagId))
+    .map((tagId) => ({
+      profile_id: profileId,
+      tag_id: tagId,
+      assigned_by: assignedBy,
+    }));
+
+  const toDelete = [...existingTagIds].filter(
+    (tagId) => !desiredTagIds.has(tagId),
+  );
+
+  // Insert first so self-edits never briefly lose org-admin tags.
+  if (toInsert.length > 0) {
+    const { error: insertError } = await admin
+      .from("profile_permission_tags")
+      .insert(toInsert);
+    if (insertError) {
+      return insertError.message;
+    }
+  }
+
+  if (toDelete.length > 0) {
+    const { error: deleteError } = await admin
+      .from("profile_permission_tags")
+      .delete()
+      .eq("profile_id", profileId)
+      .in("tag_id", toDelete);
+    if (deleteError) {
+      return deleteError.message;
+    }
+  }
+
+  return null;
 }
 
 function revalidateEmployeePaths(employeeId: string) {
@@ -336,7 +366,6 @@ export async function createEmployee(
   }
 
   const tagsWriteError = await replaceProfileTags({
-    client: admin,
     profileId: userId,
     tags,
     assignedBy: viewer.id,
@@ -504,7 +533,6 @@ export async function updateEmployee(
   }
 
   const tagsWriteError = await replaceProfileTags({
-    client: supabase,
     profileId: employeeId,
     tags,
     assignedBy: viewer.id,

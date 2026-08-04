@@ -33,7 +33,7 @@ export default async function NewEmployeePage() {
         <div className="space-y-1">
           <h1 className="text-xl font-medium tracking-tight">Add employee</h1>
           <p className="text-sm text-muted-foreground">
-            Capture Ghana employment details - Ghana Card, SSNIT, TIN, and
+            Capture employment details - national ID, statutory numbers, and
             reporting line - before onboarding starts.
           </p>
         </div>

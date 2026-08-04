@@ -211,11 +211,11 @@ export function AddEmployeeForm({
       <Section title="IDs & immigration">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
-            label="Ghana Card number"
+            label="National ID number"
             value={nationalId}
             onChange={setNationalId}
-            placeholder="GHA-XXXXXXXXX-X"
-            hint="Optional. Not required for staff outside Ghana."
+            placeholder="National ID / passport ID"
+            hint="Optional. Use the ID number for their country of work."
           />
           <Field
             label="SSNIT number"

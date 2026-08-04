@@ -295,7 +295,7 @@ export function EmployeeProfile({
                 />
                 <Field label="Gender" value={profile.gender ?? "-"} />
                 <Field label="Nationality" value={profile.nationality ?? "-"} />
-                <Field label="Ghana Card" value={profile.national_id ?? "-"} />
+                <Field label="National ID" value={profile.national_id ?? "-"} />
                 <Field label="SSNIT" value={profile.ssnit_number ?? "-"} />
                 <Field label="Immigration status" value={immigrationLabel} />
                 <Field
