@@ -34,7 +34,7 @@ export async function GET(
 
   if (
     document.employee_id !== viewer.id &&
-    !isOrgAdmin(viewer.role)
+    !isOrgAdmin(viewer)
   ) {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }

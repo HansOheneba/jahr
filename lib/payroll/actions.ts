@@ -43,7 +43,7 @@ export async function savePayPackage(
   input: SavePayPackageInput,
 ): Promise<PayrollActionResult> {
   const profile = await getCurrentProfile();
-  if (!profile || !isOrgAdmin(profile.role)) {
+  if (!profile || !isOrgAdmin(profile)) {
     return { error: "Only org admins can edit pay packages." };
   }
 
@@ -156,7 +156,7 @@ export async function ensurePayslipSnapshot(input: {
   }
 
   const { employeeId, period } = input;
-  if (viewer.id !== employeeId && !isOrgAdmin(viewer.role)) {
+  if (viewer.id !== employeeId && !isOrgAdmin(viewer)) {
     return { error: "You cannot generate this payslip." };
   }
 

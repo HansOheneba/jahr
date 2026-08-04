@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export default async function NewEmployeePage() {
   const profile = await getCurrentProfile();
 
-  if (!profile || !isOrgAdmin(profile.role)) {
+  if (!profile || !isOrgAdmin(profile)) {
     redirect("/dashboard");
   }
 
@@ -40,7 +40,7 @@ export default async function NewEmployeePage() {
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6">
-        <AddEmployeeForm org={org} />
+        <AddEmployeeForm org={org} viewer={profile} />
       </div>
     </div>
   );

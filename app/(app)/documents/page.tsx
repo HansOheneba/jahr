@@ -26,7 +26,7 @@ export default async function DocumentsPage() {
         viewerId={viewer.id}
         documents={record.documents}
         payslips={record.payslips}
-        canManageHrDocs={isOrgAdmin(viewer.role)}
+        canManageHrDocs={isOrgAdmin(viewer)}
         employmentStartDate={record.profile.start_date}
         hasPayPackage={record.hasPayPackage}
       />

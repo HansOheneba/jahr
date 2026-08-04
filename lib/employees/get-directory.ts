@@ -1,6 +1,10 @@
 import { cookies } from "next/headers";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import {
+  isPermissionTagSlug,
+  type PermissionTagSlug,
+} from "@/lib/auth/permissions";
+import {
   isOrgAdmin,
   type AppRole,
   type EmploymentStatus,
@@ -15,6 +19,7 @@ export interface DirectoryEmployee {
   preferred_name: string | null;
   job_title: string | null;
   role: AppRole;
+  tags: PermissionTagSlug[];
   status: EmploymentStatus;
   employee_number: string | null;
   office_location: string | null;
@@ -32,6 +37,13 @@ export interface DirectoryEmployee {
 export async function getDirectoryEmployees(options?: {
   /** When true, includes inactive, onboarding, and terminated people. */
   allStatuses?: boolean;
+  /** Restrict to a single employment status (e.g. alumni = terminated). */
+  status?: EmploymentStatus;
+  /**
+   * When true, includes active / inactive / onboarding but not terminated.
+   * Ignored when `status` or `allStatuses` is set.
+   */
+  excludeTerminated?: boolean;
   /**
    * When true, non-admins include themselves plus direct reports (organogram).
    * Default is reports-only for managers.
@@ -45,7 +57,7 @@ export async function getDirectoryEmployees(options?: {
 
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
-  const admin = isOrgAdmin(viewer.role);
+  const admin = isOrgAdmin(viewer);
 
   let query = supabase
     .from("profiles")
@@ -58,7 +70,11 @@ export async function getDirectoryEmployees(options?: {
     )
     .order("first_name", { ascending: true });
 
-  if (!options?.allStatuses) {
+  if (options?.status) {
+    query = query.eq("status", options.status);
+  } else if (options?.excludeTerminated) {
+    query = query.neq("status", "terminated");
+  } else if (!options?.allStatuses) {
     query = query.eq("status", "active");
   }
 
@@ -87,7 +103,9 @@ export async function getDirectoryEmployees(options?: {
     ...new Set(data.map((row) => row.manager_id).filter(Boolean)),
   ] as string[];
 
-  const [units, departments, managers] = await Promise.all([
+  const profileIds = data.map((row) => row.id);
+
+  const [units, departments, managers, tagRows] = await Promise.all([
     businessUnitIds.length
       ? supabase
           .from("business_units")
@@ -113,6 +131,17 @@ export async function getDirectoryEmployees(options?: {
             preferred_name: string | null;
           }>,
         }),
+    profileIds.length
+      ? supabase
+          .from("profile_permission_tags")
+          .select("profile_id, tag:permission_tags(slug)")
+          .in("profile_id", profileIds)
+      : Promise.resolve({
+          data: [] as Array<{
+            profile_id: string;
+            tag: { slug: string } | { slug: string }[] | null;
+          }>,
+        }),
   ]);
 
   const unitMap = new Map((units.data ?? []).map((row) => [row.id, row.name]));
@@ -128,9 +157,23 @@ export async function getDirectoryEmployees(options?: {
     ]),
   );
 
+  const tagsByProfile = new Map<string, PermissionTagSlug[]>();
+  for (const row of tagRows.data ?? []) {
+    const tag = Array.isArray(row.tag) ? row.tag[0] : row.tag;
+    const slug =
+      tag && typeof tag === "object" && "slug" in tag
+        ? String((tag as { slug: string }).slug)
+        : null;
+    if (!slug || !isPermissionTagSlug(slug)) continue;
+    const list = tagsByProfile.get(row.profile_id) ?? [];
+    list.push(slug);
+    tagsByProfile.set(row.profile_id, list);
+  }
+
   return data.map((row) => ({
     ...row,
     role: row.role as AppRole,
+    tags: tagsByProfile.get(row.id) ?? [],
     status: row.status as EmploymentStatus,
     gender: row.gender ?? null,
     avatar_url: row.avatar_url ?? null,
@@ -153,6 +196,7 @@ export interface OrganogramNode {
   jobTitle: string | null;
   email: string;
   role: AppRole;
+  tags: PermissionTagSlug[];
   gender: string | null;
   avatarUrl: string | null;
   departmentName: string | null;
@@ -177,6 +221,7 @@ export function buildOrganogram(
       jobTitle: employee.job_title,
       email: employee.email,
       role: employee.role,
+      tags: employee.tags,
       gender: employee.gender,
       avatarUrl: employee.avatar_url,
       departmentName: employee.department_name,

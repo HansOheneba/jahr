@@ -30,6 +30,9 @@ export const DUMMY_PROFILE: ProfileWithOrg = {
   leaving_reason: null,
   nationality: "Ghanaian",
   national_id: null,
+  immigration_status: null,
+  work_permit_number: null,
+  work_permit_expiry: null,
   ssnit_number: null,
   tin_number: null,
   address_line: null,
@@ -50,4 +53,5 @@ export const DUMMY_PROFILE: ProfileWithOrg = {
   },
   manager: null,
   isManager: true,
+  tags: ["ceo", "super_admin"],
 };

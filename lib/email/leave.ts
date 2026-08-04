@@ -25,7 +25,7 @@ export async function notifyManagerOfLeaveRequest(input: {
       `Working days: ${input.workingDays}`,
       `Notes: ${input.notes || "None"}`,
       "",
-      "Log in to JA Group HR → Approve Leave to respond.",
+      "Log in to JA Group TMS → Approve Leave to respond.",
     ].join("\n"),
   });
 }

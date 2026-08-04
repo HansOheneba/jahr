@@ -45,8 +45,8 @@ export default async function LeavePage() {
     return null;
   }
 
-  const canViewTeam = canApproveLeave(profile.role, profile.isManager);
-  const admin = isOrgAdmin(profile.role);
+  const canViewTeam = canApproveLeave(profile);
+  const admin = isOrgAdmin(profile);
 
   let requests: LeaveRequestDraft[];
 
@@ -79,7 +79,7 @@ export default async function LeavePage() {
   const schedule = await getLeaveSchedule({
     viewerId: profile.id,
     isOrgAdmin: admin,
-    isManager: profile.isManager || profile.role === "manager",
+    isManager: profile.isManager || profile.tags.includes("manager"),
   });
 
   const balance = summarizeLeaveBalance(

@@ -9,6 +9,7 @@ import {
   CalendarCheck,
   CalendarDays,
   FileText,
+  GraduationCap,
   Laptop,
   LayoutDashboard,
   LogOut,
@@ -55,12 +56,9 @@ interface AppSidebarProps {
 
 export function AppSidebar({ profile }: AppSidebarProps) {
   const pathname = usePathname();
-  const showOrgAdmin = isOrgAdmin(profile.role);
-  const showPeopleDirectory = canViewPeopleDirectory(
-    profile.role,
-    profile.isManager,
-  );
-  const showTeamNav = canApproveLeave(profile.role, profile.isManager);
+  const showOrgAdmin = isOrgAdmin(profile);
+  const showPeopleDirectory = canViewPeopleDirectory(profile);
+  const showTeamNav = canApproveLeave(profile);
 
   const employeeNav: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -76,6 +74,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
     ...(showPeopleDirectory
       ? [
           { href: "/admin/employees", label: "Employees", icon: Users },
+          { href: "/admin/alumni", label: "Alumni", icon: GraduationCap },
           { href: "/admin/organogram", label: "Organogram", icon: Network },
         ]
       : []),
@@ -113,7 +112,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
             className="h-7 w-full max-w-[150px]"
           />
           <span className="text-[10px] font-medium tracking-[0.18em] text-[#1f2353]/70 uppercase">
-            HRIS
+            TMS
           </span>
         </Link>
       </div>

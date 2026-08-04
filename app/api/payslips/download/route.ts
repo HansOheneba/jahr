@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     );
   }
 
-  if (employeeId !== viewer.id && !isOrgAdmin(viewer.role)) {
+  if (employeeId !== viewer.id && !isOrgAdmin(viewer)) {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 

@@ -3,7 +3,7 @@ import { Resend } from "resend";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const fromAddress =
-  process.env.RESEND_FROM_EMAIL ?? "JA Group HR <noreply@no-reply.celerey.co>";
+  process.env.RESEND_FROM_EMAIL ?? "JA Group TMS <noreply@no-reply.celerey.co>";
 
 function getClient(): Resend | null {
   if (!resendApiKey) {

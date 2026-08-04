@@ -59,7 +59,7 @@ function mapPayslipLine(row: {
 
 export async function getPayrollEmployees(): Promise<PayrollEmployeeSummary[]> {
   const viewer = await getCurrentProfile();
-  if (!viewer || !isOrgAdmin(viewer.role)) {
+  if (!viewer || !isOrgAdmin(viewer)) {
     return [];
   }
 
@@ -136,7 +136,7 @@ export async function getPayPackage(
 ): Promise<PayPackage | null> {
   const viewer = await getCurrentProfile();
   if (!viewer) return null;
-  if (viewer.id !== employeeId && !isOrgAdmin(viewer.role)) {
+  if (viewer.id !== employeeId && !isOrgAdmin(viewer)) {
     return null;
   }
 
@@ -233,7 +233,7 @@ export async function getPayslipSnapshot(
     return null;
   }
 
-  if (slip.employee_id !== viewer.id && !isOrgAdmin(viewer.role)) {
+  if (slip.employee_id !== viewer.id && !isOrgAdmin(viewer)) {
     return null;
   }
 
@@ -273,7 +273,7 @@ export async function findPayslipForPeriod(
 ): Promise<PayslipSnapshot | null> {
   const viewer = await getCurrentProfile();
   if (!viewer) return null;
-  if (viewer.id !== employeeId && !isOrgAdmin(viewer.role)) {
+  if (viewer.id !== employeeId && !isOrgAdmin(viewer)) {
     return null;
   }
 

@@ -10,7 +10,7 @@ export async function ensureDefaultPayPackage(
   employeeId: string,
 ): Promise<{ error?: string; success?: boolean }> {
   const profile = await getCurrentProfile();
-  if (!profile || !isOrgAdmin(profile.role)) {
+  if (!profile || !isOrgAdmin(profile)) {
     return { error: "Only org admins can create pay packages." };
   }
 

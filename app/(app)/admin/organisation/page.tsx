@@ -82,7 +82,7 @@ const PREVIEW_DEPARTMENTS: Department[] = [
 export default async function OrganisationPage() {
   const profile = await getCurrentProfile();
 
-  if (!profile || !isOrgAdmin(profile.role)) {
+  if (!profile || !isOrgAdmin(profile)) {
     redirect("/dashboard");
   }
 

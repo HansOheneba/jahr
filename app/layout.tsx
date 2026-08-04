@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JA Group HR",
-  description: "JA Group human resources portal",
+  title: "JA Group TMS",
+  description: "JA Group talent management system",
 };
 
 export default function RootLayout({

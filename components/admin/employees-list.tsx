@@ -68,13 +68,17 @@ function matchesFilter(
 export function EmployeesList({
   employees,
   canManagePay = false,
+  variant = "employees",
 }: {
   employees: DirectoryEmployee[];
   /** Org admins can open pay packages; managers cannot. */
   canManagePay?: boolean;
+  /** Alumni hides the Active filter chip. */
+  variant?: "employees" | "alumni";
 }) {
   const router = useRouter();
   const [filter, setFilter] = useState<StatusFilter>("all");
+  const isAlumni = variant === "alumni";
 
   const stats = useMemo(() => {
     const active = employees.filter((row) => row.status === "active").length;
@@ -99,14 +103,19 @@ export function EmployeesList({
   }, [employees]);
 
   const visible = useMemo(
-    () => employees.filter((row) => matchesFilter(row, filter)),
-    [employees, filter],
+    () =>
+      isAlumni
+        ? employees
+        : employees.filter((row) => matchesFilter(row, filter)),
+    [employees, filter, isAlumni],
   );
 
   if (employees.length === 0) {
     return (
       <p className="py-10 text-center text-sm text-muted-foreground">
-        No employees visible for your account.
+        {isAlumni
+          ? "No alumni yet. Offboard an employee to move them here."
+          : "No employees visible for your account."}
       </p>
     );
   }
@@ -125,26 +134,28 @@ export function EmployeesList({
                 : "border-border bg-background text-muted-foreground hover:bg-muted/40 hover:text-foreground",
             )}
           >
-            All
+            {isAlumni ? "Alumni" : "All"}
             <span className="tabular-nums font-medium text-foreground">
               {stats.all}
             </span>
           </button>
-          <button
-            type="button"
-            onClick={() => setFilter("active")}
-            className={cn(
-              "inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-sm transition-colors",
-              filter === "active"
-                ? "border-[#0070F3] bg-[color-mix(in_srgb,#0070F3_8%,white)] text-foreground"
-                : "border-border bg-background text-muted-foreground hover:bg-muted/40 hover:text-foreground",
-            )}
-          >
-            Active
-            <span className="tabular-nums font-medium text-foreground">
-              {stats.active}/{stats.all}
-            </span>
-          </button>
+          {!isAlumni ? (
+            <button
+              type="button"
+              onClick={() => setFilter("active")}
+              className={cn(
+                "inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-sm transition-colors",
+                filter === "active"
+                  ? "border-[#0070F3] bg-[color-mix(in_srgb,#0070F3_8%,white)] text-foreground"
+                  : "border-border bg-background text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+              )}
+            >
+              Active
+              <span className="tabular-nums font-medium text-foreground">
+                {stats.active}/{stats.all}
+              </span>
+            </button>
+          ) : null}
         </div>
 
         <div className="flex min-w-0 flex-1 items-center gap-3 sm:max-w-sm sm:justify-end">

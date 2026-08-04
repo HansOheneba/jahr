@@ -30,7 +30,7 @@ export default function LoginPage() {
                 JA Group
               </p>
               <h1 className="text-3xl font-medium tracking-tight xl:text-4xl">
-                JA HR management system
+                JA Group TMS
               </h1>
               <div className="h-px w-14 bg-white/50" />
               <p className="text-sm leading-relaxed text-white/85 xl:text-base">

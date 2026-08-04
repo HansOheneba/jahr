@@ -1,6 +1,10 @@
 import { cookies } from "next/headers";
 import { AUTH_BYPASS } from "@/lib/auth/config";
 import { DUMMY_PROFILE } from "@/lib/auth/dummy-profile";
+import {
+  isPermissionTagSlug,
+  type PermissionTagSlug,
+} from "@/lib/auth/permissions";
 import { createClient } from "@/utils/supabase/server";
 import type {
   BusinessUnit,
@@ -8,6 +12,33 @@ import type {
   Profile,
   ProfileWithOrg,
 } from "@/lib/types/database";
+
+async function loadProfileTags(
+  supabase: ReturnType<typeof createClient>,
+  profileId: string,
+): Promise<PermissionTagSlug[]> {
+  const { data, error } = await supabase
+    .from("profile_permission_tags")
+    .select("tag:permission_tags(slug)")
+    .eq("profile_id", profileId);
+
+  if (error) {
+    console.error("[getCurrentProfile] tags", error.message);
+    return [];
+  }
+
+  const tags: PermissionTagSlug[] = [];
+  for (const row of data ?? []) {
+    const tag = Array.isArray(row.tag) ? row.tag[0] : row.tag;
+    const slug = tag && typeof tag === "object" && "slug" in tag
+      ? String((tag as { slug: string }).slug)
+      : null;
+    if (slug && isPermissionTagSlug(slug)) {
+      tags.push(slug);
+    }
+  }
+  return tags;
+}
 
 export async function getCurrentProfile(): Promise<ProfileWithOrg | null> {
   if (AUTH_BYPASS) {
@@ -42,35 +73,41 @@ export async function getCurrentProfile(): Promise<ProfileWithOrg | null> {
 
   const typed = profile as Profile;
 
-  const [businessUnitResult, departmentResult, managerResult, reportsResult] =
-    await Promise.all([
-      typed.business_unit_id
-        ? supabase
-            .from("business_units")
-            .select("id, name, slug")
-            .eq("id", typed.business_unit_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      typed.department_id
-        ? supabase
-            .from("departments")
-            .select("id, name, slug")
-            .eq("id", typed.department_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      typed.manager_id
-        ? supabase
-            .from("profiles")
-            .select("id, first_name, last_name, email, job_title")
-            .eq("id", typed.manager_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .eq("manager_id", user.id)
-        .eq("status", "active"),
-    ]);
+  const [
+    businessUnitResult,
+    departmentResult,
+    managerResult,
+    reportsResult,
+    tags,
+  ] = await Promise.all([
+    typed.business_unit_id
+      ? supabase
+          .from("business_units")
+          .select("id, name, slug")
+          .eq("id", typed.business_unit_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    typed.department_id
+      ? supabase
+          .from("departments")
+          .select("id, name, slug")
+          .eq("id", typed.department_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    typed.manager_id
+      ? supabase
+          .from("profiles")
+          .select("id, first_name, last_name, email, job_title")
+          .eq("id", typed.manager_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("manager_id", user.id)
+      .eq("status", "active"),
+    loadProfileTags(supabase, user.id),
+  ]);
 
   return {
     ...typed,
@@ -84,5 +121,8 @@ export async function getCurrentProfile(): Promise<ProfileWithOrg | null> {
     > | null) ?? null,
     manager: managerResult.data as ProfileWithOrg["manager"],
     isManager: (reportsResult.count ?? 0) > 0,
+    tags,
   };
 }
+
+export { loadProfileTags };

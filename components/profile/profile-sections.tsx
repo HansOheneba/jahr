@@ -8,6 +8,7 @@ import {
   ASSET_KIND_LABELS,
   type EmployeeRecord,
 } from "@/lib/types/employee";
+import { PERMISSION_TAG_LABELS } from "@/lib/auth/permissions";
 import { displayName } from "@/lib/types/database";
 import { LEAVE_TYPES } from "@/lib/leave/types";
 
@@ -349,7 +350,24 @@ export function ProfileSections({
 
       <Section title="User account">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label="Role" value={formatLabel(profile.role)} />
+          <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+            <p className="text-xs text-muted-foreground">Permission tags</p>
+            {profile.tags.length === 0 ? (
+              <p className="text-sm font-medium">Employee</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {profile.tags.map((slug) => (
+                  <Badge
+                    key={slug}
+                    variant="outline"
+                    className="rounded-md font-normal"
+                  >
+                    {PERMISSION_TAG_LABELS[slug] ?? slug}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
           <Field label="Account status" value={formatLabel(profile.status)} />
           <Field
             label="Last login"

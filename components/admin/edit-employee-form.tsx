@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
@@ -16,24 +16,36 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import {
+  IMMIGRATION_STATUSES,
+  IMMIGRATION_STATUS_LABELS,
+} from "@/lib/employees/immigration";
+import { OFFICE_LOCATIONS } from "@/lib/employees/office-locations";
+import { updateEmployee } from "@/lib/employees/actions";
+import {
   canAssignTag,
   PERMISSION_TAG_LABELS,
   PERMISSION_TAG_SLUGS,
   type PermissionTagSlug,
 } from "@/lib/auth/permissions";
 import {
-  IMMIGRATION_STATUSES,
-  IMMIGRATION_STATUS_LABELS,
-} from "@/lib/employees/immigration";
-import { OFFICE_LOCATIONS } from "@/lib/employees/office-locations";
-import { createEmployee } from "@/lib/employees/actions";
-import { displayName, type ProfileWithOrg } from "@/lib/types/database";
+  displayName,
+  type EmploymentStatus,
+  type ProfileWithOrg,
+} from "@/lib/types/database";
 import type {
   EmployeeCategory,
+  EmployeeRecord,
   EmploymentType,
   WorkType,
 } from "@/lib/types/employee";
 import { cn } from "@/lib/utils";
+
+const STATUS_OPTIONS: EmploymentStatus[] = [
+  "active",
+  "inactive",
+  "onboarding",
+  "terminated",
+];
 
 interface OrgOptions {
   businessUnits: Array<{ id: string; name: string }>;
@@ -47,53 +59,108 @@ interface OrgOptions {
   }>;
 }
 
-export function AddEmployeeForm({
+function parseDate(value: string | null | undefined): Date | undefined {
+  if (!value) return undefined;
+  try {
+    return parseISO(value);
+  } catch {
+    return undefined;
+  }
+}
+
+export function EditEmployeeForm({
+  record,
   org,
   viewer,
 }: {
+  record: EmployeeRecord;
   org: OrgOptions;
   viewer: ProfileWithOrg;
 }) {
   const router = useRouter();
+  const { profile } = record;
+  const primaryContact = record.emergencyContacts.find((c) => c.is_primary)
+    ?? record.emergencyContacts[0];
+
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [preferredName, setPreferredName] = useState("");
-  const [email, setEmail] = useState("");
-  const [personalEmail, setPersonalEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
-  const [gender, setGender] = useState("Male");
-  const [nationality, setNationality] = useState("Ghanaian");
-  const [nationalId, setNationalId] = useState("");
-  const [ssnitNumber, setSsnitNumber] = useState("");
-  const [tinNumber, setTinNumber] = useState("");
-  const [immigrationStatus, setImmigrationStatus] = useState("");
-  const [workPermitNumber, setWorkPermitNumber] = useState("");
-  const [workPermitExpiry, setWorkPermitExpiry] = useState<Date | undefined>();
-  const [addressLine, setAddressLine] = useState("");
-  const [city, setCity] = useState("Accra");
-  const [country, setCountry] = useState("Ghana");
-  const [jobTitle, setJobTitle] = useState("");
-  const [employeeNumber, setEmployeeNumber] = useState("");
-  const [tags, setTags] = useState<PermissionTagSlug[]>([]);
+  const [firstName, setFirstName] = useState(profile.first_name);
+  const [lastName, setLastName] = useState(profile.last_name);
+  const [preferredName, setPreferredName] = useState(
+    profile.preferred_name ?? "",
+  );
+  const [personalEmail, setPersonalEmail] = useState(
+    profile.personal_email ?? "",
+  );
+  const [phone, setPhone] = useState(profile.phone ?? "");
+  const [dateOfBirth, setDateOfBirth] = useState(parseDate(profile.date_of_birth));
+  const [gender, setGender] = useState(profile.gender ?? "Male");
+  const [nationality, setNationality] = useState(
+    profile.nationality ?? "Ghanaian",
+  );
+  const [nationalId, setNationalId] = useState(profile.national_id ?? "");
+  const [ssnitNumber, setSsnitNumber] = useState(profile.ssnit_number ?? "");
+  const [tinNumber, setTinNumber] = useState(profile.tin_number ?? "");
+  const [immigrationStatus, setImmigrationStatus] = useState(
+    profile.immigration_status ?? "",
+  );
+  const [workPermitNumber, setWorkPermitNumber] = useState(
+    profile.work_permit_number ?? "",
+  );
+  const [workPermitExpiry, setWorkPermitExpiry] = useState(
+    parseDate(profile.work_permit_expiry),
+  );
+  const [addressLine, setAddressLine] = useState(profile.address_line ?? "");
+  const [city, setCity] = useState(profile.city ?? "");
+  const [country, setCountry] = useState(profile.country || "Ghana");
+  const [jobTitle, setJobTitle] = useState(profile.job_title ?? "");
+  const [employeeNumber, setEmployeeNumber] = useState(
+    profile.employee_number ?? "",
+  );
+  const [tags, setTags] = useState<PermissionTagSlug[]>([...profile.tags]);
+  const [status, setStatus] = useState<EmploymentStatus>(profile.status);
   const [employeeCategory, setEmployeeCategory] =
-    useState<EmployeeCategory>("employee");
-  const [workType, setWorkType] = useState<WorkType>("hybrid");
-  const [employmentType, setEmploymentType] =
-    useState<EmploymentType>("full_time");
-  const [officeLocation, setOfficeLocation] = useState<string>("Accra HQ");
-  const [startDate, setStartDate] = useState<Date | undefined>();
-  const [probationEndDate, setProbationEndDate] = useState<Date | undefined>();
-  const [annualLeave, setAnnualLeave] = useState("25");
-  const [businessUnitId, setBusinessUnitId] = useState("");
-  const [departmentId, setDepartmentId] = useState("");
-  const [managerId, setManagerId] = useState("");
-  const [emergencyName, setEmergencyName] = useState("");
-  const [emergencyRelationship, setEmergencyRelationship] = useState("");
-  const [emergencyPhone, setEmergencyPhone] = useState("");
+    useState<EmployeeCategory>(profile.employee_category);
+  const [workType, setWorkType] = useState<WorkType>(profile.work_type);
+  const [employmentType, setEmploymentType] = useState<EmploymentType>(
+    profile.employment_type,
+  );
+  const [officeLocation, setOfficeLocation] = useState(
+    profile.office_location &&
+      (OFFICE_LOCATIONS as readonly string[]).includes(profile.office_location)
+      ? profile.office_location
+      : "Accra HQ",
+  );
+  const [startDate, setStartDate] = useState(parseDate(profile.start_date));
+  const [probationEndDate, setProbationEndDate] = useState(
+    parseDate(profile.probation_end_date),
+  );
+  const [terminationDate, setTerminationDate] = useState(
+    parseDate(profile.termination_date),
+  );
+  const [leavingReason, setLeavingReason] = useState(
+    profile.leaving_reason ?? "",
+  );
+  const [annualLeave, setAnnualLeave] = useState(
+    String(profile.annual_leave_entitlement ?? 25),
+  );
+  const [businessUnitId, setBusinessUnitId] = useState(
+    profile.business_unit_id ?? "",
+  );
+  const [departmentId, setDepartmentId] = useState(
+    profile.department_id ?? "",
+  );
+  const [managerId, setManagerId] = useState(profile.manager_id ?? "");
+  const [emergencyName, setEmergencyName] = useState(
+    primaryContact?.full_name ?? "",
+  );
+  const [emergencyRelationship, setEmergencyRelationship] = useState(
+    primaryContact?.relationship ?? "",
+  );
+  const [emergencyPhone, setEmergencyPhone] = useState(
+    primaryContact?.phone ?? "",
+  );
 
   const departments = useMemo(
     () =>
@@ -104,12 +171,22 @@ export function AddEmployeeForm({
     [businessUnitId, org.departments],
   );
 
+  const managers = useMemo(
+    () => org.managers.filter((manager) => manager.id !== profile.id),
+    [org.managers, profile.id],
+  );
+
   const assignableTags = useMemo(
-    () => PERMISSION_TAG_SLUGS.filter((slug) => canAssignTag(viewer, slug)),
-    [viewer],
+    () =>
+      PERMISSION_TAG_SLUGS.filter(
+        (slug) => canAssignTag(viewer, slug) || tags.includes(slug),
+      ),
+    [viewer, tags],
   );
 
   function toggleTag(slug: PermissionTagSlug) {
+    if (!canAssignTag(viewer, slug) && !tags.includes(slug)) return;
+    if (tags.includes(slug) && !canAssignTag(viewer, slug)) return;
     setTags((current) =>
       current.includes(slug)
         ? current.filter((item) => item !== slug)
@@ -120,11 +197,11 @@ export function AddEmployeeForm({
   function handleSubmit() {
     setError(null);
     startTransition(async () => {
-      const result = await createEmployee({
+      const result = await updateEmployee({
+        employeeId: profile.id,
         firstName,
         lastName,
         preferredName,
-        email,
         personalEmail,
         phone,
         dateOfBirth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : "",
@@ -144,6 +221,7 @@ export function AddEmployeeForm({
         jobTitle,
         employeeNumber,
         tags,
+        status,
         employeeCategory,
         workType,
         employmentType,
@@ -152,6 +230,10 @@ export function AddEmployeeForm({
         probationEndDate: probationEndDate
           ? format(probationEndDate, "yyyy-MM-dd")
           : "",
+        terminationDate: terminationDate
+          ? format(terminationDate, "yyyy-MM-dd")
+          : "",
+        leavingReason,
         annualLeaveEntitlement: Number(annualLeave) || 25,
         businessUnitId,
         departmentId,
@@ -161,12 +243,12 @@ export function AddEmployeeForm({
         emergencyPhone,
       });
 
-      if (result.error || !result.employeeId) {
-        setError(result.error ?? "Could not create employee.");
+      if (result.error) {
+        setError(result.error);
         return;
       }
 
-      router.push(`/admin/employees/${result.employeeId}`);
+      router.push(`/admin/employees/${profile.id}`);
       router.refresh();
     });
   }
@@ -178,7 +260,10 @@ export function AddEmployeeForm({
           <Field label="First name" value={firstName} onChange={setFirstName} required />
           <Field label="Last name" value={lastName} onChange={setLastName} required />
           <Field label="Preferred name" value={preferredName} onChange={setPreferredName} />
-          <Field label="Work email" type="email" value={email} onChange={setEmail} required />
+          <div className="space-y-2">
+            <Label>Work email</Label>
+            <Input value={profile.email} disabled className="h-10" />
+          </div>
           <Field
             label="Personal email"
             type="email"
@@ -237,9 +322,9 @@ export function AddEmployeeForm({
             }
             items={[
               { value: "none", label: "Not set" },
-              ...IMMIGRATION_STATUSES.map((status) => ({
-                value: status,
-                label: IMMIGRATION_STATUS_LABELS[status],
+              ...IMMIGRATION_STATUSES.map((statusOption) => ({
+                value: statusOption,
+                label: IMMIGRATION_STATUS_LABELS[statusOption],
               })),
             ]}
           />
@@ -280,27 +365,29 @@ export function AddEmployeeForm({
             label="Employee number"
             value={employeeNumber}
             onChange={setEmployeeNumber}
-            hint="Leave blank to auto-assign (JA-0004…)."
           />
           <div className="space-y-2 sm:col-span-2">
             <Label>Permission tags</Label>
             <p className="text-xs text-muted-foreground">
-              Leave empty for a regular employee. Tags grant privileges
-              independently of job title.
+              Empty means a regular employee. Privileges come from tags, not
+              job title.
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               {assignableTags.map((slug) => {
                 const selected = tags.includes(slug);
+                const locked = selected && !canAssignTag(viewer, slug);
                 return (
                   <button
                     key={slug}
                     type="button"
+                    disabled={locked}
                     onClick={() => toggleTag(slug)}
                     className={cn(
                       "inline-flex h-8 items-center rounded-md border px-3 text-sm transition-colors",
                       selected
                         ? "border-[#0070F3] bg-[color-mix(in_srgb,#0070F3_8%,white)] text-foreground"
                         : "border-border bg-background text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+                      locked && "opacity-60",
                     )}
                   >
                     {PERMISSION_TAG_LABELS[slug]}
@@ -309,6 +396,15 @@ export function AddEmployeeForm({
               })}
             </div>
           </div>
+          <SelectField
+            label="Status"
+            value={status}
+            onChange={(value) => setStatus(value as EmploymentStatus)}
+            items={STATUS_OPTIONS.map((option) => ({
+              value: option,
+              label: option.charAt(0).toUpperCase() + option.slice(1),
+            }))}
+          />
           <SelectField
             label="Employee category"
             value={employeeCategory}
@@ -369,6 +465,23 @@ export function AddEmployeeForm({
               placeholder="Probation end"
             />
           </div>
+          {status === "terminated" ? (
+            <>
+              <div className="space-y-2">
+                <Label>Termination date</Label>
+                <DatePicker
+                  value={terminationDate}
+                  onChange={setTerminationDate}
+                  placeholder="Termination date"
+                />
+              </div>
+              <Field
+                label="Reason for leaving"
+                value={leavingReason}
+                onChange={setLeavingReason}
+              />
+            </>
+          ) : null}
           <SelectField
             label="Business unit"
             value={businessUnitId || "none"}
@@ -405,7 +518,7 @@ export function AddEmployeeForm({
               onChange={(value) => setManagerId(value === "none" ? "" : value)}
               items={[
                 { value: "none", label: "None" },
-                ...org.managers.map((manager) => ({
+                ...managers.map((manager) => ({
                   value: manager.id,
                   label: `${displayName(manager)}${manager.job_title ? ` · ${manager.job_title}` : ""}`,
                 })),
@@ -442,7 +555,7 @@ export function AddEmployeeForm({
           type="button"
           variant="outline"
           disabled={pending}
-          onClick={() => router.push("/admin/employees")}
+          onClick={() => router.push(`/admin/employees/${profile.id}`)}
         >
           Cancel
         </Button>
@@ -453,7 +566,7 @@ export function AddEmployeeForm({
           className="gap-2"
         >
           {pending ? <Spinner /> : null}
-          Add employee
+          Save changes
         </Button>
       </div>
     </div>

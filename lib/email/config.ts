@@ -20,7 +20,7 @@ export function getEmailLogoUrl(): string {
 }
 
 export const EMAIL_BRAND = {
-  productName: "JA Group HR",
+  productName: "JA Group TMS",
   background: "#F5F7FB",
   surface: "#FFFFFF",
   softSurface: "#FBFCFE",

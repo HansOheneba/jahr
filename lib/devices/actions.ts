@@ -28,7 +28,7 @@ export async function createDevice(
   input: CreateDeviceInput,
 ): Promise<DeviceActionResult> {
   const profile = await getCurrentProfile();
-  if (!profile || !isOrgAdmin(profile.role)) {
+  if (!profile || !isOrgAdmin(profile)) {
     return { error: "Only org admins can add devices." };
   }
 
@@ -70,7 +70,7 @@ export async function assignDevice(input: {
   notes?: string;
 }): Promise<DeviceActionResult> {
   const profile = await getCurrentProfile();
-  if (!profile || !isOrgAdmin(profile.role)) {
+  if (!profile || !isOrgAdmin(profile)) {
     return { error: "Only org admins can assign devices." };
   }
 
@@ -136,7 +136,7 @@ export async function returnDevice(input: {
   notes?: string;
 }): Promise<DeviceActionResult> {
   const profile = await getCurrentProfile();
-  if (!profile || !isOrgAdmin(profile.role)) {
+  if (!profile || !isOrgAdmin(profile)) {
     return { error: "Only org admins can return devices." };
   }
 
@@ -193,7 +193,7 @@ export async function updateDeviceStatus(input: {
   status: Exclude<DeviceStatus, "assigned">;
 }): Promise<DeviceActionResult> {
   const profile = await getCurrentProfile();
-  if (!profile || !isOrgAdmin(profile.role)) {
+  if (!profile || !isOrgAdmin(profile)) {
     return { error: "Only org admins can update device status." };
   }
 

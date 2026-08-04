@@ -49,6 +49,7 @@ export interface Profile {
   last_name: string;
   preferred_name: string | null;
   job_title: string | null;
+  /** @deprecated Prefer `tags` for authorization. Kept in sync from tags on write. */
   role: AppRole;
   status: EmploymentStatus;
   business_unit_id: string | null;
@@ -72,6 +73,9 @@ export interface Profile {
   leaving_reason: string | null;
   nationality: string | null;
   national_id: string | null;
+  immigration_status: string | null;
+  work_permit_number: string | null;
+  work_permit_expiry: string | null;
   ssnit_number: string | null;
   tin_number: string | null;
   address_line: string | null;
@@ -91,6 +95,8 @@ export interface ProfileWithOrg extends Profile {
   > | null;
   /** True when at least one active profile reports to this person. */
   isManager: boolean;
+  /** Capability tags used for authorization. */
+  tags: import("@/lib/auth/permissions").PermissionTagSlug[];
 }
 
 export const ADMIN_ROLES: AppRole[] = ["ceo", "coo", "hr_admin"];
@@ -120,41 +126,11 @@ export function displayName(profile: {
   return [first, profile.last_name].filter(Boolean).join(" ").trim();
 }
 
-export function isOrgAdmin(role: AppRole): boolean {
-  return ADMIN_ROLES.includes(role);
-}
-
-export function isOrgLeader(role: AppRole): boolean {
-  return ORG_LEADER_ROLES.includes(role);
-}
-
-/** Can open the leave approvals queue (direct reports and/or manager role). */
-export function canApproveLeave(
-  role: AppRole,
-  isManager: boolean,
-): boolean {
-  return isManager || role === "manager" || isOrgAdmin(role);
-}
-
-/** Can browse the people directory and organogram. */
-export function canViewPeopleDirectory(
-  role: AppRole,
-  isManager: boolean,
-): boolean {
-  return (
-    isManager ||
-    role === "manager" ||
-    isOrgLeader(role) ||
-    isOrgAdmin(role)
-  );
-}
-
-/** Non-admins may only open records for themselves or direct reports. */
-export function canViewEmployeeDetails(
-  viewer: { id: string; role: AppRole },
-  target: { id: string; manager_id: string | null },
-): boolean {
-  if (viewer.id === target.id) return true;
-  if (isOrgAdmin(viewer.role)) return true;
-  return target.manager_id === viewer.id;
-}
+export {
+  canApproveLeave,
+  canViewEmployeeDetails,
+  canViewPeopleDirectory,
+  hasTag,
+  isOrgAdmin,
+  isOrgLeader,
+} from "@/lib/auth/permissions";

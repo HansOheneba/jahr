@@ -15,7 +15,6 @@ import {
 import {
   displayName,
   isOrgAdmin,
-  type AppRole,
 } from "@/lib/types/database";
 import { createClient } from "@/utils/supabase/server";
 
@@ -143,7 +142,7 @@ function mapApproval(
 
 export async function getApprovalsWorkspace(viewer: {
   id: string;
-  role: AppRole;
+  tags: import("@/lib/auth/permissions").PermissionTagSlug[];
   isManager: boolean;
 }): Promise<{
   open: ApprovalQueueRecord[];
@@ -162,7 +161,7 @@ export async function getApprovalsWorkspace(viewer: {
 
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
-  const admin = isOrgAdmin(viewer.role);
+  const admin = isOrgAdmin(viewer);
   const year = new Date().getFullYear();
 
   let requestsQuery = supabase

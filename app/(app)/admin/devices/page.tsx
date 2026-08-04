@@ -10,7 +10,7 @@ import { isOrgAdmin } from "@/lib/types/database";
 export default async function DevicesAdminPage() {
   const profile = await getCurrentProfile();
 
-  if (!profile || !isOrgAdmin(profile.role)) {
+  if (!profile || !isOrgAdmin(profile)) {
     redirect("/dashboard");
   }
 

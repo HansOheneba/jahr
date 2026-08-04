@@ -18,7 +18,7 @@ export default async function EmployeeAdminPage({
 
   if (
     !viewer ||
-    !canViewPeopleDirectory(viewer.role, viewer.isManager)
+    !canViewPeopleDirectory(viewer)
   ) {
     redirect("/dashboard");
   }
@@ -30,7 +30,7 @@ export default async function EmployeeAdminPage({
     notFound();
   }
 
-  const admin = isOrgAdmin(viewer.role);
+  const admin = isOrgAdmin(viewer);
   let payPackage = null;
 
   if (admin) {

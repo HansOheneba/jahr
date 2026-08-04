@@ -16,13 +16,15 @@ export default async function EmployeesAdminPage() {
 
   if (
     !profile ||
-    !canViewPeopleDirectory(profile.role, profile.isManager)
+    !canViewPeopleDirectory(profile)
   ) {
     redirect("/dashboard");
   }
 
-  const canAdd = isOrgAdmin(profile.role);
-  const employees = await getDirectoryEmployees({ allStatuses: canAdd });
+  const canAdd = isOrgAdmin(profile);
+  const employees = await getDirectoryEmployees(
+    canAdd ? { excludeTerminated: true } : undefined,
+  );
 
   return (
     <div className="flex w-full flex-col gap-5">

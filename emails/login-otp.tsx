@@ -32,7 +32,7 @@ export function LoginOtpEmail({
   logoUrl = getEmailLogoUrl(),
 }: LoginOtpEmailProps) {
   const digits = code.replace(/\D/g, "").slice(0, 6).split("");
-  const preview = `${code} is your JA Group HR sign-in code`;
+  const preview = `${code} is your JA Group TMS sign-in code`;
 
   return (
     <Html lang="en">

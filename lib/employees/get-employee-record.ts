@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { getCurrentProfile } from "@/lib/auth/get-profile";
+import { getCurrentProfile, loadProfileTags } from "@/lib/auth/get-profile";
 import type { LeaveTypeId } from "@/lib/leave/types";
 import type {
   AssetKind,
@@ -65,6 +65,7 @@ export async function getEmployeeRecord(
     activity,
     directReports,
     hrNotes,
+    tags,
   ] = await Promise.all([
     profile.business_unit_id
       ? supabase
@@ -147,13 +148,14 @@ export async function getEmployeeRecord(
       .eq("manager_id", targetId)
       .eq("status", "active")
       .order("first_name", { ascending: true }),
-    isOrgAdmin(viewer.role)
+    isOrgAdmin(viewer)
       ? supabase
           .from("hr_notes")
           .select("id, kind, body, created_at")
           .eq("employee_id", targetId)
           .order("created_at", { ascending: false })
       : Promise.resolve({ data: [] }),
+    loadProfileTags(supabase, targetId),
   ]);
 
   const { count: reportCount } = await supabase
@@ -167,11 +169,21 @@ export async function getEmployeeRecord(
     employee_category: profile.employee_category as EmployeeCategory,
     work_type: profile.work_type as WorkType,
     employment_type: profile.employment_type as EmploymentType,
+    immigration_status:
+      (profile as { immigration_status?: string | null }).immigration_status ??
+      null,
+    work_permit_number:
+      (profile as { work_permit_number?: string | null }).work_permit_number ??
+      null,
+    work_permit_expiry:
+      (profile as { work_permit_expiry?: string | null }).work_permit_expiry ??
+      null,
     business_unit: businessUnit.data,
     department: department.data,
     team: team.data,
     manager: manager.data,
     isManager: (reportCount ?? 0) > 0,
+    tags,
   };
 
   return {

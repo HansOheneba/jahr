@@ -15,7 +15,7 @@ export default async function OrganogramPage() {
 
   if (
     !profile ||
-    !canViewPeopleDirectory(profile.role, profile.isManager)
+    !canViewPeopleDirectory(profile)
   ) {
     redirect("/dashboard");
   }
@@ -28,7 +28,7 @@ export default async function OrganogramPage() {
       <div className="space-y-1">
         <h1 className="text-xl font-medium tracking-tight">Organogram</h1>
         <p className="text-sm text-muted-foreground">
-          {isOrgAdmin(profile.role)
+          {isOrgAdmin(profile)
             ? "Scroll horizontally if the chart is wider than your screen."
             : "Your reporting line - only people who report to you."}
         </p>

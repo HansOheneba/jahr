@@ -6,7 +6,7 @@ import { canApproveLeave } from "@/lib/types/database";
 
 export default async function ApprovalsPage() {
   const profile = await getCurrentProfile();
-  if (!profile || !canApproveLeave(profile.role, profile.isManager)) {
+  if (!profile || !canApproveLeave(profile)) {
     redirect("/dashboard");
   }
 

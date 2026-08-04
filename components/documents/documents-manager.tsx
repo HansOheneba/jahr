@@ -67,6 +67,7 @@ export function DocumentsManager({
   viewerId,
   documents,
   canManageHrDocs = false,
+  defaultKind,
   title = "Your documents",
   description = "Upload CVs, IDs, and certificates. HR can add contracts and NDAs.",
 }: {
@@ -74,18 +75,18 @@ export function DocumentsManager({
   viewerId: string;
   documents: EmployeeDocument[];
   canManageHrDocs?: boolean;
+  /** Prefills the upload sheet kind (e.g. employment_contract for HR). */
+  defaultKind?: DocumentKind;
   title?: string;
   description?: string;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const initialKind: DocumentKind =
+    defaultKind ?? (canManageHrDocs ? "employment_contract" : "cv");
   const [open, setOpen] = useState(false);
-  const [kind, setKind] = useState<DocumentKind>(
-    canManageHrDocs ? "appointment_letter" : "cv",
-  );
-  const [docTitle, setDocTitle] = useState(
-    defaultTitleForKind(canManageHrDocs ? "appointment_letter" : "cv"),
-  );
+  const [kind, setKind] = useState<DocumentKind>(initialKind);
+  const [docTitle, setDocTitle] = useState(defaultTitleForKind(initialKind));
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,7 +116,8 @@ export function DocumentsManager({
   );
 
   function resetForm() {
-    const nextKind = canManageHrDocs ? "appointment_letter" : "cv";
+    const nextKind =
+      defaultKind ?? (canManageHrDocs ? "employment_contract" : "cv");
     setKind(nextKind);
     setDocTitle(defaultTitleForKind(nextKind));
     setFile(null);

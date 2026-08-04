@@ -43,7 +43,7 @@ export async function uploadDocument(
     return { error: "You must be signed in to upload documents." };
   }
 
-  const admin = isOrgAdmin(viewer.role);
+  const admin = isOrgAdmin(viewer);
   const employeeIdRaw = formData.get("employeeId");
   const employeeId =
     typeof employeeIdRaw === "string" && employeeIdRaw.length > 0
@@ -166,7 +166,7 @@ export async function deleteDocument(
     return { error: "Document not found." };
   }
 
-  const admin = isOrgAdmin(viewer.role);
+  const admin = isOrgAdmin(viewer);
   const ownsDocument = document.employee_id === viewer.id;
   if (!admin && !ownsDocument) {
     return { error: "You cannot delete this document." };

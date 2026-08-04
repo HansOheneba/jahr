@@ -116,7 +116,7 @@ export async function issueLoginOtp(emailInput: string): Promise<OtpResult> {
 
   await sendEmail({
     to: email,
-    subject: `${code} is your JA Group HR sign-in code`,
+    subject: `${code} is your JA Group TMS sign-in code`,
     text: [
       `Hi ${displayName},`,
       "",

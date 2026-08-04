@@ -1,10 +1,11 @@
 import { UserAvatar } from "@/components/ui/user-avatar";
 import type { OrganogramNode } from "@/lib/employees/get-directory";
-import { APP_ROLE_LABELS, type AppRole } from "@/lib/types/database";
+import { PERMISSION_TAG_LABELS } from "@/lib/auth/permissions";
 import { cn } from "@/lib/utils";
 
-function formatRole(role: AppRole): string {
-  return APP_ROLE_LABELS[role] ?? role;
+function formatTags(tags: OrganogramNode["tags"]): string {
+  if (tags.length === 0) return "Employee";
+  return tags.map((slug) => PERMISSION_TAG_LABELS[slug] ?? slug).join(" · ");
 }
 
 /** Quiet institution tint - accent only, not a painted card. */
@@ -52,7 +53,7 @@ function PersonBox({ node }: { node: OrganogramNode }) {
         </p>
       ) : null}
       <p className="mt-2 text-[10px] font-medium tracking-wide text-accent-blue uppercase">
-        {formatRole(node.role)}
+        {formatTags(node.tags)}
       </p>
     </div>
   );

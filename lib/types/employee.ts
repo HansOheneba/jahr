@@ -49,6 +49,9 @@ export interface EmployeeProfile extends ProfileWithOrg {
   leaving_reason: string | null;
   nationality: string | null;
   national_id: string | null;
+  immigration_status: string | null;
+  work_permit_number: string | null;
+  work_permit_expiry: string | null;
   ssnit_number: string | null;
   tin_number: string | null;
   address_line: string | null;

@@ -1,26 +1,31 @@
 "use client";
 
-import { useEffect, useState, type ComponentType, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
   ArrowLeft,
   Briefcase,
   Building2,
+  ExternalLink,
   FileText,
   History,
   Laptop,
   MapPin,
+  Pencil,
   Shield,
   UserRound,
   Wallet,
 } from "lucide-react";
+import { OffboardEmployeeDialog } from "@/components/admin/offboard-employee-dialog";
 import { PayPackageForm } from "@/components/admin/pay-package-form";
 import { DocumentsManager } from "@/components/documents/documents-manager";
 import { PayslipsPanel } from "@/components/payroll/payslips-panel";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { IMMIGRATION_STATUS_LABELS } from "@/lib/employees/immigration";
+import { PERMISSION_TAG_LABELS } from "@/lib/auth/permissions";
 import type { PayPackage } from "@/lib/payroll/types";
 import {
   ASSET_KIND_LABELS,
@@ -135,10 +140,29 @@ export function EmployeeProfile({
   const [tab, setTab] = useState<ProfileTab>("profile");
   const { profile } = record;
   const name = displayName(profile);
+  const isAlumni = profile.status === "terminated";
+  const backHref = isAlumni ? "/admin/alumni" : "/admin/employees";
+  const backLabel = isAlumni ? "Alumni" : "Employees";
+
+  const latestContract = useMemo(
+    () =>
+      record.documents.find((doc) => doc.kind === "employment_contract") ??
+      null,
+    [record.documents],
+  );
+
+  const immigrationLabel = profile.immigration_status
+    ? (IMMIGRATION_STATUS_LABELS[
+        profile.immigration_status as keyof typeof IMMIGRATION_STATUS_LABELS
+      ] ?? formatLabel(profile.immigration_status))
+    : "-";
 
   useEffect(() => {
     if (window.location.hash === "#pay" && isAdmin) {
       setTab("compensation");
+    }
+    if (window.location.hash === "#contract") {
+      setTab("documents");
     }
   }, [isAdmin]);
 
@@ -146,14 +170,14 @@ export function EmployeeProfile({
     <div className="flex w-full flex-col gap-5">
       <div className="space-y-4">
         <Link
-          href="/admin/employees"
+          href={backHref}
           className={cn(
             buttonVariants({ variant: "ghost", size: "sm" }),
             "w-fit px-0 hover:bg-transparent",
           )}
         >
           <ArrowLeft className="size-4" />
-          Employees
+          {backLabel}
         </Link>
 
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -192,6 +216,27 @@ export function EmployeeProfile({
                 .join(" · ")}
             </p>
           </div>
+
+          {isAdmin ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/admin/employees/${profile.id}/edit`}
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "gap-1.5",
+                )}
+              >
+                <Pencil className="size-3.5" />
+                Edit
+              </Link>
+              {!isAlumni ? (
+                <OffboardEmployeeDialog
+                  employeeId={profile.id}
+                  employeeName={name}
+                />
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div className="flex gap-1 border-b border-border">
@@ -252,8 +297,64 @@ export function EmployeeProfile({
                 <Field label="Nationality" value={profile.nationality ?? "-"} />
                 <Field label="Ghana Card" value={profile.national_id ?? "-"} />
                 <Field label="SSNIT" value={profile.ssnit_number ?? "-"} />
+                <Field label="Immigration status" value={immigrationLabel} />
+                <Field
+                  label="Work permit number"
+                  value={profile.work_permit_number ?? "-"}
+                />
+                <Field
+                  label="Work permit expiry"
+                  value={formatDate(profile.work_permit_expiry)}
+                />
               </div>
             </div>
+          </Section>
+
+          <Section
+            title="Employment contract"
+            icon={FileText}
+            description="Latest signed contract on file. Upload more from Documents."
+          >
+            {latestContract ? (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0 space-y-1">
+                  <p className="truncate text-sm font-medium">
+                    {latestContract.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {latestContract.file_name} · uploaded{" "}
+                    {formatDate(latestContract.created_at)}
+                  </p>
+                </div>
+                <a
+                  href={`/api/documents/${latestContract.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "gap-1.5",
+                  )}
+                >
+                  <ExternalLink className="size-3.5" />
+                  Open
+                </a>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-muted-foreground">
+                  No employment contract uploaded yet.
+                </p>
+                {isAdmin ? (
+                  <button
+                    type="button"
+                    onClick={() => setTab("documents")}
+                    className={cn(buttonVariants({ size: "sm" }), "gap-1.5")}
+                  >
+                    Upload contract
+                  </button>
+                ) : null}
+              </div>
+            )}
           </Section>
 
           <Section title="Address information" icon={MapPin}>
@@ -396,10 +497,11 @@ export function EmployeeProfile({
           viewerId={viewerId}
           documents={record.documents}
           canManageHrDocs={isAdmin}
+          defaultKind={isAdmin ? "employment_contract" : "cv"}
           title={isAdmin ? "Employee documents" : "Documents"}
           description={
             isAdmin
-              ? "Upload appointment letters, NDAs, contracts, and other files."
+              ? "Upload employment contracts, appointment letters, NDAs, and other files."
               : "Upload your CV, ID, and certificates. HR files appear here too."
           }
         />
@@ -505,7 +607,26 @@ export function EmployeeProfile({
 
           <Section title="User account" icon={UserRound}>
             <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
-              <Field label="Role" value={formatLabel(profile.role)} />
+              <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+                <p className="text-xs text-muted-foreground">Permission tags</p>
+                {profile.tags.length === 0 ? (
+                  <p className="text-sm font-medium text-foreground">
+                    Employee
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile.tags.map((slug) => (
+                      <Badge
+                        key={slug}
+                        variant="outline"
+                        className="rounded-md font-normal"
+                      >
+                        {PERMISSION_TAG_LABELS[slug] ?? slug}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
               <Field
                 label="Account status"
                 value={formatLabel(profile.status)}

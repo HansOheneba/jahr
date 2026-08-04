@@ -9,6 +9,7 @@ import {
   type DashboardTeamMember,
 } from "@/components/dashboard/shared";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
+import { hasTag } from "@/lib/auth/permissions";
 import { getEmployeeRecord } from "@/lib/employees/get-employee-record";
 import { summarizeLeaveBalance } from "@/lib/leave/balance";
 import { getLeaveSchedule } from "@/lib/leave/get-schedule";
@@ -39,8 +40,8 @@ export default async function DashboardPage() {
   const todayKey = format(new Date(), "yyyy-MM-dd");
   const year = new Date().getFullYear();
   const month = getMonth(new Date());
-  const admin = isOrgAdmin(profile.role);
-  const canApprove = canApproveLeave(profile.role, profile.isManager);
+  const admin = isOrgAdmin(profile);
+  const canApprove = canApproveLeave(profile);
   const firstName = displayName(profile).split(" ")[0] || "there";
 
   const annual = record?.leaveBalances.find((row) => row.leave_type === "annual");
@@ -338,7 +339,7 @@ export default async function DashboardPage() {
         dateLabel: format(parseISO(item.holiday_date), "EEE d MMM"),
       }))}
       reportingLine={
-        profile.role === "ceo"
+        hasTag(profile, "ceo") || hasTag(profile, "super_admin")
           ? {
               label: "Organisation",
               name: "You lead JA Group",
