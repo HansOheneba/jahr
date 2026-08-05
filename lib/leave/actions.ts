@@ -6,6 +6,7 @@ import { AUTH_BYPASS } from "@/lib/auth/config";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import {
   notifyEmployeeOfLeaveDecision,
+  notifyEmployeeOfLeaveSubmission,
   notifyManagerOfLeaveRequest,
 } from "@/lib/email/leave";
 import { summarizeLeaveBalance } from "@/lib/leave/balance";
@@ -18,6 +19,8 @@ export interface LeaveActionResult {
   error?: string;
   success?: boolean;
   days?: number;
+  /** True when the requester has no manager and leave was approved on submit. */
+  autoApproved?: boolean;
 }
 
 export interface SubmitLeaveInput {
@@ -95,6 +98,9 @@ export async function submitLeaveRequest(
   }
 
   const notes = input.notes.trim();
+  const requiresApproval = Boolean(profile.manager_id);
+  const autoApproved = !requiresApproval;
+  const nowIso = new Date().toISOString();
 
   const { error: insertError } = await supabase.from("leave_requests").insert({
     employee_id: profile.id,
@@ -104,6 +110,13 @@ export async function submitLeaveRequest(
     end_date: input.endDate,
     working_days: workingDays,
     notes,
+    status: autoApproved ? "approved" : "pending",
+    ...(autoApproved
+      ? {
+          manager_notes: "Auto-approved — no reporting manager.",
+          manager_response_at: nowIso,
+        }
+      : {}),
   });
 
   if (insertError) {
@@ -113,20 +126,22 @@ export async function submitLeaveRequest(
   await supabase.from("audit_logs").insert({
     actor_id: profile.id,
     subject_id: profile.id,
-    action: "requested_leave",
+    action: autoApproved ? "approved_leave" : "requested_leave",
     metadata: {
       type: input.type,
       start_date: input.startDate,
       end_date: input.endDate,
       working_days: workingDays,
+      auto_approved: autoApproved,
     },
   });
 
-  const managerEmail = profile.manager?.email;
-  if (managerEmail) {
+  const employeeName = displayName(profile);
+
+  if (requiresApproval && profile.manager?.email) {
     await notifyManagerOfLeaveRequest({
-      managerEmail,
-      employeeName: displayName(profile),
+      managerEmail: profile.manager.email,
+      employeeName,
       type: input.type,
       startDate: input.startDate,
       endDate: input.endDate,
@@ -135,9 +150,21 @@ export async function submitLeaveRequest(
     });
   }
 
+  if (profile.email) {
+    await notifyEmployeeOfLeaveSubmission({
+      employeeEmail: profile.email,
+      employeeName,
+      type: input.type,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      workingDays,
+      autoApproved,
+    });
+  }
+
   revalidatePath("/leave");
   revalidatePath("/approvals");
-  return { success: true, days: workingDays };
+  return { success: true, days: workingDays, autoApproved };
 }
 
 export interface RespondLeaveInput {

@@ -54,6 +54,8 @@ interface LeaveRequestFormProps {
   schedule: ScheduleLeaveEntry[];
   canViewTeam: boolean;
   viewerId: string;
+  /** False when the viewer has no manager — leave is approved on submit. */
+  requiresApproval: boolean;
 }
 
 function entryCoversDay(entry: ScheduleLeaveEntry, day: Date): boolean {
@@ -68,6 +70,7 @@ export function LeaveRequestForm({
   schedule,
   canViewTeam,
   viewerId,
+  requiresApproval,
 }: LeaveRequestFormProps) {
   const router = useRouter();
   const [range, setRange] = useState<DateRange | undefined>();
@@ -196,7 +199,9 @@ export function LeaveRequestForm({
       }
 
       setSuccess(
-        `Leave request submitted for ${result.days} working day${result.days === 1 ? "" : "s"}. Waiting on manager approval.`,
+        result.autoApproved
+          ? `Leave recorded for ${result.days} working day${result.days === 1 ? "" : "s"} — approved automatically (no manager to approve).`
+          : `Leave request submitted for ${result.days} working day${result.days === 1 ? "" : "s"}. Your manager has been emailed and you will get another email when it is decided.`,
       );
       setRange(undefined);
       setNotes("");
@@ -490,7 +495,9 @@ export function LeaveRequestForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="leave-notes">Note for your manager</Label>
+              <Label htmlFor="leave-notes">
+                {requiresApproval ? "Note for your manager" : "Notes"}
+              </Label>
               <Textarea
                 id="leave-notes"
                 value={notes}
@@ -522,7 +529,7 @@ export function LeaveRequestForm({
                 disabled={!canSubmit || pending}
               >
                 {pending ? <Spinner className="mr-1" /> : null}
-                Submit request
+                {requiresApproval ? "Submit request" : "Record leave"}
               </Button>
               <Button
                 type="button"

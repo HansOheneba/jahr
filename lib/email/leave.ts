@@ -30,6 +30,46 @@ export async function notifyManagerOfLeaveRequest(input: {
   });
 }
 
+export async function notifyEmployeeOfLeaveSubmission(input: {
+  employeeEmail: string;
+  employeeName: string;
+  type: LeaveTypeId;
+  startDate: string;
+  endDate: string;
+  workingDays: number;
+  autoApproved: boolean;
+}): Promise<void> {
+  const typeLabel = leaveTypeLabel(input.type);
+  const range = `${input.startDate} to ${input.endDate}`;
+
+  if (input.autoApproved) {
+    await sendEmail({
+      to: input.employeeEmail,
+      subject: `Leave recorded – ${typeLabel}`,
+      text: [
+        `Hi ${input.employeeName},`,
+        "",
+        `Your ${typeLabel} leave (${range}, ${input.workingDays} working day${input.workingDays === 1 ? "" : "s"}) has been recorded and approved.`,
+        "",
+        "No manager approval was required because you do not report to anyone.",
+      ].join("\n"),
+    });
+    return;
+  }
+
+  await sendEmail({
+    to: input.employeeEmail,
+    subject: `Leave request submitted – ${typeLabel}`,
+    text: [
+      `Hi ${input.employeeName},`,
+      "",
+      `Your ${typeLabel} leave request (${range}, ${input.workingDays} working day${input.workingDays === 1 ? "" : "s"}) has been submitted.`,
+      "",
+      "Your manager has been notified and will review it. You will get another email when it is approved or declined.",
+    ].join("\n"),
+  });
+}
+
 export async function notifyEmployeeOfLeaveDecision(input: {
   employeeEmail: string;
   employeeName: string;

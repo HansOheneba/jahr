@@ -92,8 +92,9 @@ export default async function LeavePage() {
       <div className="space-y-1">
         <h1 className="text-xl font-medium tracking-tight">Leave</h1>
         <p className="text-sm text-muted-foreground">
-          Pick days on the calendar, review the working-day count, then send to
-          your manager for approval.
+          {profile.manager_id
+            ? "Pick days on the calendar, review the working-day count, then send to your manager for approval. You and your manager will both get email updates."
+            : "Pick days on the calendar and submit — leave is approved automatically because you do not report to a manager."}
         </p>
       </div>
 
@@ -103,6 +104,7 @@ export default async function LeavePage() {
         schedule={schedule}
         canViewTeam={canViewTeam}
         viewerId={profile.id}
+        requiresApproval={Boolean(profile.manager_id)}
       />
     </div>
   );
