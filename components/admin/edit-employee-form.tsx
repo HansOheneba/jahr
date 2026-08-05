@@ -277,6 +277,9 @@ export function EditEmployeeForm({
               value={dateOfBirth}
               onChange={setDateOfBirth}
               placeholder="Date of birth"
+              startMonth={new Date(1920, 0)}
+              endMonth={new Date()}
+              defaultMonth={dateOfBirth ?? new Date(1995, 0)}
             />
           </div>
           <SelectField

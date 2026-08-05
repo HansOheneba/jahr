@@ -282,9 +282,6 @@ export async function createEmployee(
   if (!jobTitle) {
     return { error: "Job title is required." };
   }
-  if (!startDate) {
-    return { error: "Start date is required." };
-  }
   if (!phone) {
     return { error: "Phone number is required." };
   }
@@ -356,7 +353,7 @@ export async function createEmployee(
       work_type: input.workType,
       employment_type: input.employmentType,
       office_location: officeLocation,
-      start_date: startDate,
+      start_date: emptyToNull(startDate),
       probation_end_date: emptyToNull(input.probationEndDate),
       annual_leave_entitlement: input.annualLeaveEntitlement || 25,
       business_unit_id: emptyToNull(input.businessUnitId),
@@ -424,9 +421,6 @@ export async function updateEmployee(
   }
   if (!jobTitle) {
     return { error: "Job title is required." };
-  }
-  if (!startDate) {
-    return { error: "Start date is required." };
   }
   if (!phone) {
     return { error: "Phone number is required." };
@@ -523,7 +517,7 @@ export async function updateEmployee(
       work_type: input.workType,
       employment_type: input.employmentType,
       office_location: officeLocation,
-      start_date: startDate,
+      start_date: emptyToNull(startDate),
       probation_end_date: emptyToNull(input.probationEndDate),
       annual_leave_entitlement: input.annualLeaveEntitlement || 25,
       business_unit_id: emptyToNull(input.businessUnitId),

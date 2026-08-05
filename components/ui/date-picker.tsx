@@ -19,6 +19,12 @@ interface DatePickerProps {
   id?: string;
   className?: string;
   disabled?: boolean;
+  /** First month available in the month/year dropdowns. */
+  startMonth?: Date;
+  /** Last month available in the month/year dropdowns. */
+  endMonth?: Date;
+  /** Month shown when the picker opens with no value. */
+  defaultMonth?: Date;
 }
 
 export function DatePicker({
@@ -28,8 +34,17 @@ export function DatePicker({
   id,
   className,
   disabled,
+  startMonth,
+  endMonth,
+  defaultMonth,
 }: DatePickerProps) {
   const [open, setOpen] = React.useState(false);
+  const resolvedEndMonth = React.useMemo(() => {
+    if (endMonth) return endMonth;
+    const next = new Date();
+    next.setFullYear(next.getFullYear() + 10);
+    return next;
+  }, [endMonth]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -60,6 +75,9 @@ export function DatePicker({
             setOpen(false);
           }}
           captionLayout="dropdown"
+          startMonth={startMonth}
+          endMonth={resolvedEndMonth}
+          defaultMonth={defaultMonth ?? value}
         />
       </PopoverContent>
     </Popover>
