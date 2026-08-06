@@ -1,7 +1,6 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -13,7 +12,6 @@ import {
   IdCard,
   Laptop,
   LayoutDashboard,
-  LogOut,
   Megaphone,
   Network,
   Settings,
@@ -22,27 +20,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Spinner } from "@/components/ui/spinner";
-import { UserAvatar } from "@/components/ui/user-avatar";
-import { signOut } from "@/lib/auth/actions";
 import {
   canApproveLeave,
   canPublishComms,
   canViewPeopleDirectory,
-  displayName,
   isOrgAdmin,
   type ProfileWithOrg,
 } from "@/lib/types/database";
@@ -168,71 +150,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
           </Link>
         </div>
       </nav>
-
-      <div className="border-t border-sidebar-border p-3">
-        <div className="mb-2 flex items-center gap-2.5">
-          <UserAvatar
-            name={displayName(profile)}
-            src={profile.avatar_url}
-            gender={profile.gender}
-            size="sm"
-            className="size-7"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">
-              {displayName(profile)}
-            </p>
-            <p className="truncate text-[11px] text-muted-foreground">
-              {profile.job_title ?? "Team member"}
-            </p>
-          </div>
-        </div>
-        <AlertDialog>
-          <AlertDialogTrigger
-            render={
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start gap-2"
-              />
-            }
-          >
-            <LogOut className="size-3.5" />
-            Sign out
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Sign out?</AlertDialogTitle>
-              <AlertDialogDescription>
-                You&apos;ll need to sign in again to access your workspace.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <form action={signOut}>
-                <SignOutConfirmButton />
-              </form>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
     </aside>
-  );
-}
-
-function SignOutConfirmButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <AlertDialogAction
-      type="submit"
-      variant="destructive"
-      disabled={pending}
-      className="w-full sm:w-auto"
-    >
-      {pending ? <Spinner className="mr-1" /> : null}
-      Sign out
-    </AlertDialogAction>
   );
 }
 

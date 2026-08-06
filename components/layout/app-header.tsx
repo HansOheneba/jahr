@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { UserMenu } from "@/components/layout/user-menu";
 import { NotificationsPanel } from "@/components/notifications/notifications-panel";
 import type { ProfileWithOrg } from "@/lib/types/database";
 
@@ -19,6 +20,7 @@ const TITLE_BY_PATH: Record<string, string> = {
   "/admin/devices": "Devices",
   "/admin/organisation": "Organisation",
   "/admin/organogram": "Organogram",
+  "/admin/comms": "Comms",
 };
 
 interface AppHeaderProps {
@@ -58,7 +60,10 @@ export function AppHeader({ profile }: AppHeaderProps) {
           <span className="truncate font-medium text-foreground">{title}</span>
         </nav>
 
-        <NotificationsPanel />
+        <div className="flex shrink-0 items-center gap-1">
+          <NotificationsPanel />
+          <UserMenu profile={profile} />
+        </div>
       </div>
     </header>
   );
