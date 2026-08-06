@@ -113,7 +113,7 @@ export async function submitLeaveRequest(
     status: autoApproved ? "approved" : "pending",
     ...(autoApproved
       ? {
-          manager_notes: "Auto-approved — no reporting manager.",
+          manager_notes: "Noted on calendar - no manager approval required.",
           manager_response_at: nowIso,
         }
       : {}),
@@ -158,6 +158,7 @@ export async function submitLeaveRequest(
       startDate: input.startDate,
       endDate: input.endDate,
       workingDays,
+      notes,
       autoApproved,
     });
   }
@@ -249,6 +250,7 @@ export async function respondToLeaveRequest(
       type: data.type as LeaveTypeId,
       startDate: data.start_date,
       endDate: data.end_date,
+      workingDays: Number(data.working_days),
       approved: input.approved,
       managerNotes,
     });

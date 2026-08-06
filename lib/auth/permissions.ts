@@ -7,6 +7,7 @@ export const PERMISSION_TAG_SLUGS = [
   "coo",
   "manager",
   "business_unit_md",
+  "comms",
 ] as const;
 
 export type PermissionTagSlug = (typeof PERMISSION_TAG_SLUGS)[number];
@@ -18,6 +19,7 @@ export const PERMISSION_TAG_LABELS: Record<PermissionTagSlug, string> = {
   coo: "COO",
   manager: "Manager",
   business_unit_md: "Business unit MD",
+  comms: "Comms",
 };
 
 /** Tags that grant the org-admin surface (payroll, hire, amend, etc.). */
@@ -34,14 +36,14 @@ export const ORG_LEADER_TAGS: PermissionTagSlug[] = [
 ];
 
 /** Priority when syncing a single legacy `profiles.role` from tags. */
-const ROLE_SYNC_PRIORITY: PermissionTagSlug[] = [
+const ROLE_SYNC_PRIORITY = [
   "super_admin",
   "ceo",
   "coo",
   "hr_admin",
   "business_unit_md",
   "manager",
-];
+] as const;
 
 export type TagBearer = {
   tags: readonly PermissionTagSlug[];
@@ -107,6 +109,11 @@ export function canAssignTag(
     return hasTag(viewer, "ceo") || hasTag(viewer, "super_admin");
   }
   return true;
+}
+
+/** Publish company announcements (email + dashboard). Not an org-admin privilege. */
+export function canPublishComms(bearer: TagBearer): boolean {
+  return hasTag(bearer, "comms") || hasTag(bearer, "super_admin");
 }
 
 /** Map selected tags → legacy `profiles.role` for organogram / old reads. */

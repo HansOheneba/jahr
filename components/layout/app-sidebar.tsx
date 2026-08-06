@@ -14,6 +14,7 @@ import {
   Laptop,
   LayoutDashboard,
   LogOut,
+  Megaphone,
   Network,
   Settings,
   Users,
@@ -39,6 +40,7 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { signOut } from "@/lib/auth/actions";
 import {
   canApproveLeave,
+  canPublishComms,
   canViewPeopleDirectory,
   displayName,
   isOrgAdmin,
@@ -60,6 +62,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
   const showOrgAdmin = isOrgAdmin(profile);
   const showPeopleDirectory = canViewPeopleDirectory(profile);
   const showTeamNav = canApproveLeave(profile);
+  const showComms = canPublishComms(profile);
 
   const employeeNav: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -72,6 +75,9 @@ export function AppSidebar({ profile }: AppSidebarProps) {
     : [];
 
   const adminNav: NavItem[] = [
+    ...(showComms
+      ? [{ href: "/admin/comms", label: "Comms", icon: Megaphone }]
+      : []),
     ...(showPeopleDirectory
       ? [
           { href: "/admin/employees", label: "Employees", icon: Users },

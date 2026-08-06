@@ -200,7 +200,7 @@ export function LeaveRequestForm({
 
       setSuccess(
         result.autoApproved
-          ? `Leave recorded for ${result.days} working day${result.days === 1 ? "" : "s"} — approved automatically (no manager to approve).`
+          ? `Leave noted for ${result.days} working day${result.days === 1 ? "" : "s"} - recorded on the calendar (no manager approval needed).`
           : `Leave request submitted for ${result.days} working day${result.days === 1 ? "" : "s"}. Your manager has been emailed and you will get another email when it is decided.`,
       );
       setRange(undefined);

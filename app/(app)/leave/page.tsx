@@ -94,7 +94,7 @@ export default async function LeavePage() {
         <p className="text-sm text-muted-foreground">
           {profile.manager_id
             ? "Pick days on the calendar, review the working-day count, then send to your manager for approval. You and your manager will both get email updates."
-            : "Pick days on the calendar and submit — leave is approved automatically because you do not report to a manager."}
+            : "Pick days on the calendar and submit - your leave is noted on the calendar because you do not report to a manager."}
         </p>
       </div>
 

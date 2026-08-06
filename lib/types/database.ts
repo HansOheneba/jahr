@@ -128,6 +128,7 @@ export function displayName(profile: {
 
 export {
   canApproveLeave,
+  canPublishComms,
   canViewEmployeeDetails,
   canViewPeopleDirectory,
   hasTag,

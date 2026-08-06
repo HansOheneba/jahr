@@ -43,8 +43,8 @@ export function LoginOtpEmail({
           <Section style={header}>
             <Img
               src={logoUrl}
-              width={160}
-              height={35}
+              width={EMAIL_BRAND.logoWidth}
+              height={EMAIL_BRAND.logoHeight}
               alt="JA Group"
               style={logo}
             />
@@ -117,13 +117,14 @@ const container: CSSProperties = {
 
 const header: CSSProperties = {
   padding: "0 8px 24px",
-  textAlign: "left",
+  textAlign: "center",
 };
 
 const logo: CSSProperties = {
   display: "block",
-  height: "35px",
-  width: "160px",
+  height: `${EMAIL_BRAND.logoHeight}px`,
+  margin: "0 auto",
+  width: `${EMAIL_BRAND.logoWidth}px`,
 };
 
 const card: CSSProperties = {

@@ -15,11 +15,35 @@ export function getAppBaseUrl(): string {
   return "http://localhost:3000";
 }
 
+/** Public Supabase Storage path for the email header mark (`jalog.png`). */
+export const EMAIL_LOGO_BUCKET = "branding";
+export const EMAIL_LOGO_STORAGE_PATH = "emails/jalog.png";
+
+/**
+ * Hosted logo URL for email clients.
+ * Emails cannot reliably load localhost / app-origin assets — use the public
+ * Supabase object URL (override with EMAIL_LOGO_URL if needed).
+ */
 export function getEmailLogoUrl(): string {
-  return `${getAppBaseUrl()}/logos/JA_logo_black_text.png`;
+  if (process.env.EMAIL_LOGO_URL) {
+    return process.env.EMAIL_LOGO_URL;
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
+  if (supabaseUrl) {
+    return `${supabaseUrl}/storage/v1/object/public/${EMAIL_LOGO_BUCKET}/${EMAIL_LOGO_STORAGE_PATH}`;
+  }
+
+  return `${getAppBaseUrl()}/logos/jalog.png`;
+}
+
+export function getPortalUrl(path = "/"): string {
+  const normalised = path.startsWith("/") ? path : `/${path}`;
+  return `${getAppBaseUrl()}${normalised}`;
 }
 
 export const EMAIL_BRAND = {
+  companyName: "JA Group",
   productName: "JA Group TMS",
   background: "#F5F7FB",
   surface: "#FFFFFF",
@@ -29,4 +53,11 @@ export const EMAIL_BRAND = {
   text: "#171717",
   mutedText: "#667085",
   accent: "#0070F3",
+  success: "#16A34A",
+  warning: "#F59E0B",
+  error: "#DC2626",
+  footerLine: "People operations for JA Group teams.",
+  /** Display size for the J.A mark in email headers (source is 300×180). */
+  logoWidth: 100,
+  logoHeight: 60,
 } as const;

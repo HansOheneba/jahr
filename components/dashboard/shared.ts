@@ -55,6 +55,13 @@ export interface DashboardHoliday {
   dateLabel: string;
 }
 
+export interface DashboardAnnouncement {
+  id: string;
+  title: string;
+  body: string;
+  publishedAtLabel: string;
+}
+
 export function leaveTypeLabel(type: string): string {
   return LEAVE_TYPES.find((option) => option.id === type)?.label ?? type;
 }

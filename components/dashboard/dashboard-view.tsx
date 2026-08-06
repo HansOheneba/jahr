@@ -15,6 +15,7 @@ import {
   FileText,
   Gift,
   Laptop,
+  Megaphone,
   PartyPopper,
   Settings,
   Users,
@@ -29,6 +30,7 @@ import {
 } from "@/components/dashboard/count-up";
 import {
   DASHBOARD_COLORS,
+  type DashboardAnnouncement,
   type DashboardBirthday,
   type DashboardHoliday,
   type DashboardKpi,
@@ -48,6 +50,7 @@ const DOCS = DASHBOARD_COLORS.docs;
 const PEOPLE = DASHBOARD_COLORS.people;
 const DEVICES = DASHBOARD_COLORS.devices;
 const BLUE = DASHBOARD_COLORS.blue;
+const COMMS = DOCS;
 
 function tint(color: string, percent: number): string {
   return `color-mix(in srgb, ${color} ${percent}%, white)`;
@@ -199,6 +202,7 @@ export function DashboardView({
   leaveUsed,
   leavePending,
   upcomingLeave,
+  announcements,
   team,
   birthdays,
   holidays,
@@ -215,6 +219,7 @@ export function DashboardView({
   leaveUsed: number;
   leavePending: number;
   upcomingLeave: DashboardLeaveItem[];
+  announcements: DashboardAnnouncement[];
   team: DashboardTeamMember[];
   birthdays: DashboardBirthday[];
   holidays: DashboardHoliday[];
@@ -351,6 +356,40 @@ export function DashboardView({
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">
+          <Section
+            title="Internal Comms"
+            description="Announcements for your business unit and work type."
+            icon={Megaphone}
+            accent={COMMS}
+            enter={enter}
+            delayMs={300}
+          >
+            {announcements.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No announcements for you right now.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {announcements.map((item) => (
+                  <li
+                    key={item.id}
+                    className="rounded-md border border-border px-3 py-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-medium">{item.title}</p>
+                      <p className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
+                        {item.publishedAtLabel}
+                      </p>
+                    </div>
+                    <p className="mt-1.5 whitespace-pre-wrap text-sm text-muted-foreground line-clamp-4">
+                      {item.body}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Section>
+
           <Section
             title="Your leave"
             description="Annual entitlement on a 9–5 working-day calendar."

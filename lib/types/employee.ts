@@ -138,6 +138,10 @@ export interface Announcement {
   title: string;
   body: string;
   published_at: string;
+  audience_business_unit_ids: string[];
+  audience_work_types: WorkType[];
+  is_active: boolean;
+  created_by: string | null;
 }
 
 export interface Holiday {
