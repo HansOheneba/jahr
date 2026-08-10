@@ -7,6 +7,7 @@ import {
   Building2,
   CalendarCheck,
   CalendarDays,
+  ChartPie,
   FileText,
   GraduationCap,
   IdCard,
@@ -63,6 +64,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
     ...(showPeopleDirectory
       ? [
           { href: "/admin/employees", label: "Employees", icon: Users },
+          { href: "/admin/insights", label: "Insights", icon: ChartPie },
           { href: "/admin/alumni", label: "Alumni", icon: GraduationCap },
           { href: "/admin/organogram", label: "Organogram", icon: Network },
         ]
@@ -94,11 +96,11 @@ export function AppSidebar({ profile }: AppSidebarProps) {
   ];
 
   return (
-    <aside className="flex h-full w-[244px] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
-      <div className="px-3 py-3">
+    <aside className="flex h-full w-[244px] max-w-[244px] shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+      <div className="shrink-0 px-3 py-3">
         <Link
           href="/dashboard"
-          className="flex flex-col items-center gap-1 rounded-md px-2 py-1.5 transition-colors hover:bg-secondary/70"
+          className="flex flex-col items-center gap-1 rounded-md px-2 py-1.5 transition-colors duration-150 hover:bg-secondary/70 active:scale-[0.98]"
         >
           <BrandLogo
             tone="navy"
@@ -111,7 +113,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
         </Link>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-4 overflow-y-auto px-2 pb-3">
+      <nav className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto overscroll-contain px-2 pb-3">
         <NavSection items={employeeNav} pathname={pathname} />
 
         {teamNav.length > 0 ? (
@@ -128,11 +130,11 @@ export function AppSidebar({ profile }: AppSidebarProps) {
           </>
         ) : null}
 
-        <div className="mt-auto space-y-1">
+        <div className="mt-auto min-w-0 space-y-1">
           <Link
             href="/settings"
             className={cn(
-              "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors duration-150",
+              "flex min-w-0 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.98]",
               pathname === "/settings" || pathname.startsWith("/settings/")
                 ? "bg-[color-mix(in_srgb,#0070F3_9%,white)] font-medium text-[#0B4FBF]"
                 : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground",
@@ -140,13 +142,13 @@ export function AppSidebar({ profile }: AppSidebarProps) {
           >
             <Settings
               className={cn(
-                "size-4",
+                "size-4 shrink-0",
                 pathname === "/settings" || pathname.startsWith("/settings/")
                   ? "text-[#0070F3]"
                   : undefined,
               )}
             />
-            Settings
+            <span className="truncate">Settings</span>
           </Link>
         </div>
       </nav>
@@ -164,7 +166,7 @@ function NavSection({
   pathname: string;
 }) {
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex min-w-0 flex-col gap-0.5">
       {label ? (
         <p className="px-2 pb-1 text-[11px] text-muted-foreground">{label}</p>
       ) : null}
@@ -178,7 +180,7 @@ function NavSection({
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors duration-150",
+              "flex min-w-0 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.98]",
               active
                 ? "bg-[color-mix(in_srgb,#0070F3_9%,white)] font-medium text-[#0B4FBF]"
                 : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground",
@@ -190,7 +192,7 @@ function NavSection({
                 active ? "text-[#0070F3]" : undefined,
               )}
             />
-            {item.label}
+            <span className="truncate">{item.label}</span>
           </Link>
         );
       })}

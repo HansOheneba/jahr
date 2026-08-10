@@ -21,19 +21,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import type { DirectoryEmployee } from "@/lib/employees/get-directory";
+import { normalizeGender } from "@/lib/employees/normalize-gender";
 import type { EmploymentStatus } from "@/lib/types/database";
 import { displayName } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
 type StatusFilter = "all" | "active";
-
-function normalizeGender(value: string | null): "male" | "female" | "other" {
-  if (!value) return "other";
-  const normalized = value.trim().toLowerCase();
-  if (normalized === "male" || normalized === "m") return "male";
-  if (normalized === "female" || normalized === "f") return "female";
-  return "other";
-}
 
 function statusLabel(
   status: EmploymentStatus,

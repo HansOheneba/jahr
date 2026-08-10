@@ -12,6 +12,10 @@ import { getAnnouncementsForViewer } from "@/lib/announcements/get-for-viewer";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { hasTag } from "@/lib/auth/permissions";
 import { getEmployeeRecord } from "@/lib/employees/get-employee-record";
+import {
+  formatAverageAge,
+  getWorkforceInsights,
+} from "@/lib/employees/get-workforce-insights";
 import { summarizeLeaveBalance } from "@/lib/leave/balance";
 import { getLeaveSchedule } from "@/lib/leave/get-schedule";
 import type { LeaveStatus, LeaveTypeId } from "@/lib/leave/types";
@@ -200,28 +204,14 @@ export default async function DashboardPage() {
     }));
 
   let orgEmployees = 0;
-  let orgDevices = 0;
-  let orgDevicesAssigned = 0;
+  let orgAverageAge: number | null = null;
+  let orgAverageAgeSample = 0;
 
   if (admin) {
-    const [
-      { count: employees },
-      { count: devices },
-      { count: devicesAssigned },
-    ] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "active"),
-      supabase.from("devices").select("id", { count: "exact", head: true }),
-      supabase
-        .from("devices")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "assigned"),
-    ]);
-    orgEmployees = employees ?? 0;
-    orgDevices = devices ?? 0;
-    orgDevicesAssigned = devicesAssigned ?? 0;
+    const insights = await getWorkforceInsights();
+    orgEmployees = insights.activeEmployees;
+    orgAverageAge = insights.averageAgeYears;
+    orgAverageAgeSample = insights.averageAgeSampleSize;
   }
 
   const pendingApprovals = pendingApprovalsResult.count ?? 0;
@@ -263,14 +253,14 @@ export default async function DashboardPage() {
               : Math.round((leaveRemaining / leaveEntitlement) * 100),
         },
         {
-          label: "Devices",
-          value: String(orgDevices),
+          label: "Avg age",
+          value: formatAverageAge(orgAverageAge),
           hint:
-            orgDevicesAssigned > 0
-              ? `${orgDevicesAssigned} assigned`
-              : "Inventory",
-          href: "/admin/devices",
-          icon: "devices",
+            orgAverageAgeSample > 0
+              ? `${orgAverageAgeSample} with DOB on file`
+              : "Add dates of birth to unlock",
+          href: "/admin/insights",
+          icon: "people",
           accent: DASHBOARD_COLORS.devices,
         },
       ]

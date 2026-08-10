@@ -24,14 +24,27 @@ export default async function OrganogramPage() {
   const roots = buildOrganogram(employees);
 
   return (
-    <div className="flex w-full flex-col gap-5">
-      <div className="space-y-1">
-        <h1 className="text-xl font-medium tracking-tight">Organogram</h1>
-        <p className="text-sm text-muted-foreground">
-          {isOrgAdmin(profile)
-            ? "Scroll horizontally if the chart is wider than your screen."
-            : "Your reporting line - only people who report to you."}
-        </p>
+    <div className="flex h-[calc(100svh-3rem-2.5rem)] w-full flex-col gap-4 overflow-hidden">
+      <div
+        className="relative shrink-0 overflow-hidden rounded-xl border border-border px-5 py-4 sm:px-6"
+        style={{
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, #0070F3 8%, white) 0%, #ffffff 55%, color-mix(in srgb, #F6B93B 6%, white) 100%)",
+        }}
+      >
+        <div className="space-y-1">
+          <p className="text-xs font-medium tracking-wide text-[#0B4FBF] uppercase">
+            People
+          </p>
+          <h1 className="text-xl font-medium tracking-tight sm:text-2xl">
+            Organogram
+          </h1>
+          <p className="max-w-xl text-sm text-muted-foreground">
+            {isOrgAdmin(profile)
+              ? "Reporting structure across JA Group. Scroll inside the chart to move around."
+              : "Your reporting line. Scroll inside the chart to move around."}
+          </p>
+        </div>
       </div>
 
       <OrganogramTree roots={roots} />

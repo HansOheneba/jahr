@@ -27,8 +27,8 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-full bg-background">
-      <div className="hidden md:block">
-        <div className="sticky top-0 h-svh">
+      <div className="hidden shrink-0 md:block">
+        <div className="sticky top-0 h-svh overflow-hidden">
           <AppSidebar profile={profile} />
         </div>
       </div>
