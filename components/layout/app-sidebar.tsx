@@ -38,14 +38,22 @@ interface NavItem {
 
 interface AppSidebarProps {
   profile: ProfileWithOrg;
+  /** Desktop rail vs mobile sheet drawer. */
+  variant?: "desktop" | "drawer";
+  className?: string;
 }
 
-export function AppSidebar({ profile }: AppSidebarProps) {
+export function AppSidebar({
+  profile,
+  variant = "desktop",
+  className,
+}: AppSidebarProps) {
   const pathname = usePathname();
   const showOrgAdmin = isOrgAdmin(profile);
   const showPeopleDirectory = canViewPeopleDirectory(profile);
   const showTeamNav = canApproveLeave(profile);
   const showComms = canPublishComms(profile);
+  const isDrawer = variant === "drawer";
 
   const employeeNav: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -95,9 +103,25 @@ export function AppSidebar({ profile }: AppSidebarProps) {
       : []),
   ];
 
+  const settingsActive =
+    pathname === "/settings" || pathname.startsWith("/settings/");
+
   return (
-    <aside className="flex h-full w-[244px] max-w-[244px] shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
-      <div className="shrink-0 px-3 py-3">
+    <aside
+      className={cn(
+        "flex h-full min-h-0 flex-col overflow-hidden bg-sidebar text-sidebar-foreground",
+        isDrawer
+          ? "w-full border-0"
+          : "w-[244px] max-w-[244px] shrink-0 border-r border-sidebar-border",
+        className,
+      )}
+    >
+      <div
+        className={cn(
+          "shrink-0 px-3 py-3",
+          isDrawer && "pr-12",
+        )}
+      >
         <Link
           href="/dashboard"
           className="flex flex-col items-center gap-1 rounded-md px-2 py-1.5 transition-colors duration-150 hover:bg-secondary/70 active:scale-[0.98]"
@@ -113,7 +137,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
         </Link>
       </div>
 
-      <nav className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto overscroll-contain px-2 pb-3">
+      <nav className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-x-hidden overflow-y-auto overscroll-contain px-2 pb-2">
         <NavSection items={employeeNav} pathname={pathname} />
 
         {teamNav.length > 0 ? (
@@ -129,29 +153,34 @@ export function AppSidebar({ profile }: AppSidebarProps) {
             <NavSection label="Admin" items={adminNav} pathname={pathname} />
           </>
         ) : null}
-
-        <div className="mt-auto min-w-0 space-y-1">
-          <Link
-            href="/settings"
-            className={cn(
-              "flex min-w-0 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.98]",
-              pathname === "/settings" || pathname.startsWith("/settings/")
-                ? "bg-[color-mix(in_srgb,#0070F3_9%,white)] font-medium text-[#0B4FBF]"
-                : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground",
-            )}
-          >
-            <Settings
-              className={cn(
-                "size-4 shrink-0",
-                pathname === "/settings" || pathname.startsWith("/settings/")
-                  ? "text-[#0070F3]"
-                  : undefined,
-              )}
-            />
-            <span className="truncate">Settings</span>
-          </Link>
-        </div>
       </nav>
+
+      <div
+        className={cn(
+          "shrink-0 border-t border-sidebar-border px-2 pt-2",
+          isDrawer
+            ? "pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+            : "pb-3",
+        )}
+      >
+        <Link
+          href="/settings"
+          className={cn(
+            "flex min-w-0 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.98]",
+            settingsActive
+              ? "bg-[color-mix(in_srgb,#0070F3_9%,white)] font-medium text-[#0B4FBF]"
+              : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground",
+          )}
+        >
+          <Settings
+            className={cn(
+              "size-4 shrink-0",
+              settingsActive ? "text-[#0070F3]" : undefined,
+            )}
+          />
+          <span className="truncate">Settings</span>
+        </Link>
+      </div>
     </aside>
   );
 }

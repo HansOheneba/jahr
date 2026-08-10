@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,8 +19,15 @@ interface MobileNavProps {
 }
 
 export function MobileNav({ profile }: MobileNavProps) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
           <Button variant="ghost" size="icon" className="md:hidden" />
@@ -27,11 +36,14 @@ export function MobileNav({ profile }: MobileNavProps) {
         <Menu className="size-5" />
         <span className="sr-only">Open navigation</span>
       </SheetTrigger>
-      <SheetContent side="left" className="w-72 p-0">
+      <SheetContent
+        side="left"
+        className="w-[min(100vw,280px)] max-w-[280px] gap-0 overflow-hidden p-0 sm:max-w-[280px]"
+      >
         <SheetHeader className="sr-only">
           <SheetTitle>Navigation</SheetTitle>
         </SheetHeader>
-        <AppSidebar profile={profile} />
+        <AppSidebar profile={profile} variant="drawer" />
       </SheetContent>
     </Sheet>
   );
