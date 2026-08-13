@@ -24,6 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { MessageContent } from "@/components/communications/message-content";
 import {
   CountUp,
   parseCountableValue,
@@ -292,15 +293,16 @@ export function DashboardView({
           const inner = (
             <div
               className={cn(
-                "flex h-full flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-transparent",
+                "flex h-full flex-col gap-3 rounded-xl border border-border p-4 transition-[border-color,background-color] duration-150 hover:border-transparent",
                 enter && "motion-safe:animate-dash-enter",
               )}
               style={
-                enter
-                  ? ({
-                      animationDelay: `${80 + index * 70}ms`,
-                    } satisfies CSSProperties)
-                  : undefined
+                {
+                  background: `linear-gradient(165deg, ${tint(kpi.accent, 14)} 0%, #ffffff 58%)`,
+                  ...(enter
+                    ? { animationDelay: `${80 + index * 70}ms` }
+                    : {}),
+                } satisfies CSSProperties
               }
             >
               <div className="flex items-start justify-between gap-3">
@@ -358,11 +360,19 @@ export function DashboardView({
         <div className="flex flex-col gap-4">
           <Section
             title="Internal Comms"
-            description="Announcements for your business unit and work type."
+            description="Latest announcement for you."
             icon={Megaphone}
             accent={COMMS}
             enter={enter}
             delayMs={300}
+            action={
+              <Link
+                href="/announcements"
+                className="text-xs font-medium text-[#0B4FBF] hover:underline"
+              >
+                View all
+              </Link>
+            }
           >
             {announcements.length === 0 ? (
               <p className="text-sm text-muted-foreground">
@@ -370,20 +380,34 @@ export function DashboardView({
               </p>
             ) : (
               <ul className="flex flex-col gap-3">
-                {announcements.map((item) => (
-                  <li
-                    key={item.id}
-                    className="rounded-md border border-border px-3 py-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-medium">{item.title}</p>
-                      <p className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
-                        {item.publishedAtLabel}
-                      </p>
-                    </div>
-                    <p className="mt-1.5 whitespace-pre-wrap text-sm text-muted-foreground line-clamp-4">
-                      {item.body}
-                    </p>
+                {announcements.slice(0, 1).map((item) => (
+                  <li key={item.id}>
+                    <Link
+                      href={`/announcements/${item.id}`}
+                      className="block rounded-md border border-border px-3 py-3 transition-colors hover:bg-white/70"
+                      style={{ background: tint(COMMS, 7) }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-medium text-[#174EA6]">
+                            {item.categoryLabel} · {item.typeLabel}
+                          </p>
+                          <p className="mt-0.5 text-sm font-medium">
+                            {item.title}
+                          </p>
+                        </div>
+                        <p className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
+                          {item.publishedAtLabel}
+                        </p>
+                      </div>
+                      <div className="mt-1.5">
+                        <MessageContent
+                          content={item.bodyJson}
+                          fallbackPlainText={item.body}
+                          clamp
+                        />
+                      </div>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -392,7 +416,7 @@ export function DashboardView({
 
           <Section
             title="Your leave"
-            description="Annual entitlement on a 9–5 working-day calendar."
+            description="Annual entitlement on a 9-5 working-day calendar."
             icon={CalendarDays}
             accent={LEAVE}
             enter={enter}
@@ -443,19 +467,28 @@ export function DashboardView({
                 </div>
               </div>
               <div className="grid flex-1 gap-3 sm:grid-cols-3">
-                <div className="rounded-md border border-border px-3 py-2.5">
+                <div
+                  className="rounded-md border border-border px-3 py-2.5"
+                  style={{ background: tint(LEAVE, 8) }}
+                >
                   <p className="text-xs text-muted-foreground">Entitlement</p>
                   <p className="mt-0.5 text-sm font-medium tabular-nums">
                     <CountUp value={leaveEntitlement} enabled={enter} /> days
                   </p>
                 </div>
-                <div className="rounded-md border border-border px-3 py-2.5">
+                <div
+                  className="rounded-md border border-border px-3 py-2.5"
+                  style={{ background: tint(PAYROLL, 8) }}
+                >
                   <p className="text-xs text-muted-foreground">Used</p>
                   <p className="mt-0.5 text-sm font-medium tabular-nums">
                     <CountUp value={leaveUsed} enabled={enter} /> days
                   </p>
                 </div>
-                <div className="rounded-md border border-border px-3 py-2.5">
+                <div
+                  className="rounded-md border border-border px-3 py-2.5"
+                  style={{ background: tint(PEOPLE, 10) }}
+                >
                   <p className="text-xs text-muted-foreground">Pending</p>
                   <p className="mt-0.5 text-sm font-medium tabular-nums">
                     <CountUp value={leavePending} enabled={enter} /> days
@@ -486,6 +519,12 @@ export function DashboardView({
                   <li
                     key={item.id}
                     className="flex items-center gap-3 rounded-md border border-border px-3 py-2.5"
+                    style={{
+                      background: tint(
+                        item.status === "approved" ? LEAVE : PEOPLE,
+                        7,
+                      ),
+                    }}
                   >
                     <UserAvatar
                       name={item.name}
@@ -558,7 +597,8 @@ export function DashboardView({
                     <Link
                       key={person.id}
                       href={`/admin/employees/${person.id}`}
-                      className="rounded-md border border-border px-3 py-3 transition-colors hover:bg-secondary/40"
+                      className="rounded-md border border-border px-3 py-3 transition-colors hover:border-transparent"
+                      style={{ background: tint(PEOPLE, 7) }}
                     >
                       <div className="flex items-center gap-2.5">
                         <UserAvatar
@@ -666,7 +706,10 @@ export function DashboardView({
             delayMs={440}
           >
             <div className="space-y-4">
-              <div className="rounded-md border border-border px-3 py-2.5">
+              <div
+                className="rounded-md border border-border px-3 py-2.5"
+                style={{ background: tint(BLUE, 7) }}
+              >
                 <p className="text-xs text-muted-foreground">
                   {reportingLine.label}
                 </p>
@@ -690,6 +733,7 @@ export function DashboardView({
                       <li
                         key={`${holiday.name}-${holiday.dateLabel}`}
                         className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm"
+                        style={{ background: tint(PAYROLL, 8) }}
                       >
                         <span className="font-medium">{holiday.name}</span>
                         <span className="text-xs text-muted-foreground">
@@ -715,6 +759,7 @@ export function DashboardView({
                       <li
                         key={person.id}
                         className="flex items-center gap-2.5 rounded-md border border-border px-3 py-2"
+                        style={{ background: tint(PEOPLE, 10) }}
                       >
                         <UserAvatar
                           name={person.name}

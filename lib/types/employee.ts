@@ -136,12 +136,16 @@ export interface LeaveBalanceRow {
 export interface Announcement {
   id: string;
   title: string;
+  category: import("@/lib/announcements/categories").AnnouncementCategory;
+  announcement_type: import("@/lib/announcements/categories").AnnouncementType;
   body: string;
+  body_json: import("@/lib/communications/types").JSONContent;
   published_at: string;
   audience_business_unit_ids: string[];
   audience_work_types: WorkType[];
   is_active: boolean;
   created_by: string | null;
+  attachments?: import("@/lib/communications/types").AnnouncementAttachmentSummary[];
 }
 
 export interface Holiday {

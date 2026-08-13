@@ -58,8 +58,14 @@ export interface DashboardHoliday {
 export interface DashboardAnnouncement {
   id: string;
   title: string;
+  category: import("@/lib/announcements/categories").AnnouncementCategory;
+  announcementType: import("@/lib/announcements/categories").AnnouncementType;
+  categoryLabel: string;
+  typeLabel: string;
   body: string;
+  bodyJson: import("@/lib/communications/types").JSONContent;
   publishedAtLabel: string;
+  attachments: import("@/lib/communications/types").AnnouncementAttachmentSummary[];
 }
 
 export function leaveTypeLabel(type: string): string {

@@ -57,6 +57,7 @@ export function AppSidebar({
 
   const employeeNav: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/announcements", label: "Announcements", icon: Megaphone },
     { href: "/leave", label: "Leave", icon: CalendarDays },
     { href: "/documents", label: "Documents", icon: FileText },
   ];

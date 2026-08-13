@@ -9,6 +9,10 @@ import {
   type DashboardTeamMember,
 } from "@/components/dashboard/shared";
 import { getAnnouncementsForViewer } from "@/lib/announcements/get-for-viewer";
+import {
+  announcementCategoryLabel,
+  announcementTypeLabel,
+} from "@/lib/announcements/categories";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { hasTag } from "@/lib/auth/permissions";
 import { getEmployeeRecord } from "@/lib/employees/get-employee-record";
@@ -64,7 +68,7 @@ export default async function DashboardPage() {
     isManager: profile.isManager,
   });
 
-  const announcements = await getAnnouncementsForViewer(6);
+  const announcements = await getAnnouncementsForViewer(1);
 
   const upcomingLeave: DashboardLeaveItem[] = schedule
     .filter((entry) => entry.endDate >= todayKey)
@@ -328,8 +332,14 @@ export default async function DashboardPage() {
       announcements={announcements.map((item) => ({
         id: item.id,
         title: item.title,
+        category: item.category,
+        announcementType: item.announcement_type,
+        categoryLabel: announcementCategoryLabel(item.category),
+        typeLabel: announcementTypeLabel(item.announcement_type),
         body: item.body,
+        bodyJson: item.body_json,
         publishedAtLabel: format(parseISO(item.published_at), "d MMM"),
+        attachments: item.attachments ?? [],
       }))}
       team={profile.isManager || admin ? team : []}
       birthdays={birthdays}

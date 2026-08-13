@@ -6,6 +6,7 @@ import { ChevronRight } from "lucide-react";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { UserMenu } from "@/components/layout/user-menu";
 import { NotificationsPanel } from "@/components/notifications/notifications-panel";
+import type { NotificationItem } from "@/lib/notifications/types";
 import type { ProfileWithOrg } from "@/lib/types/database";
 
 const TITLE_BY_PATH: Record<string, string> = {
@@ -13,6 +14,7 @@ const TITLE_BY_PATH: Record<string, string> = {
   "/leave": "Leave",
   "/approvals": "Approve Leave",
   "/documents": "Documents",
+  "/announcements": "Announcements",
   "/settings": "Settings",
   "/profile": "Settings",
   "/admin/employees": "Employees",
@@ -21,13 +23,15 @@ const TITLE_BY_PATH: Record<string, string> = {
   "/admin/organisation": "Organisation",
   "/admin/organogram": "Organogram",
   "/admin/comms": "Comms",
+  "/admin/comms/new": "Compose",
 };
 
 interface AppHeaderProps {
   profile: ProfileWithOrg;
+  notifications: NotificationItem[];
 }
 
-export function AppHeader({ profile }: AppHeaderProps) {
+export function AppHeader({ profile, notifications }: AppHeaderProps) {
   const pathname = usePathname();
   const title =
     TITLE_BY_PATH[pathname] ??
@@ -61,7 +65,7 @@ export function AppHeader({ profile }: AppHeaderProps) {
         </nav>
 
         <div className="flex shrink-0 items-center gap-1">
-          <NotificationsPanel />
+          <NotificationsPanel initialItems={notifications} />
           <UserMenu profile={profile} />
         </div>
       </div>

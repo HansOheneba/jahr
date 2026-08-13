@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -18,7 +18,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { DEMO_NOTIFICATIONS } from "@/lib/notifications/demo";
 import type {
   NotificationItem,
   NotificationKind,
@@ -26,6 +25,26 @@ import type {
 import { cn } from "@/lib/utils";
 
 type Filter = "all" | "unread";
+
+const READ_STORAGE_KEY = "jahr-notification-reads";
+
+function loadReadIds(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = window.localStorage.getItem(READ_STORAGE_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((id): id is string => typeof id === "string"));
+  } catch {
+    return new Set();
+  }
+}
+
+function persistReadIds(ids: Set<string>) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(READ_STORAGE_KEY, JSON.stringify([...ids]));
+}
 
 function startOfLocalDay(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
@@ -96,11 +115,9 @@ function SystemIcon({ kind }: { kind: NotificationKind }) {
 function NotificationRow({
   item,
   onMarkRead,
-  onResolve,
 }: {
   item: NotificationItem;
   onMarkRead: (id: string) => void;
-  onResolve: (id: string, action: "approve" | "decline") => void;
 }) {
   return (
     <div
@@ -139,41 +156,13 @@ function NotificationRow({
             {formatRelativeTime(item.createdAt)}
           </p>
 
-          {item.actions && item.actions.length > 0 ? (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {item.actions.includes("approve") ? (
-                <Button
-                  size="sm"
-                  className="h-8 px-3.5"
-                  onClick={() => {
-                    onResolve(item.id, "approve");
-                    onMarkRead(item.id);
-                  }}
-                >
-                  Approve
-                </Button>
-              ) : null}
-              {item.actions.includes("decline") ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 border-[#E3E8EF] bg-white px-3.5 text-[#344054] hover:bg-[#F5F7FB]"
-                  onClick={() => {
-                    onResolve(item.id, "decline");
-                    onMarkRead(item.id);
-                  }}
-                >
-                  Decline
-                </Button>
-              ) : null}
-            </div>
-          ) : item.href ? (
+          {item.href ? (
             <Link
               href={item.href}
               onClick={() => onMarkRead(item.id)}
               className="mt-2 inline-block text-[12px] font-medium text-accent-blue hover:underline"
             >
-              View
+              Open announcement
             </Link>
           ) : null}
         </div>
@@ -182,16 +171,32 @@ function NotificationRow({
   );
 }
 
-export function NotificationsPanel() {
+interface NotificationsPanelProps {
+  initialItems: NotificationItem[];
+}
+
+export function NotificationsPanel({ initialItems }: NotificationsPanelProps) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
-  const [items, setItems] = useState(DEMO_NOTIFICATIONS);
+  const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    setReadIds(loadReadIds());
+  }, []);
+
+  const items = useMemo(
+    () =>
+      initialItems.map((item) => ({
+        ...item,
+        unread: !readIds.has(item.id),
+      })),
+    [initialItems, readIds],
+  );
 
   const unreadCount = items.filter((item) => item.unread).length;
 
   const visible = useMemo(() => {
-    const list = filter === "unread" ? items.filter((i) => i.unread) : items;
-    return list;
+    return filter === "unread" ? items.filter((i) => i.unread) : items;
   }, [filter, items]);
 
   const groups = useMemo(() => {
@@ -213,25 +218,23 @@ export function NotificationsPanel() {
   }, [visible]);
 
   function markAllRead() {
-    setItems((prev) => prev.map((item) => ({ ...item, unread: false })));
+    setReadIds((prev) => {
+      const next = new Set(prev);
+      for (const item of initialItems) {
+        next.add(item.id);
+      }
+      persistReadIds(next);
+      return next;
+    });
   }
 
   function markRead(id: string) {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, unread: false } : item,
-      ),
-    );
-  }
-
-  function resolve(id: string, _action: "approve" | "decline") {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, unread: false, actions: undefined }
-          : item,
-      ),
-    );
+    setReadIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      persistReadIds(next);
+      return next;
+    });
   }
 
   return (
@@ -320,7 +323,9 @@ export function NotificationsPanel() {
         <div className="max-h-[min(70vh,520px)] overflow-y-auto">
           {groups.length === 0 ? (
             <div className="px-4 py-12 text-center text-sm text-[#98A2B3]">
-              You&apos;re all caught up.
+              {filter === "unread"
+                ? "You're all caught up."
+                : "No announcements yet."}
             </div>
           ) : (
             groups.map((group) => (
@@ -333,12 +338,21 @@ export function NotificationsPanel() {
                     key={item.id}
                     item={item}
                     onMarkRead={markRead}
-                    onResolve={resolve}
                   />
                 ))}
               </section>
             ))
           )}
+        </div>
+
+        <div className="border-t border-[#E3E8EF] px-4 py-3">
+          <Link
+            href="/announcements"
+            onClick={() => setOpen(false)}
+            className="text-[12px] font-medium text-accent-blue hover:underline"
+          >
+            View all announcements
+          </Link>
         </div>
       </PopoverContent>
     </Popover>
