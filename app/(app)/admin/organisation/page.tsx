@@ -12,6 +12,15 @@ import { createClient } from "@/utils/supabase/server";
 
 const PREVIEW_UNITS: BusinessUnit[] = [
   {
+    id: "bu-group",
+    name: "JA Group",
+    slug: "ja-group",
+    description: "Group-level roles not assigned to a specific wing",
+    is_active: true,
+    created_at: "",
+    updated_at: "",
+  },
+  {
     id: "bu-wealth",
     name: "JA Wealth",
     slug: "ja-wealth",
@@ -50,6 +59,15 @@ const PREVIEW_UNITS: BusinessUnit[] = [
 ];
 
 const PREVIEW_DEPARTMENTS: Department[] = [
+  {
+    id: "dep-group-employee",
+    business_unit_id: "bu-group",
+    name: "Group Employee",
+    slug: "group-employee",
+    is_active: true,
+    created_at: "",
+    updated_at: "",
+  },
   {
     id: "dep-eng",
     business_unit_id: "bu-digital",

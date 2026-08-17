@@ -26,6 +26,8 @@ function formatTags(tags: OrganogramNode["tags"]): string {
 /** Quiet institution tint - accent only, not a painted card. */
 function institutionTone(name: string | null): string {
   switch (name) {
+    case "JA Group":
+      return "bg-[color-mix(in_srgb,#171717_10%,transparent)] text-[#171717]";
     case "JA Digital":
       return "bg-[color-mix(in_srgb,#55A8FD_14%,transparent)] text-[#2563EB]";
     case "JA Wealth":
@@ -37,6 +39,29 @@ function institutionTone(name: string | null): string {
     default:
       return "bg-secondary text-muted-foreground";
   }
+}
+
+interface UnitGroup {
+  label: string;
+  nodes: OrganogramNode[];
+}
+
+function unitLabel(name: string | null): string {
+  return name ?? "JA Group";
+}
+
+function groupByUnit(nodes: OrganogramNode[]): UnitGroup[] {
+  const groups: UnitGroup[] = [];
+  for (const node of nodes) {
+    const label = unitLabel(node.businessUnitName);
+    const last = groups[groups.length - 1];
+    if (last?.label === label) {
+      last.nodes.push(node);
+    } else {
+      groups.push({ label, nodes: [node] });
+    }
+  }
+  return groups;
 }
 
 function Enter({
@@ -58,6 +83,82 @@ function Enter({
   );
 }
 
+function Stem() {
+  return (
+    <div
+      className="h-4 w-px"
+      style={{ background: tint(BLUE, 55) }}
+      aria-hidden
+    />
+  );
+}
+
+function StaffConnector() {
+  return (
+    <div
+      className="h-px w-5 shrink-0"
+      style={{ background: tint(BLUE, 55) }}
+      aria-hidden
+    />
+  );
+}
+
+function HBar({ isFirst, isLast }: { isFirst: boolean; isLast: boolean }) {
+  return (
+    <div className="absolute top-0 right-0 left-0 flex h-px">
+      <div
+        className={cn("h-px flex-1", isFirst ? "bg-transparent" : undefined)}
+        style={isFirst ? undefined : { background: tint(BLUE, 55) }}
+      />
+      <div
+        className={cn("h-px flex-1", isLast ? "bg-transparent" : undefined)}
+        style={isLast ? undefined : { background: tint(BLUE, 55) }}
+      />
+    </div>
+  );
+}
+
+function ConnectorColumn({
+  isFirst,
+  isLast,
+  only,
+  wide = false,
+  children,
+}: {
+  isFirst: boolean;
+  isLast: boolean;
+  only: boolean;
+  wide?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative flex flex-col items-center",
+        wide ? "px-3" : "px-1.5",
+      )}
+    >
+      {!only ? <HBar isFirst={isFirst} isLast={isLast} /> : null}
+      <Stem />
+      {children}
+    </div>
+  );
+}
+
+function UnitLabel({ name }: { name: string }) {
+  return (
+    <div
+      className={cn(
+        "inline-flex h-6 max-w-[168px] shrink-0 items-center truncate rounded-md px-2 text-[10px] font-medium tracking-wide",
+        institutionTone(name),
+      )}
+      title={name}
+    >
+      {name}
+    </div>
+  );
+}
+
 function PersonBox({
   node,
   delayMs,
@@ -65,7 +166,7 @@ function PersonBox({
   node: OrganogramNode;
   delayMs: number;
 }) {
-  const institution = node.businessUnitName ?? "JA Group";
+  const institution = unitLabel(node.businessUnitName);
   const jobTitle = node.jobTitle ?? "Team member";
   const department = node.departmentName ?? "-";
   const tags = formatTags(node.tags);
@@ -88,7 +189,7 @@ function PersonBox({
         <div
           className={cn(
             "inline-flex h-4 max-w-full shrink-0 items-center truncate rounded px-1.5 text-[9px] font-medium tracking-wide",
-            institutionTone(node.businessUnitName),
+            institutionTone(institution),
           )}
         >
           {institution}
@@ -131,6 +232,115 @@ function PersonBox({
   );
 }
 
+function UnitCluster({
+  group,
+  depth,
+}: {
+  group: UnitGroup;
+  depth: number;
+}) {
+  const people = group.nodes;
+
+  return (
+    <div className="flex flex-col items-center">
+      <UnitLabel name={group.label} />
+      {people.length === 1 ? (
+        <>
+          <Stem />
+          <TreeNode node={people[0]} depth={depth} index={0} />
+        </>
+      ) : (
+        <>
+          <Stem />
+          <div className="flex items-start">
+            {people.map((child, childIndex) => (
+              <ConnectorColumn
+                key={child.id}
+                isFirst={childIndex === 0}
+                isLast={childIndex === people.length - 1}
+                only={false}
+              >
+                <TreeNode
+                  node={child}
+                  depth={depth}
+                  index={childIndex}
+                />
+              </ConnectorColumn>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ChildBranches({
+  nodes,
+  depth,
+}: {
+  nodes: OrganogramNode[];
+  depth: number;
+}) {
+  const groups = groupByUnit(nodes);
+  const showClusterLabels = nodes.length > 1;
+
+  return (
+    <div className="flex items-start">
+      {groups.map((group, groupIndex) => {
+        const isFirst = groupIndex === 0;
+        const isLast = groupIndex === groups.length - 1;
+        const only = groups.length === 1;
+
+        return (
+          <ConnectorColumn
+            key={group.label}
+            isFirst={isFirst}
+            isLast={isLast}
+            only={only}
+            wide={showClusterLabels}
+          >
+            {showClusterLabels ? (
+              <UnitCluster group={group} depth={depth} />
+            ) : (
+              <TreeNode node={group.nodes[0]} depth={depth} index={0} />
+            )}
+          </ConnectorColumn>
+        );
+      })}
+    </div>
+  );
+}
+
+function AssistantNeck({
+  assistants,
+  depth,
+}: {
+  assistants: OrganogramNode[];
+  depth: number;
+}) {
+  return (
+    <div className="grid w-full grid-cols-[1fr_auto_1fr] self-stretch">
+      <div className="flex items-center justify-end">
+        {assistants.map((assistant, assistantIndex) => (
+          <div key={assistant.id} className="flex items-center">
+            <PersonBox
+              node={assistant}
+              delayMs={Math.min(depth * 70 + assistantIndex * 35, 420)}
+            />
+            <StaffConnector />
+          </div>
+        ))}
+      </div>
+      <div
+        className="w-px min-h-[138px] self-stretch"
+        style={{ background: tint(BLUE, 55) }}
+        aria-hidden
+      />
+      <div />
+    </div>
+  );
+}
+
 function TreeNode({
   node,
   depth,
@@ -140,6 +350,7 @@ function TreeNode({
   depth: number;
   index: number;
 }) {
+  const assistants = node.assistants;
   const childCount = node.children.length;
   const delayMs = Math.min(depth * 70 + index * 35, 420);
 
@@ -147,67 +358,44 @@ function TreeNode({
     <div className="flex flex-col items-center">
       <PersonBox node={node} delayMs={delayMs} />
 
-      {childCount > 0 ? (
+      {assistants.length > 0 ? (
         <>
-          <div
-            className="h-4 w-px"
-            style={{ background: tint(BLUE, 55) }}
-            aria-hidden
-          />
-
-          <div className="flex items-start">
-            {node.children.map((child, childIndex) => {
-              const isFirst = childIndex === 0;
-              const isLast = childIndex === childCount - 1;
-              const onlyChild = childCount === 1;
-
-              return (
-                <div
-                  key={child.id}
-                  className="relative flex flex-col items-center px-1.5"
-                >
-                  {!onlyChild ? (
-                    <div className="absolute top-0 right-0 left-0 flex h-px">
-                      <div
-                        className={cn(
-                          "h-px flex-1",
-                          isFirst ? "bg-transparent" : undefined,
-                        )}
-                        style={
-                          isFirst
-                            ? undefined
-                            : { background: tint(BLUE, 55) }
-                        }
-                      />
-                      <div
-                        className={cn(
-                          "h-px flex-1",
-                          isLast ? "bg-transparent" : undefined,
-                        )}
-                        style={
-                          isLast ? undefined : { background: tint(BLUE, 55) }
-                        }
-                      />
-                    </div>
-                  ) : null}
-
-                  <div
-                    className="h-4 w-px"
-                    style={{ background: tint(BLUE, 55) }}
-                    aria-hidden
-                  />
-
-                  <TreeNode
-                    node={child}
-                    depth={depth + 1}
-                    index={childIndex}
-                  />
-                </div>
-              );
-            })}
-          </div>
+          <Stem />
+          <AssistantNeck assistants={assistants} depth={depth} />
+          {childCount > 0 ? <Stem /> : null}
         </>
+      ) : childCount > 0 ? (
+        <Stem />
       ) : null}
+
+      {childCount > 0 ? (
+        <ChildBranches nodes={node.children} depth={depth + 1} />
+      ) : null}
+    </div>
+  );
+}
+
+function Forest({ roots }: { roots: OrganogramNode[] }) {
+  const groups = groupByUnit(roots);
+  const showClusterLabels = roots.length > 1;
+
+  if (!showClusterLabels) {
+    return (
+      <div className="flex w-max items-start justify-center gap-4">
+        {roots.map((root, index) => (
+          <TreeNode key={root.id} node={root} depth={0} index={index} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex w-max items-start justify-center">
+      {groups.map((group) => (
+        <div key={group.label} className="flex flex-col items-center px-4">
+          <UnitCluster group={group} depth={0} />
+        </div>
+      ))}
     </div>
   );
 }
@@ -285,11 +473,7 @@ export function OrganogramTree({ roots }: { roots: OrganogramNode[] }) {
           background: `radial-gradient(ellipse 70% 50% at 50% 0%, ${tint(BLUE, 8)} 0%, transparent 70%)`,
         }}
       >
-        <div className="flex w-max items-start justify-center gap-4">
-          {roots.map((root, index) => (
-            <TreeNode key={root.id} node={root} depth={0} index={index} />
-          ))}
-        </div>
+        <Forest roots={roots} />
       </div>
     </div>
   );

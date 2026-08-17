@@ -396,8 +396,14 @@ export function AddEmployeeForm({
             label="Business unit"
             value={businessUnitId || "none"}
             onChange={(value) => {
-              setBusinessUnitId(value === "none" ? "" : value);
-              setDepartmentId("");
+              const next = value === "none" ? "" : value;
+              setBusinessUnitId(next);
+              const matching = org.departments.filter(
+                (department) => department.business_unit_id === next,
+              );
+              setDepartmentId(
+                matching.length === 1 ? (matching[0]?.id ?? "") : "",
+              );
             }}
             items={[
               { value: "none", label: "None" },

@@ -673,8 +673,14 @@ export async function getOrgOptionsForHire(): Promise<{
       .order("first_name"),
   ]);
 
+  const businessUnits = [...(units.data ?? [])].sort((a, b) => {
+    if (a.name === "JA Group") return -1;
+    if (b.name === "JA Group") return 1;
+    return a.name.localeCompare(b.name);
+  });
+
   return {
-    businessUnits: units.data ?? [],
+    businessUnits,
     departments: departments.data ?? [],
     managers: managers.data ?? [],
   };

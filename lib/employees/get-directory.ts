@@ -201,7 +201,52 @@ export interface OrganogramNode {
   avatarUrl: string | null;
   departmentName: string | null;
   businessUnitName: string | null;
+  /** Staff roles drawn to the left of this person, not as reports below. */
+  assistants: OrganogramNode[];
   children: OrganogramNode[];
+}
+
+const ORGANOGRAM_UNIT_ORDER = [
+  "JA Group",
+  "JA Wealth",
+  "JA Digital",
+  "JA Realty",
+  "JA Elements",
+] as const;
+
+function organogramUnitLabel(name: string | null): string {
+  return name ?? "JA Group";
+}
+
+function unitOrderIndex(name: string): number {
+  const index = (ORGANOGRAM_UNIT_ORDER as readonly string[]).indexOf(name);
+  return index === -1 ? ORGANOGRAM_UNIT_ORDER.length : index;
+}
+
+function isExecutiveAssistant(jobTitle: string | null): boolean {
+  if (!jobTitle) return false;
+  const title = jobTitle.trim().toLowerCase();
+  return (
+    title.includes("executive assistant") ||
+    title.includes("personal assistant") ||
+    title.includes("assistant to the")
+  );
+}
+
+function compareOrganogramSiblings(
+  a: OrganogramNode,
+  b: OrganogramNode,
+): number {
+  const aUnit = organogramUnitLabel(a.businessUnitName);
+  const bUnit = organogramUnitLabel(b.businessUnitName);
+  const unitDiff = unitOrderIndex(aUnit) - unitOrderIndex(bUnit);
+  if (unitDiff !== 0) return unitDiff;
+  if (aUnit !== bUnit) return aUnit.localeCompare(bUnit);
+
+  const dept = (a.departmentName ?? "").localeCompare(b.departmentName ?? "");
+  if (dept !== 0) return dept;
+
+  return a.name.localeCompare(b.name);
 }
 
 export function buildOrganogram(
@@ -226,6 +271,7 @@ export function buildOrganogram(
       avatarUrl: employee.avatar_url,
       departmentName: employee.department_name,
       businessUnitName: employee.business_unit_name,
+      assistants: [],
       children: [],
     });
   }
@@ -237,15 +283,24 @@ export function buildOrganogram(
     if (!node) continue;
 
     if (employee.manager_id && nodes.has(employee.manager_id)) {
-      nodes.get(employee.manager_id)?.children.push(node);
+      const parent = nodes.get(employee.manager_id);
+      if (!parent) continue;
+      if (isExecutiveAssistant(employee.job_title)) {
+        parent.assistants.push(node);
+      } else {
+        parent.children.push(node);
+      }
     } else {
       roots.push(node);
     }
   }
 
   const sortTree = (list: OrganogramNode[]) => {
-    list.sort((a, b) => a.name.localeCompare(b.name));
-    list.forEach((node) => sortTree(node.children));
+    list.sort(compareOrganogramSiblings);
+    list.forEach((node) => {
+      sortTree(node.assistants);
+      sortTree(node.children);
+    });
   };
   sortTree(roots);
 
