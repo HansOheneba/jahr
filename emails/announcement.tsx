@@ -5,7 +5,7 @@ import {
   EmailNote,
   emailFontFamily,
 } from "./shared";
-import { getPortalUrl } from "../lib/email/config";
+import { EMAIL_CONFIDENTIALITY, getPortalUrl } from "../lib/email/config";
 
 export interface AnnouncementEmailProps {
   title: string;
@@ -34,6 +34,8 @@ export function AnnouncementEmail({
       heading={title}
       ctaLabel="Open in portal"
       ctaHref={ctaHref}
+      disclaimerHeading={EMAIL_CONFIDENTIALITY.heading}
+      disclaimer={EMAIL_CONFIDENTIALITY.body}
     >
       <EmailIntro>
         A new announcement was published for your team.

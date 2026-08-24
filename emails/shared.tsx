@@ -35,6 +35,9 @@ interface BrandedEmailProps {
   ctaLabel?: string;
   ctaHref?: string;
   logoUrl?: string;
+  /** Confidentiality notice under the brand footer. */
+  disclaimerHeading?: string;
+  disclaimer?: string;
 }
 
 export function BrandedEmail({
@@ -45,6 +48,8 @@ export function BrandedEmail({
   ctaLabel,
   ctaHref,
   logoUrl = getEmailLogoUrl(),
+  disclaimerHeading,
+  disclaimer,
 }: BrandedEmailProps) {
   return (
     <Html lang="en">
@@ -96,6 +101,15 @@ export function BrandedEmail({
               <br />
               {EMAIL_BRAND.footerLine}
             </Text>
+            {disclaimerHeading || disclaimer ? (
+              <Hr style={disclaimerDivider} />
+            ) : null}
+            {disclaimerHeading ? (
+              <Text style={disclaimerHeadingStyle}>{disclaimerHeading}</Text>
+            ) : null}
+            {disclaimer ? (
+              <Text style={disclaimerText}>{disclaimer}</Text>
+            ) : null}
           </Section>
         </Container>
       </Body>
@@ -283,4 +297,29 @@ const footerText: CSSProperties = {
   lineHeight: "18px",
   margin: 0,
   textAlign: "center",
+};
+
+const disclaimerDivider: CSSProperties = {
+  borderColor: EMAIL_BRAND.border,
+  borderTop: `1px solid ${EMAIL_BRAND.border}`,
+  margin: "20px 0 16px",
+};
+
+const disclaimerHeadingStyle: CSSProperties = {
+  color: EMAIL_BRAND.text,
+  fontSize: "11px",
+  fontWeight: 600,
+  letterSpacing: "0.04em",
+  lineHeight: "16px",
+  margin: "0 0 6px",
+  textAlign: "left",
+  textTransform: "uppercase",
+};
+
+const disclaimerText: CSSProperties = {
+  color: EMAIL_BRAND.mutedText,
+  fontSize: "11px",
+  lineHeight: "16px",
+  margin: 0,
+  textAlign: "left",
 };

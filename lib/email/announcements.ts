@@ -9,7 +9,7 @@ import {
 import { extractLinksFromTipTap } from "@/lib/communications/tiptap-links";
 import { tipTapJsonToEmailHtml } from "@/lib/communications/email-html";
 import type { JSONContent } from "@/lib/communications/types";
-import { EMAIL_BRAND, getPortalUrl } from "@/lib/email/config";
+import { EMAIL_BRAND, EMAIL_CONFIDENTIALITY, getPortalUrl } from "@/lib/email/config";
 import {
   formatFromAddress,
   sendEmail,
@@ -64,6 +64,9 @@ export async function sendAnnouncementEmail(input: {
     `View in portal: ${getPortalUrl(`/announcements/${input.announcementId}`)}`,
     "",
     EMAIL_BRAND.productName,
+    "",
+    EMAIL_CONFIDENTIALITY.heading,
+    EMAIL_CONFIDENTIALITY.body,
   ];
 
   // Pre-render so Resend gets plain HTML (keeps <a href> intact).

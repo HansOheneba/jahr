@@ -61,3 +61,8 @@ export const EMAIL_BRAND = {
   logoWidth: 100,
   logoHeight: 60,
 } as const;
+
+/** Confidentiality notice for Internal Comms / broadcast emails. */
+export const EMAIL_CONFIDENTIALITY = {
+  body: "This email is intended for internal use within JA Group and may contain confidential information. Please do not share or distribute it outside the organisation without prior authorisation. If you received this email in error, please notify the sender and delete it.",
+} as const;
