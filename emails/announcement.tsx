@@ -34,7 +34,6 @@ export function AnnouncementEmail({
       heading={title}
       ctaLabel="Open in portal"
       ctaHref={ctaHref}
-      disclaimerHeading={EMAIL_CONFIDENTIALITY.heading}
       disclaimer={EMAIL_CONFIDENTIALITY.body}
     >
       <EmailIntro>

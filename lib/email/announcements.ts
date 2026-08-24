@@ -65,7 +65,6 @@ export async function sendAnnouncementEmail(input: {
     "",
     EMAIL_BRAND.productName,
     "",
-    EMAIL_CONFIDENTIALITY.heading,
     EMAIL_CONFIDENTIALITY.body,
   ];
 
