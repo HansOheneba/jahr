@@ -53,10 +53,10 @@ function recordToInput(record: AlumniRecord): AlumniRecordInput {
 
 export function AlumniRecordForm({
   record,
-  businessUnits,
+  businessUnits = [],
 }: {
   record?: AlumniRecord;
-  businessUnits: Array<{ id: string; name: string }>;
+  businessUnits?: Array<{ id: string; name: string }>;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
