@@ -7,6 +7,7 @@ import {
   announcementTypeLabel,
 } from "@/lib/announcements/categories";
 import { MessageContent } from "@/components/communications/message-content";
+import { Badge } from "@/components/ui/badge";
 
 export default async function AnnouncementsPage() {
   const announcements = await getAnnouncementsForViewer(50);
@@ -16,8 +17,7 @@ export default async function AnnouncementsPage() {
       <div className="space-y-1">
         <h1 className="text-xl font-medium tracking-tight">Announcements</h1>
         <p className="text-sm text-muted-foreground">
-          Internal comms for your business unit and work type. Open any item to
-          read the full message, attachments, and links.
+          Internal comms for your business unit and work type.
         </p>
       </div>
 
@@ -38,21 +38,22 @@ export default async function AnnouncementsPage() {
             <li key={item.id}>
               <Link
                 href={`/announcements/${item.id}`}
-                className="block rounded-xl border border-border bg-card p-5 transition-[border-color,box-shadow] duration-150 ease-out hover:border-slate-300 hover:shadow-sm"
+                className="block rounded-xl border border-border bg-card p-5 transition-colors duration-150 ease-out hover:border-[color-mix(in_srgb,var(--primary)_25%,var(--border))]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-[#174EA6]">
+                    <Badge
+                      variant="secondary"
+                      className="rounded-md font-normal"
+                    >
                       {announcementCategoryLabel(item.category)} ·{" "}
                       {announcementTypeLabel(item.announcement_type)}
-                    </p>
-                    <h2 className="mt-1 text-base font-semibold text-slate-900">
-                      {item.title}
-                    </h2>
+                    </Badge>
+                    <h2 className="mt-2 text-sm font-medium">{item.title}</h2>
                   </div>
                   <time
                     dateTime={item.published_at}
-                    className="shrink-0 text-xs font-medium text-slate-500 tabular-nums"
+                    className="shrink-0 text-xs text-muted-foreground tabular-nums"
                   >
                     {format(parseISO(item.published_at), "d MMM")}
                   </time>
@@ -62,6 +63,7 @@ export default async function AnnouncementsPage() {
                     content={item.body_json}
                     fallbackPlainText={item.body}
                     clamp
+                    staticLinks
                   />
                 </div>
               </Link>

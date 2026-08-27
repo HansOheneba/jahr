@@ -4,6 +4,7 @@ import { format, parseISO } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import { AttachmentList } from "@/components/communications/attachment-list";
 import { MessageContent } from "@/components/communications/message-content";
+import { Badge } from "@/components/ui/badge";
 import {
   announcementCategoryLabel,
   announcementTypeLabel,
@@ -35,11 +36,11 @@ export default async function AnnouncementDetailPage({
           All announcements
         </Link>
         <div className="space-y-2">
-          <p className="text-xs font-medium text-[#174EA6]">
+          <Badge variant="secondary" className="rounded-md font-normal">
             {announcementCategoryLabel(announcement.category)} ·{" "}
             {announcementTypeLabel(announcement.announcement_type)}
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight text-[#1F1F1F]">
+          </Badge>
+          <h1 className="text-xl font-medium tracking-tight">
             {announcement.title}
           </h1>
           <p className="text-sm text-muted-foreground tabular-nums">
@@ -53,7 +54,7 @@ export default async function AnnouncementDetailPage({
         <MessageContent
           content={announcement.body_json}
           fallbackPlainText={announcement.body}
-          className="text-[15px] leading-relaxed text-slate-700"
+          className="text-[15px] leading-relaxed text-foreground"
         />
         {announcement.attachments && announcement.attachments.length > 0 ? (
           <div className="mt-6 border-t border-border pt-4">

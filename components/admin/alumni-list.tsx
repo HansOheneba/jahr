@@ -100,8 +100,8 @@ export function AlumniList({ alumni }: { alumni: AlumniDirectoryEntry[] }) {
         <div className="mx-auto flex max-w-md flex-col items-center text-center">
           <p className="text-sm font-medium tracking-tight">No alumni yet</p>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Offboard employees from their profile, or add a lightweight record
-            for someone who never had a JA account.
+            Offboard from an employee profile, or add someone without a JA
+            account.
           </p>
           <Link href="/admin/alumni/new" className={cn(buttonVariants(), "mt-6")}>
             Add alumni

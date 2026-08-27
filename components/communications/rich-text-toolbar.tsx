@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import {
   Bold,
@@ -16,13 +17,26 @@ import {
   Undo2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { normalizeEmailHref } from "@/lib/communications/href";
+import { normalizeEditorHref } from "@/lib/communications/href";
+import {
+  applyEditorLink,
+  removeEditorLink,
+} from "@/lib/communications/link-editor";
 import { cn } from "@/lib/utils";
 
 interface RichTextToolbarProps {
@@ -69,22 +83,119 @@ function ToolbarButton({
   );
 }
 
-function setLink(editor: Editor) {
-  const previous = editor.getAttributes("link").href;
-  const url = window.prompt(
-    "Link URL",
-    typeof previous === "string" && previous.length > 0
-      ? previous
-      : "https://",
-  );
-  if (url === null) return;
-  const trimmed = url.trim();
-  if (trimmed === "" || trimmed === "https://" || trimmed === "http://") {
-    editor.chain().focus().extendMarkRange("link").unsetLink().run();
-    return;
+function LinkToolbarControl({
+  editor,
+  disabled,
+}: {
+  editor: Editor;
+  disabled: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const current = editor.getAttributes("link").href;
+    setUrl(typeof current === "string" && current.length > 0 ? current : "");
+    setError(null);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }, [editor, open]);
+
+  function handleApply(event: React.FormEvent) {
+    event.preventDefault();
+    const trimmed = url.trim();
+
+    if (!trimmed) {
+      removeEditorLink(editor);
+      setOpen(false);
+      return;
+    }
+
+    const href = normalizeEditorHref(trimmed);
+    if (!href) {
+      setError("Enter a valid URL, email, or domain.");
+      return;
+    }
+
+    if (!applyEditorLink(editor, href, trimmed)) {
+      setError("Could not apply that link.");
+      return;
+    }
+
+    setOpen(false);
   }
-  const href = normalizeEmailHref(trimmed) ?? trimmed;
-  editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <PopoverTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled={disabled}
+                  aria-label="Link"
+                  aria-pressed={editor.isActive("link")}
+                  className={cn(
+                    "text-muted-foreground",
+                    editor.isActive("link") && "bg-secondary text-foreground",
+                  )}
+                >
+                  <Link2 />
+                </Button>
+              }
+            />
+          }
+        />
+        <TooltipContent side="top">Link</TooltipContent>
+      </Tooltip>
+      <PopoverContent align="start" className="w-80 gap-3 p-4">
+        <PopoverHeader>
+          <PopoverTitle>Link URL</PopoverTitle>
+        </PopoverHeader>
+        <form className="flex flex-col gap-3" onSubmit={handleApply}>
+          <div className="space-y-2">
+            <Label htmlFor="comms-link-url">Address</Label>
+            <Input
+              ref={inputRef}
+              id="comms-link-url"
+              value={url}
+              onChange={(event) => {
+                setUrl(event.target.value);
+                if (error) setError(null);
+              }}
+              placeholder="https://example.com"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
+          {error ? (
+            <p className="text-xs text-destructive" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" size="sm">
+              Apply
+            </Button>
+          </div>
+        </form>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
@@ -168,14 +279,7 @@ export function RichTextToolbar({ editor, disabled }: RichTextToolbarProps) {
         >
           <Quote />
         </ToolbarButton>
-        <ToolbarButton
-          label="Link"
-          active={editor.isActive("link")}
-          disabled={busy}
-          onClick={() => setLink(editor)}
-        >
-          <Link2 />
-        </ToolbarButton>
+        <LinkToolbarControl editor={editor} disabled={busy} />
 
         <span className="mx-1 h-4 w-px bg-border" aria-hidden />
 

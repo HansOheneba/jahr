@@ -33,6 +33,7 @@ function nodePlainText(node: JSONContent): string {
     node.type === "paragraph" ||
     node.type === "heading" ||
     node.type === "blockquote" ||
+    node.type === "codeBlock" ||
     node.type === "listItem"
   ) {
     return joined ? `${joined}\n` : "\n";

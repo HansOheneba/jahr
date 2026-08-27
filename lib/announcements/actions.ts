@@ -31,12 +31,18 @@ import {
   type JSONContent,
 } from "@/lib/communications/types";
 import { sanitizeTipTapJson } from "@/lib/communications/tiptap-links";
-import { sendAnnouncementEmail } from "@/lib/email/announcements";
+import {
+  buildAnnouncementEmail,
+  renderAnnouncementEmailHtml,
+  sendAnnouncementEmail,
+} from "@/lib/email/announcements";
 import type { EmailAttachment } from "@/lib/email/resend";
 import type { WorkType } from "@/lib/types/employee";
 import { createClient } from "@/utils/supabase/server";
 
 const WORK_TYPES: readonly WorkType[] = ["onsite", "hybrid", "remote"];
+
+const PUBLISHED_AT_FORMAT = "d MMM yyyy 'at' HH:mm";
 
 export interface PublishAnnouncementInput {
   title: string;
@@ -88,6 +94,38 @@ export async function previewAnnouncementAudience(input: {
   });
 
   return { count };
+}
+
+/** Render the draft exactly as recipients will see it, without publishing. */
+export async function previewAnnouncementEmail(input: {
+  title: string;
+  announcementType: AnnouncementType;
+  bodyJson: JSONContent;
+  attachmentNames: string[];
+}): Promise<{ html?: string; error?: string }> {
+  const profile = await getCurrentProfile();
+  if (!profile || !canPublishComms(profile)) {
+    return { error: "You do not have permission to preview announcements." };
+  }
+
+  if (!isAnnouncementType(input.announcementType)) {
+    return { error: "Choose an announcement type." };
+  }
+
+  if (!isAnnouncementJsonContent(input.bodyJson)) {
+    return { error: "Message content is invalid." };
+  }
+
+  const html = await renderAnnouncementEmailHtml({
+    title: input.title.trim() || "Untitled announcement",
+    body: "",
+    bodyJson: sanitizeTipTapJson(input.bodyJson),
+    announcementType: input.announcementType,
+    publishedAtLabel: format(new Date(), PUBLISHED_AT_FORMAT),
+    attachmentNames: input.attachmentNames,
+  });
+
+  return { html };
 }
 
 export async function publishAnnouncement(
@@ -232,20 +270,25 @@ export async function publishAnnouncement(
 
   const publishedAtLabel = format(
     parseISO(data.published_at),
-    "d MMM yyyy 'at' HH:mm",
+    PUBLISHED_AT_FORMAT,
   );
+
+  const email = await buildAnnouncementEmail({
+    title,
+    body,
+    bodyJson,
+    announcementType: input.announcementType,
+    announcementId: data.id,
+    publishedAtLabel,
+    attachmentNames: emailAttachments.map((file) => file.filename),
+  });
 
   // Await sends so the server action does not finish before Resend returns.
   await Promise.all(
     recipients.map((recipient) =>
       sendAnnouncementEmail({
         to: recipient.email,
-        title,
-        body,
-        bodyJson,
-        announcementType: input.announcementType,
-        announcementId: data.id,
-        publishedAtLabel,
+        email,
         attachments: emailAttachments,
       }),
     ),

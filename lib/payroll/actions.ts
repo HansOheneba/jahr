@@ -120,7 +120,7 @@ export async function savePayPackage(
   }));
 
   if (rows.some((row) => !row.code || !row.label)) {
-    return { error: "Every pay line needs a code and label." };
+    return { error: "Every pay line needs a description." };
   }
 
   const { error: insertError } = await supabase

@@ -27,13 +27,7 @@ export default async function NewAlumniRecordPage() {
           <ArrowLeft className="size-4" />
           Alumni
         </Link>
-        <div className="space-y-1">
-          <h1 className="text-xl font-medium tracking-tight">Add alumni</h1>
-          <p className="text-sm text-muted-foreground">
-            Capture someone who has left JA Group. Only a name is required —
-            add contact details and tenure when you have them.
-          </p>
-        </div>
+        <h1 className="text-xl font-medium tracking-tight">Add alumni</h1>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6">

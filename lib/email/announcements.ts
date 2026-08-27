@@ -6,87 +6,132 @@ import {
   announcementTypeLabel,
   getAnnouncementCategory,
 } from "@/lib/announcements/categories";
-import { extractLinksFromTipTap } from "@/lib/communications/tiptap-links";
 import { tipTapJsonToEmailHtml } from "@/lib/communications/email-html";
 import type { JSONContent } from "@/lib/communications/types";
-import { EMAIL_BRAND, EMAIL_CONFIDENTIALITY, getPortalUrl } from "@/lib/email/config";
+import {
+  EMAIL_BRAND,
+  EMAIL_CONFIDENTIALITY,
+  getPortalUrl,
+} from "@/lib/email/config";
 import {
   formatFromAddress,
   sendEmail,
   type EmailAttachment,
 } from "@/lib/email/resend";
 
-export async function sendAnnouncementEmail(input: {
-  to: string;
+export interface AnnouncementEmailContent {
   title: string;
+  /** Plain-text body for the text/plain alternative. */
   body: string;
   bodyJson: JSONContent;
   announcementType: AnnouncementType;
-  announcementId: string;
+  /** Omitted while previewing an unpublished draft. */
+  announcementId?: string;
   publishedAtLabel: string;
-  attachments?: EmailAttachment[];
-}): Promise<void> {
-  const attachments = input.attachments ?? [];
-  const attachmentNames = attachments.map((file) => file.filename);
-  const typeLabel = announcementTypeLabel(input.announcementType);
-  const categoryLabel = announcementCategoryLabel(
-    getAnnouncementCategory(input.announcementType),
+  attachmentNames?: string[];
+}
+
+export interface PreparedAnnouncementEmail {
+  subject: string;
+  html: string;
+  text: string;
+}
+
+function announcementLabels(announcementType: AnnouncementType) {
+  return {
+    typeLabel: announcementTypeLabel(announcementType),
+    categoryLabel: announcementCategoryLabel(
+      getAnnouncementCategory(announcementType),
+    ),
+  };
+}
+
+/** The HTML mail clients receive. Shared by the send path and composer preview. */
+export async function renderAnnouncementEmailHtml(
+  input: AnnouncementEmailContent,
+): Promise<string> {
+  const { typeLabel, categoryLabel } = announcementLabels(
+    input.announcementType,
   );
+
+  return render(
+    AnnouncementEmail({
+      title: input.title,
+      bodyHtml: tipTapJsonToEmailHtml(input.bodyJson),
+      categoryLabel,
+      typeLabel,
+      publishedAtLabel: input.publishedAtLabel,
+      attachmentNames: input.attachmentNames ?? [],
+      ctaHref: getPortalUrl(
+        input.announcementId
+          ? `/announcements/${input.announcementId}`
+          : "/announcements",
+      ),
+    }),
+  );
+}
+
+/**
+ * Render subject, HTML, and text once so a broadcast to many recipients does
+ * not re-render the same email per person.
+ */
+export async function buildAnnouncementEmail(
+  input: AnnouncementEmailContent,
+): Promise<PreparedAnnouncementEmail> {
+  const { typeLabel, categoryLabel } = announcementLabels(
+    input.announcementType,
+  );
+  const attachmentNames = input.attachmentNames ?? [];
+
   const attachmentNote =
     attachmentNames.length === 0
-      ? null
-      : `${attachmentNames.length} attachment${
-          attachmentNames.length === 1 ? "" : "s"
-        } included: ${attachmentNames.join(", ")}.`;
-
-  const bodyHtml = tipTapJsonToEmailHtml(input.bodyJson);
-  const links = extractLinksFromTipTap(input.bodyJson);
-  const linksText =
-    links.length === 0
       ? []
       : [
-          "Links:",
-          ...links.map((link) => `- ${link.label}: ${link.href}`),
+          `${attachmentNames.length} attachment${
+            attachmentNames.length === 1 ? "" : "s"
+          } included: ${attachmentNames.join(", ")}.`,
           "",
         ];
 
-  const textParts = [
+  const text = [
     input.title,
     `Category: ${categoryLabel}`,
     `Type: ${typeLabel}`,
     "",
     input.body,
     "",
-    ...linksText,
-    ...(attachmentNote ? [attachmentNote, ""] : []),
+    ...attachmentNote,
     `Published: ${input.publishedAtLabel}`,
     "",
-    `View in portal: ${getPortalUrl(`/announcements/${input.announcementId}`)}`,
+    `View in portal: ${getPortalUrl(
+      input.announcementId
+        ? `/announcements/${input.announcementId}`
+        : "/announcements",
+    )}`,
     "",
     EMAIL_BRAND.productName,
     "",
     EMAIL_CONFIDENTIALITY.body,
-  ];
+  ].join("\n");
 
-  // Pre-render so Resend gets plain HTML (keeps <a href> intact).
-  const html = await render(
-    AnnouncementEmail({
-      title: input.title,
-      bodyHtml,
-      categoryLabel,
-      typeLabel,
-      publishedAtLabel: input.publishedAtLabel,
-      attachmentNames,
-      ctaHref: getPortalUrl(`/announcements/${input.announcementId}`),
-    }),
-  );
+  return {
+    subject: `[${typeLabel}] ${input.title}`,
+    html: await renderAnnouncementEmailHtml(input),
+    text,
+  };
+}
 
+export async function sendAnnouncementEmail(input: {
+  to: string;
+  email: PreparedAnnouncementEmail;
+  attachments?: EmailAttachment[];
+}): Promise<void> {
   await sendEmail({
     to: input.to,
     from: formatFromAddress("JA Group Internal Comms"),
-    subject: `[${typeLabel}] ${input.title}`,
-    text: textParts.join("\n"),
-    html,
-    attachments,
+    subject: input.email.subject,
+    text: input.email.text,
+    html: input.email.html,
+    attachments: input.attachments,
   });
 }

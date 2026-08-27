@@ -405,6 +405,7 @@ export function DashboardView({
                           content={item.bodyJson}
                           fallbackPlainText={item.body}
                           clamp
+                          staticLinks
                         />
                       </div>
                     </Link>

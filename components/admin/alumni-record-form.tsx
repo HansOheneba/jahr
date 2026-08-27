@@ -127,12 +127,7 @@ export function AlumniRecordForm({
   return (
     <div className="flex flex-col gap-6">
       <section className="space-y-4">
-        <div>
-          <h2 className="text-sm font-medium">Person</h2>
-          <p className="text-xs text-muted-foreground">
-            Start with a name — everything else is optional.
-          </p>
-        </div>
+        <h2 className="text-sm font-medium">Person</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="First name" required>
             <Input
@@ -152,12 +147,7 @@ export function AlumniRecordForm({
       </section>
 
       <section className="space-y-4">
-        <div>
-          <h2 className="text-sm font-medium">Contact & tenure</h2>
-          <p className="text-xs text-muted-foreground">
-            Add what you know — email, phone, years at JA, and where they worked.
-          </p>
-        </div>
+        <h2 className="text-sm font-medium">Contact & tenure</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Email">
             <Input
@@ -260,7 +250,6 @@ export function AlumniRecordForm({
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 rows={4}
-                placeholder="Anything else worth keeping on file"
               />
             </Field>
           </div>

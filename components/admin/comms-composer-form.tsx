@@ -11,8 +11,8 @@ import {
   Megaphone,
   Users,
 } from "lucide-react";
+import { CommsEmailPreview } from "@/components/admin/comms-email-preview";
 import { MessageComposer } from "@/components/communications/message-composer";
-import { MessageContent } from "@/components/communications/message-content";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -23,7 +23,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import {
   previewAnnouncementAudience,
@@ -34,7 +40,6 @@ import type {
   AnnouncementType,
 } from "@/lib/announcements/categories";
 import {
-  announcementDisplayLabel,
   DEFAULT_ANNOUNCEMENT_CATEGORY,
   DEFAULT_ANNOUNCEMENT_TYPE,
   getAnnouncementCategory,
@@ -125,18 +130,18 @@ function describeAudience(input: {
   } = input;
 
   if (allUnitsSelected && allWorkTypesSelected) {
-    return "This communique will reach everyone at JA Group.";
+    return "This goes to everyone at JA Group.";
   }
 
   if (allUnitsSelected) {
-    return `This communique will reach ${workStylePhrase(selectedWorkTypes)} across JA Group.`;
+    return `This goes to ${workStylePhrase(selectedWorkTypes)} across JA Group.`;
   }
 
   if (allWorkTypesSelected) {
-    return `This communique will reach everyone at ${joinNames(selectedUnitNames)}.`;
+    return `This goes to everyone at ${joinNames(selectedUnitNames)}.`;
   }
 
-  return `This communique will reach ${workStylePhrase(selectedWorkTypes)} at ${joinNames(selectedUnitNames)}.`;
+  return `This goes to ${workStylePhrase(selectedWorkTypes)} at ${joinNames(selectedUnitNames)}.`;
 }
 
 interface CommsComposerInitialDraft {
@@ -187,7 +192,7 @@ export function CommsComposerForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(
     initialDraft
-      ? "Loaded from a past announcement. Edit if needed, then publish to email the audience again."
+      ? "Loaded from a past announcement. Publishing emails the audience again."
       : null,
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -313,21 +318,20 @@ export function CommsComposerForm({
   const canPublish = Boolean(title.trim() && !isTipTapDocEmpty(bodyJson));
 
   const audienceSlot = (
-    <section className="space-y-4">
-      <div className="space-y-1">
-        <Label>Who should hear this?</Label>
-        <p className="text-xs text-muted-foreground">
-          Start with the whole company, or narrow by institution and work
-          style.
-        </p>
-      </div>
-
+    <Card>
+      <CardHeader className="border-b">
+        <CardTitle>Audience</CardTitle>
+        <CardDescription>
+          Everyone by default, or narrow by institution and work style.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
       <button
         type="button"
         onClick={selectWholeCompany}
         disabled={pending}
         className={cn(
-          "flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out active:scale-[0.99]",
+          "flex w-full items-center gap-3 rounded-md border px-4 py-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out active:scale-[0.99]",
           wholeCompany
             ? "border-[color-mix(in_srgb,#0070F3_35%,var(--border))]"
             : "border-border bg-background hover:bg-secondary/40",
@@ -368,9 +372,9 @@ export function CommsComposerForm({
               onClick={() => toggleBusinessUnit(unit.id)}
               disabled={pending}
               className={cn(
-                "flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out active:scale-[0.98]",
+                "flex items-center gap-3 rounded-md border px-3.5 py-3 text-left transition-[background-color,border-color,transform] duration-150 ease-out active:scale-[0.98]",
                 selected
-                  ? "shadow-[0_1px_2px_rgba(16,24,40,0.04)]"
+                  ? undefined
                   : "border-border bg-background hover:bg-secondary/40",
               )}
               style={
@@ -426,7 +430,7 @@ export function CommsComposerForm({
                 onClick={() => toggleWorkType(option.value)}
                 disabled={pending}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center transition-[background-color,border-color,transform] duration-150 ease-out active:scale-[0.97]",
+                  "flex flex-col items-center gap-1.5 rounded-md border px-2 py-3 text-center transition-[background-color,border-color,transform] duration-150 ease-out active:scale-[0.97]",
                   selected
                     ? undefined
                     : "border-border bg-background text-muted-foreground hover:bg-secondary/40",
@@ -460,11 +464,10 @@ export function CommsComposerForm({
       </div>
 
       <div
-        className="rounded-xl border border-border px-4 py-3.5"
+        className="rounded-md border border-border px-4 py-3.5"
         style={{ background: tint("#55A8FD", 7) }}
       >
-        <p className="text-xs text-muted-foreground">Audience</p>
-        <p className="mt-1 text-sm font-medium leading-snug text-foreground">
+        <p className="text-sm font-medium leading-snug text-foreground">
           {audienceSentence}
         </p>
         <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
@@ -477,7 +480,8 @@ export function CommsComposerForm({
           )}
         </p>
       </div>
-    </section>
+      </CardContent>
+    </Card>
   );
 
   return (
@@ -498,24 +502,33 @@ export function CommsComposerForm({
         onSubmitShortcut={openConfirmIfValid}
         error={error}
         success={success}
-        headingIcon={<Megaphone className="size-4" />}
         audienceSlot={audienceSlot}
         footerSlot={
           <div className="flex flex-wrap items-center justify-end gap-2">
             <Link
               href="/admin/comms"
-              className={cn(buttonVariants({ variant: "outline" }))}
+              className={cn(buttonVariants({ variant: "secondary" }))}
             >
               Cancel
             </Link>
+            <CommsEmailPreview
+              draft={{
+                title,
+                announcementType,
+                bodyJson,
+                attachmentNames: pendingAttachments.map(
+                  (item) => item.fileName,
+                ),
+              }}
+              disabled={pending}
+            />
             <Button
               type="button"
               onClick={openConfirmIfValid}
               disabled={pending || !canPublish}
-              className="gap-2"
             >
-              {pending ? <Spinner /> : <Megaphone className="size-4" />}
-              Publish announcement
+              {pending ? <Spinner /> : <Megaphone />}
+              Publish
             </Button>
           </div>
         }
@@ -524,36 +537,16 @@ export function CommsComposerForm({
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Publish this communique?</AlertDialogTitle>
+            <AlertDialogTitle>Publish this announcement?</AlertDialogTitle>
             <AlertDialogDescription>
               {audienceSentence}
               {audienceCount !== null
-                ? ` That is ${audienceCount} recipient${
+                ? ` ${audienceCount} recipient${
                     audienceCount === 1 ? "" : "s"
                   }.`
-                : ""}{" "}
-              They will get the email and see it on their dashboard.
+                : null}
             </AlertDialogDescription>
           </AlertDialogHeader>
-
-          <div className="rounded-xl border border-border bg-secondary/40 px-4 py-3">
-            <p className="text-xs text-muted-foreground">Preview</p>
-            <p className="mt-1 text-[11px] font-medium text-[#174EA6]">
-              {announcementDisplayLabel(announcementType)}
-            </p>
-            <p className="mt-1 text-sm font-medium">
-              {title.trim() || "Untitled"}
-            </p>
-            <div className="mt-1">
-              <MessageContent content={bodyJson} clamp />
-            </div>
-            {pendingAttachments.length > 0 ? (
-              <p className="mt-2 text-[11px] text-muted-foreground">
-                {pendingAttachments.length} attachment
-                {pendingAttachments.length === 1 ? "" : "s"}
-              </p>
-            ) : null}
-          </div>
 
           {error ? (
             <p className="text-sm text-destructive" role="alert">
@@ -563,14 +556,9 @@ export function CommsComposerForm({
 
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-            <Button
-              type="button"
-              disabled={pending}
-              onClick={handleConfirmPublish}
-              className="gap-2"
-            >
-              {pending ? <Spinner /> : <Megaphone className="size-4" />}
-              Confirm publish
+            <Button type="button" disabled={pending} onClick={handleConfirmPublish}>
+              {pending ? <Spinner /> : <Megaphone />}
+              Publish
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

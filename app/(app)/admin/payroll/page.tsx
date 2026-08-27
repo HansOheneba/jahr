@@ -18,8 +18,7 @@ export default async function PayrollAdminPage() {
       <div className="space-y-1">
         <h1 className="text-xl font-medium tracking-tight">Payroll</h1>
         <p className="text-sm text-muted-foreground">
-          Set each employee’s pay package. Payslip PDFs are generated on
-          download - nothing is batch-created every month.
+          Set each employee’s pay package. Payslip PDFs generate on download.
         </p>
       </div>
 

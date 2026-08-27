@@ -232,7 +232,7 @@
   color: var(--muted-foreground);
 }
 
-.prose-comms a {
+.prose-comms a[href]:not([href=""]) {
   color: #0b4fbf;
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;

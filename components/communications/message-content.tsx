@@ -1,3 +1,4 @@
+import { normalizeEmailHref } from "@/lib/communications/href";
 import type { JSONContent } from "@/lib/communications/types";
 import { cn } from "@/lib/utils";
 
@@ -6,12 +7,19 @@ interface MessageContentProps {
   fallbackPlainText?: string;
   className?: string;
   clamp?: boolean;
+  /** Render link marks as styled text (no `<a>`). Use inside a parent link. */
+  staticLinks?: boolean;
+}
+
+interface RenderOptions {
+  staticLinks: boolean;
 }
 
 function renderMarks(
   text: string,
   marks: JSONContent["marks"],
   keyBase: string,
+  options: RenderOptions,
 ): React.ReactNode {
   let node: React.ReactNode = text;
   if (!marks) return node;
@@ -31,21 +39,29 @@ function renderMarks(
       case "strike":
         node = <s key={key}>{node}</s>;
         break;
+      case "code":
+        node = (
+          <code
+            key={key}
+            className="rounded-sm border border-border bg-muted px-1 py-0.5 font-mono text-[0.8125rem]"
+          >
+            {node}
+          </code>
+        );
+        break;
       case "link": {
         const href =
-          typeof mark.attrs?.href === "string" ? mark.attrs.href.trim() : "";
-        const normalized =
-          href.startsWith("http://") ||
-          href.startsWith("https://") ||
-          href.startsWith("mailto:")
-            ? href
-            : href.startsWith("www.")
-              ? `https://${href}`
-              : /^[a-z0-9.-]+\.[a-z]{2,}([/:?#].*)?$/i.test(href)
-                ? `https://${href}`
-                : null;
+          typeof mark.attrs?.href === "string" ? mark.attrs.href : "";
+        const normalized = normalizeEmailHref(href);
         if (normalized) {
-          node = (
+          node = options.staticLinks ? (
+            <span
+              key={key}
+              className="font-medium text-[#0B4FBF] underline underline-offset-2"
+            >
+              {node}
+            </span>
+          ) : (
             <a
               key={key}
               href={normalized}
@@ -70,6 +86,7 @@ function renderMarks(
 function renderInline(
   nodes: JSONContent[] | undefined,
   keyPrefix: string,
+  options: RenderOptions,
 ): React.ReactNode[] {
   if (!nodes) return [];
   return nodes.map((node, index) => {
@@ -95,22 +112,26 @@ function renderInline(
     }
     if (node.type === "text" && typeof node.text === "string") {
       return (
-        <span key={key}>{renderMarks(node.text, node.marks, key)}</span>
+        <span key={key}>{renderMarks(node.text, node.marks, key, options)}</span>
       );
     }
     return (
-      <span key={key}>{renderInline(node.content, key)}</span>
+      <span key={key}>{renderInline(node.content, key, options)}</span>
     );
   });
 }
 
-function renderBlock(node: JSONContent, index: number): React.ReactNode {
+function renderBlock(
+  node: JSONContent,
+  index: number,
+  options: RenderOptions,
+): React.ReactNode {
   const key = `block-${index}`;
   switch (node.type) {
     case "paragraph":
       return (
         <p key={key} className="my-1">
-          {renderInline(node.content, key)}
+          {renderInline(node.content, key, options)}
         </p>
       );
     case "heading": {
@@ -123,13 +144,13 @@ function renderBlock(node: JSONContent, index: number): React.ReactNode {
       if (level === 3) {
         return (
           <h4 key={key} className={className}>
-            {renderInline(node.content, key)}
+            {renderInline(node.content, key, options)}
           </h4>
         );
       }
       return (
         <h3 key={key} className={className}>
-          {renderInline(node.content, key)}
+          {renderInline(node.content, key, options)}
         </h3>
       );
     }
@@ -140,7 +161,7 @@ function renderBlock(node: JSONContent, index: number): React.ReactNode {
           className="my-2 border-l-[3px] border-[#55A8FD] pl-3 text-muted-foreground italic"
         >
           {(node.content ?? []).map((child, childIndex) =>
-            renderBlock(child, childIndex),
+            renderBlock(child, childIndex, options),
           )}
         </blockquote>
       );
@@ -148,7 +169,7 @@ function renderBlock(node: JSONContent, index: number): React.ReactNode {
       return (
         <ul key={key} className="my-1.5 list-disc space-y-0.5 pl-5">
           {(node.content ?? []).map((child, childIndex) =>
-            renderBlock(child, childIndex),
+            renderBlock(child, childIndex, options),
           )}
         </ul>
       );
@@ -156,7 +177,7 @@ function renderBlock(node: JSONContent, index: number): React.ReactNode {
       return (
         <ol key={key} className="my-1.5 list-decimal space-y-0.5 pl-5">
           {(node.content ?? []).map((child, childIndex) =>
-            renderBlock(child, childIndex),
+            renderBlock(child, childIndex, options),
           )}
         </ol>
       );
@@ -164,13 +185,26 @@ function renderBlock(node: JSONContent, index: number): React.ReactNode {
       return (
         <li key={key}>
           {(node.content ?? []).map((child, childIndex) =>
-            renderBlock(child, childIndex),
+            renderBlock(child, childIndex, options),
           )}
         </li>
       );
+    case "codeBlock":
+      return (
+        <pre
+          key={key}
+          className="my-2 overflow-x-auto rounded-md border border-border bg-muted px-3 py-2 font-mono text-[0.8125rem] whitespace-pre-wrap"
+        >
+          {(node.content ?? [])
+            .map((child) => (typeof child.text === "string" ? child.text : ""))
+            .join("")}
+        </pre>
+      );
+    case "horizontalRule":
+      return <hr key={key} className="my-3 border-border" />;
     default:
       return (
-        <div key={key}>{renderInline(node.content, key)}</div>
+        <div key={key}>{renderInline(node.content, key, options)}</div>
       );
   }
 }
@@ -180,7 +214,9 @@ export function MessageContent({
   fallbackPlainText,
   className,
   clamp = false,
+  staticLinks = false,
 }: MessageContentProps) {
+  const renderOptions: RenderOptions = { staticLinks: staticLinks };
   const hasDoc =
     content &&
     content.type === "doc" &&
@@ -210,7 +246,9 @@ export function MessageContent({
         className,
       )}
     >
-      {content.content!.map((node, index) => renderBlock(node, index))}
+      {content.content!.map((node, index) =>
+        renderBlock(node, index, renderOptions),
+      )}
     </div>
   );
 }

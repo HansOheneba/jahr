@@ -25,19 +25,19 @@ export default async function CommsAdminPage() {
     <div className="flex w-full flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-[#1F1F1F]">
-            Comms
+          <h1 className="text-xl font-medium tracking-tight">
+            Internal comms
           </h1>
-          <p className="max-w-xl text-sm leading-relaxed text-[#444746]">
-            Sent internal announcements. Open one in the editor to tweak and
-            send again, or create a new communique.
+          <p className="text-sm text-muted-foreground">
+            Everything sent to the company. Reuse a past announcement to send it
+            again.
           </p>
         </div>
         <Link
           href="/admin/comms/new"
-          className={cn(buttonVariants(), "shrink-0 gap-2 self-start")}
+          className={cn(buttonVariants(), "shrink-0 self-start")}
         >
-          <Plus className="size-4" />
+          <Plus />
           New announcement
         </Link>
       </div>

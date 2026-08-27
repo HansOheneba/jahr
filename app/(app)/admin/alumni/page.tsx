@@ -27,8 +27,8 @@ export default async function AlumniAdminPage() {
         <div className="space-y-1">
           <h1 className="text-xl font-medium tracking-tight">Alumni</h1>
           <p className="text-sm text-muted-foreground">
-            Past employees and historical records. Offboard active employees from
-            their profile, or add someone who never had a JA account.
+            Offboard from an employee profile, or add someone without a JA
+            account.
           </p>
         </div>
         {canManage ? (

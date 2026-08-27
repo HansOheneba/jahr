@@ -13,6 +13,8 @@ import {
 } from "@tiptap/react";
 import { createMentionSuggestion } from "@/components/communications/mention-extension";
 import { RichTextToolbar } from "@/components/communications/rich-text-toolbar";
+import { normalizeEditorHref } from "@/lib/communications/href";
+import { sanitizeTipTapJson } from "@/lib/communications/tiptap-links";
 import {
   EMPTY_DOC,
   type JSONContent,
@@ -67,6 +69,10 @@ export function RichTextEditor({
           rel: "noopener noreferrer",
           target: "_blank",
         },
+        isAllowedUri: (url) => {
+          if (!url?.trim()) return false;
+          return normalizeEditorHref(url) !== null;
+        },
       }),
       Placeholder.configure({ placeholder }),
       Mention.configure({
@@ -98,7 +104,7 @@ export function RichTextEditor({
       },
     },
     onUpdate: ({ editor: current }) => {
-      onChange(current.getJSON());
+      onChange(sanitizeTipTapJson(current.getJSON()));
     },
   });
 

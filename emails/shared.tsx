@@ -2,25 +2,28 @@ import type { CSSProperties, ReactNode } from "react";
 import {
   Body,
   Button,
+  Column,
   Container,
   Head,
   Heading,
-  Hr,
   Html,
   Img,
-  Link,
   Preview,
+  Row,
   Section,
   Text,
 } from "react-email";
 import {
   EMAIL_BRAND,
-  getEmailLogoUrl,
-  getPortalUrl,
+  getEmailHandsUrl,
+  getEmailLogoWhiteUrl,
 } from "../lib/email/config";
 
 export const emailFontFamily =
   'Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+
+/** Georgia is the most widely installed serif, matching the signature tagline. */
+const taglineFontFamily = 'Georgia, "Times New Roman", Times, serif';
 
 export interface EmailDetailRow {
   label: string;
@@ -35,7 +38,7 @@ interface BrandedEmailProps {
   ctaLabel?: string;
   ctaHref?: string;
   logoUrl?: string;
-  /** Confidentiality notice under the brand footer. */
+  /** Confidentiality notice under the sign-off. */
   disclaimer?: string;
 }
 
@@ -46,27 +49,45 @@ export function BrandedEmail({
   children,
   ctaLabel,
   ctaHref,
-  logoUrl = getEmailLogoUrl(),
+  logoUrl = getEmailLogoWhiteUrl(),
   disclaimer,
 }: BrandedEmailProps) {
   return (
     <Html lang="en">
-      <Head />
+      <Head>
+        <style>{`
+          @media only screen and (min-width: 600px) {
+            .email-container {
+              max-width: ${EMAIL_BRAND.contentWidthDesktop}px !important;
+            }
+            .email-body {
+              padding-left: 32px !important;
+              padding-right: 32px !important;
+            }
+          }
+        `}</style>
+      </Head>
       <Preview>{preview}</Preview>
-      <Body style={body}>
-        <Container style={container}>
-          <Section style={header}>
-            <Img
-              src={logoUrl}
-              width={EMAIL_BRAND.logoWidth}
-              height={EMAIL_BRAND.logoHeight}
-              alt="JA Group"
-              style={logo}
-            />
+      <Body style={body} className="email-body">
+        <Container style={container} className="email-container">
+          <Section style={brandBand}>
+            <Row>
+              <Column>
+                <Img
+                  src={logoUrl}
+                  width={EMAIL_BRAND.logoWhiteWidth}
+                  height={EMAIL_BRAND.logoWhiteHeight}
+                  alt={EMAIL_BRAND.companyName}
+                  style={brandLogo}
+                />
+              </Column>
+              <Column style={brandEyebrowCell}>
+                <Text style={brandEyebrow}>{eyebrow}</Text>
+              </Column>
+            </Row>
           </Section>
 
           <Section style={card}>
-            <Text style={eyebrowStyle}>{eyebrow}</Text>
             <Heading as="h1" style={headingStyle}>
               {heading}
             </Heading>
@@ -80,32 +101,35 @@ export function BrandedEmail({
                 </Button>
               </Section>
             ) : null}
-
-            <Hr style={divider} />
-
-            <Text style={portalHint}>
-              Or open{" "}
-              <Link href={getPortalUrl("/")} style={inlineLink}>
-                {EMAIL_BRAND.productName}
-              </Link>{" "}
-              in your browser.
-            </Text>
           </Section>
 
-          <Section style={footer}>
-            <Text style={footerBrand}>{EMAIL_BRAND.productName}</Text>
-            <Text style={footerText}>
-              {EMAIL_BRAND.companyName}
-              <br />
-              {EMAIL_BRAND.footerLine}
-            </Text>
-            {disclaimer ? (
-              <>
-                <Hr style={disclaimerDivider} />
-                <Text style={disclaimerText}>{disclaimer}</Text>
-              </>
-            ) : null}
+          <Section style={signature}>
+            <Row>
+              <Column style={signatureImageCell}>
+                <Img
+                  src={getEmailHandsUrl()}
+                  width={72}
+                  height={72}
+                  alt=""
+                  style={signatureImage}
+                />
+              </Column>
+              <Column>
+                <Text style={signatureTagline}>{EMAIL_BRAND.tagline}</Text>
+                <Text style={signatureMeta}>
+                  {EMAIL_BRAND.companyName}
+                  <br />
+                  {EMAIL_BRAND.footerLine}
+                </Text>
+              </Column>
+            </Row>
           </Section>
+
+          {disclaimer ? (
+            <Section style={disclaimerSection}>
+              <Text style={disclaimerText}>{disclaimer}</Text>
+            </Section>
+          ) : null}
         </Container>
       </Body>
     </Html>
@@ -114,6 +138,11 @@ export function BrandedEmail({
 
 export function EmailIntro({ children }: { children: ReactNode }) {
   return <Text style={intro}>{children}</Text>;
+}
+
+/** Small caps line under the heading, for category / type style context. */
+export function EmailMeta({ children }: { children: ReactNode }) {
+  return <Text style={meta}>{children}</Text>;
 }
 
 export function EmailDetails({ rows }: { rows: EmailDetailRow[] }) {
@@ -140,42 +169,48 @@ const body: CSSProperties = {
   backgroundColor: EMAIL_BRAND.background,
   fontFamily: emailFontFamily,
   margin: 0,
-  padding: "40px 16px",
+  padding: "32px 16px",
 };
 
 const container: CSSProperties = {
   margin: "0 auto",
-  maxWidth: "520px",
+  maxWidth: `${EMAIL_BRAND.contentWidth}px`,
   width: "100%",
 };
 
-const header: CSSProperties = {
-  padding: "0 8px 24px",
-  textAlign: "center",
+const brandBand: CSSProperties = {
+  backgroundColor: EMAIL_BRAND.navy,
+  borderRadius: "12px 12px 0 0",
+  padding: "20px 28px",
 };
 
-const logo: CSSProperties = {
+const brandLogo: CSSProperties = {
   display: "block",
-  height: `${EMAIL_BRAND.logoHeight}px`,
-  margin: "0 auto",
-  width: `${EMAIL_BRAND.logoWidth}px`,
+  height: `${EMAIL_BRAND.logoWhiteHeight}px`,
+  width: `${EMAIL_BRAND.logoWhiteWidth}px`,
+};
+
+const brandEyebrowCell: CSSProperties = {
+  textAlign: "right",
+  verticalAlign: "middle",
+};
+
+const brandEyebrow: CSSProperties = {
+  color: EMAIL_BRAND.gold,
+  fontSize: "11px",
+  fontWeight: 600,
+  letterSpacing: "0.14em",
+  lineHeight: "16px",
+  margin: 0,
+  textTransform: "uppercase",
 };
 
 const card: CSSProperties = {
   backgroundColor: EMAIL_BRAND.surface,
-  border: `1px solid ${EMAIL_BRAND.border}`,
-  borderRadius: "12px",
+  borderLeft: `1px solid ${EMAIL_BRAND.border}`,
+  borderRight: `1px solid ${EMAIL_BRAND.border}`,
+  borderBottom: `1px solid ${EMAIL_BRAND.border}`,
   padding: "32px 28px",
-};
-
-const eyebrowStyle: CSSProperties = {
-  color: EMAIL_BRAND.accent,
-  fontSize: "12px",
-  fontWeight: 600,
-  letterSpacing: "0.08em",
-  lineHeight: "16px",
-  margin: "0 0 8px",
-  textTransform: "uppercase",
 };
 
 const headingStyle: CSSProperties = {
@@ -185,6 +220,16 @@ const headingStyle: CSSProperties = {
   letterSpacing: "-0.02em",
   lineHeight: "32px",
   margin: "0 0 12px",
+};
+
+const meta: CSSProperties = {
+  color: EMAIL_BRAND.mutedText,
+  fontSize: "11px",
+  fontWeight: 600,
+  letterSpacing: "0.08em",
+  lineHeight: "16px",
+  margin: "0 0 20px",
+  textTransform: "uppercase",
 };
 
 const intro: CSSProperties = {
@@ -239,12 +284,12 @@ const note: CSSProperties = {
 };
 
 const ctaSection: CSSProperties = {
-  margin: "24px 0 0",
+  margin: "20px 0 0",
   textAlign: "center",
 };
 
 const ctaButton: CSSProperties = {
-  backgroundColor: EMAIL_BRAND.text,
+  backgroundColor: EMAIL_BRAND.navy,
   borderRadius: "6px",
   color: "#FFFFFF",
   display: "inline-block",
@@ -255,49 +300,41 @@ const ctaButton: CSSProperties = {
   textDecoration: "none",
 };
 
-const divider: CSSProperties = {
-  borderColor: EMAIL_BRAND.border,
-  borderTop: `1px solid ${EMAIL_BRAND.border}`,
-  margin: "24px 0 16px",
+const signature: CSSProperties = {
+  backgroundColor: EMAIL_BRAND.navy,
+  borderRadius: "0 0 12px 12px",
+  padding: "20px 28px",
 };
 
-const portalHint: CSSProperties = {
-  color: EMAIL_BRAND.mutedText,
-  fontSize: "13px",
-  lineHeight: "20px",
-  margin: 0,
+const signatureImageCell: CSSProperties = {
+  verticalAlign: "middle",
+  width: "88px",
 };
 
-const inlineLink: CSSProperties = {
-  color: EMAIL_BRAND.accent,
-  textDecoration: "underline",
+const signatureImage: CSSProperties = {
+  borderRadius: "6px",
+  display: "block",
+  height: "72px",
+  width: "72px",
 };
 
-const footer: CSSProperties = {
-  padding: "24px 8px 0",
+const signatureTagline: CSSProperties = {
+  color: EMAIL_BRAND.gold,
+  fontFamily: taglineFontFamily,
+  fontSize: "20px",
+  lineHeight: "26px",
+  margin: "0 0 6px",
 };
 
-const footerBrand: CSSProperties = {
-  color: EMAIL_BRAND.text,
-  fontSize: "12px",
-  fontWeight: 600,
-  lineHeight: "18px",
-  margin: "0 0 4px",
-  textAlign: "center",
-};
-
-const footerText: CSSProperties = {
-  color: EMAIL_BRAND.mutedText,
+const signatureMeta: CSSProperties = {
+  color: EMAIL_BRAND.onNavyMuted,
   fontSize: "12px",
   lineHeight: "18px",
   margin: 0,
-  textAlign: "center",
 };
 
-const disclaimerDivider: CSSProperties = {
-  borderColor: EMAIL_BRAND.border,
-  borderTop: `1px solid ${EMAIL_BRAND.border}`,
-  margin: "20px 0 16px",
+const disclaimerSection: CSSProperties = {
+  padding: "20px 8px 0",
 };
 
 const disclaimerText: CSSProperties = {
@@ -305,5 +342,4 @@ const disclaimerText: CSSProperties = {
   fontSize: "11px",
   lineHeight: "16px",
   margin: 0,
-  textAlign: "left",
 };

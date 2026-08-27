@@ -1,8 +1,7 @@
 import { Text } from "react-email";
 import {
   BrandedEmail,
-  EmailIntro,
-  EmailNote,
+  EmailMeta,
   emailFontFamily,
 } from "./shared";
 import { EMAIL_CONFIDENTIALITY, getPortalUrl } from "../lib/email/config";
@@ -30,25 +29,20 @@ export function AnnouncementEmail({
   return (
     <BrandedEmail
       preview={`${typeLabel}: ${title}`}
-      eyebrow={`Internal Comms · ${categoryLabel} · ${typeLabel}`}
+      eyebrow="Internal Comms"
       heading={title}
       ctaLabel="Open in portal"
       ctaHref={ctaHref}
       disclaimer={EMAIL_CONFIDENTIALITY.body}
     >
-      <EmailIntro>
-        A new announcement was published for your team.
-      </EmailIntro>
-      <div
-        style={bodyShell}
-        dangerouslySetInnerHTML={{ __html: bodyHtml }}
-      />
+      <EmailMeta>
+        {categoryLabel} · {typeLabel} · Published {publishedAtLabel}
+      </EmailMeta>
+      <div style={bodyShell} dangerouslySetInnerHTML={{ __html: bodyHtml }} />
       {attachmentNames.length > 0 ? (
         <div style={attachmentBox}>
           <Text style={attachmentHeading}>
-            {attachmentNames.length === 1
-              ? "Attachment"
-              : "Attachments"}
+            {attachmentNames.length === 1 ? "Attachment" : "Attachments"}
           </Text>
           {attachmentNames.map((name) => (
             <Text key={name} style={attachmentItem}>
@@ -56,12 +50,10 @@ export function AnnouncementEmail({
             </Text>
           ))}
           <Text style={attachmentHint}>
-            Files are attached to this email. You can also download them from
-            the dashboard.
+            Attached to this email and saved in the portal.
           </Text>
         </div>
       ) : null}
-      <EmailNote>Published {publishedAtLabel}</EmailNote>
     </BrandedEmail>
   );
 }

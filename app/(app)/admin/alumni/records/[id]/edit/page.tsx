@@ -37,12 +37,7 @@ export default async function EditAlumniRecordPage({
           <ArrowLeft className="size-4" />
           Alumni record
         </Link>
-        <div className="space-y-1">
-          <h1 className="text-xl font-medium tracking-tight">Edit alumni</h1>
-          <p className="text-sm text-muted-foreground">
-            Update contact details, tenure, or notes for this record.
-          </p>
-        </div>
+        <h1 className="text-xl font-medium tracking-tight">Edit alumni</h1>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6">
