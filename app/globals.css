@@ -193,6 +193,64 @@
   }
 }
 
+@layer components {
+  .form-page-shell::before,
+  .form-page-shell::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+  }
+
+  .form-page-shell::before {
+    z-index: 0;
+    background:
+      radial-gradient(
+        ellipse 90% 55% at 50% -15%,
+        color-mix(in srgb, var(--accent-blue) 7%, transparent),
+        transparent 72%
+      ),
+      radial-gradient(
+        ellipse 45% 38% at 100% 100%,
+        color-mix(in srgb, var(--primary) 4%, transparent),
+        transparent 70%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--secondary) 35%, var(--background)),
+        var(--background) 55%
+      );
+  }
+
+  .form-page-shell::after {
+    z-index: 0;
+    opacity: 0.35;
+    background-image: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--foreground) 6%, transparent) 0.65px,
+      transparent 0.65px
+    );
+    background-size: 22px 22px;
+    mask-image: radial-gradient(
+      ellipse 90% 80% at 50% 30%,
+      black 15%,
+      transparent 100%
+    );
+  }
+
+  .form-page-shell > div {
+    z-index: 1;
+  }
+
+  .form-page-card {
+    border-radius: var(--radius-xl);
+    border: 1px solid color-mix(in srgb, var(--border) 85%, white);
+    background: color-mix(in srgb, var(--card) 96%, var(--background));
+    padding: 1.5rem;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 3%, transparent);
+  }
+}
+
 /* TipTap / ProseMirror — Internal Comms editor */
 .prose-comms p {
   margin: 0.35em 0;

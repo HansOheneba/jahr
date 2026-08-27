@@ -2,6 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AlumniRecordForm } from "@/components/admin/alumni-record-form";
+import {
+  FormPageCard,
+  FormPageShell,
+} from "@/components/layout/form-page-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { getOrgOptionsForHire } from "@/lib/employees/actions";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
@@ -18,7 +22,7 @@ export default async function NewAlumniRecordPage() {
   const { businessUnits } = await getOrgOptionsForHire();
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
+    <FormPageShell>
       <div className="space-y-3">
         <Link
           href="/admin/alumni"
@@ -33,9 +37,9 @@ export default async function NewAlumniRecordPage() {
         <h1 className="text-xl font-medium tracking-tight">Add alumni</h1>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
+      <FormPageCard>
         <AlumniRecordForm businessUnits={businessUnits} />
-      </div>
-    </div>
+      </FormPageCard>
+    </FormPageShell>
   );
 }

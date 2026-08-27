@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { EditEmployeeForm } from "@/components/admin/edit-employee-form";
+import { FormPageShell } from "@/components/layout/form-page-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { getOrgOptionsForHire } from "@/lib/employees/actions";
@@ -30,7 +31,7 @@ export default async function EditEmployeePage({
   }
 
   return (
-    <div className="flex w-full flex-col gap-5">
+    <FormPageShell width="full">
       <div className="space-y-3">
         <Link
           href={`/admin/employees/${employeeId}`}
@@ -53,6 +54,6 @@ export default async function EditEmployeePage({
       </div>
 
       <EditEmployeeForm record={record} org={org} viewer={viewer} />
-    </div>
+    </FormPageShell>
   );
 }

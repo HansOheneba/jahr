@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
 import { SettingsForm } from "@/components/settings/settings-form";
+import {
+  FormPageCard,
+  FormPageShell,
+} from "@/components/layout/form-page-shell";
 import { getEmployeeRecord } from "@/lib/employees/get-employee-record";
 
 export default async function SettingsPage() {
@@ -10,7 +14,7 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    <FormPageShell width="sm">
       <div className="space-y-1">
         <h1 className="text-xl font-medium tracking-tight">Settings</h1>
         <p className="text-sm text-muted-foreground">
@@ -18,9 +22,9 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
+      <FormPageCard>
         <SettingsForm profile={record.profile} />
-      </div>
-    </div>
+      </FormPageCard>
+    </FormPageShell>
   );
 }

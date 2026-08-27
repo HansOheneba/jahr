@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { CommsComposerForm } from "@/components/admin/comms-composer-form";
+import { FormPageShell } from "@/components/layout/form-page-shell";
 import { getCommsBusinessUnits } from "@/lib/announcements/actions";
 import {
   getAnnouncementForCompose,
@@ -50,7 +51,7 @@ export default async function CommsNewPage({ searchParams }: CommsNewPageProps) 
     : null;
 
   return (
-    <div className="flex w-full flex-col gap-5">
+    <FormPageShell width="full">
       <div className="space-y-3">
         <Link
           href="/admin/comms"
@@ -76,6 +77,6 @@ export default async function CommsNewPage({ searchParams }: CommsNewPageProps) 
         mentionCandidates={mentionCandidates}
         initialDraft={initialDraft}
       />
-    </div>
+    </FormPageShell>
   );
 }

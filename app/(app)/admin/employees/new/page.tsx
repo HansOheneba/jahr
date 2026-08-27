@@ -2,6 +2,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AddEmployeeForm } from "@/components/admin/add-employee-form";
+import {
+  FormPageCard,
+  FormPageShell,
+} from "@/components/layout/form-page-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { getOrgOptionsForHire } from "@/lib/employees/actions";
@@ -18,7 +22,7 @@ export default async function NewEmployeePage() {
   const org = await getOrgOptionsForHire();
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
+    <FormPageShell>
       <div className="space-y-3">
         <Link
           href="/admin/employees"
@@ -39,9 +43,9 @@ export default async function NewEmployeePage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
+      <FormPageCard>
         <AddEmployeeForm org={org} viewer={profile} />
-      </div>
-    </div>
+      </FormPageCard>
+    </FormPageShell>
   );
 }
