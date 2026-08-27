@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { isReportingCurrency } from "@/lib/payroll/currencies";
-import { isOrgAdmin } from "@/lib/types/database";
+import { canManagePayroll } from "@/lib/types/database";
 import { createClient } from "@/utils/supabase/server";
 
 export interface OrgSettingsActionResult {
@@ -16,7 +16,7 @@ export async function updateReportingCurrency(
   currency: string,
 ): Promise<OrgSettingsActionResult> {
   const profile = await getCurrentProfile();
-  if (!profile || !isOrgAdmin(profile)) {
+  if (!profile || !canManagePayroll(profile)) {
     return { error: "Only org admins can change the reporting currency." };
   }
 

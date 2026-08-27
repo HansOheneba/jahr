@@ -6,13 +6,13 @@ import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { getFxRateTable } from "@/lib/fx/get-fx-rates";
 import { getOrgSettings } from "@/lib/org/get-org-settings";
 import { getPayrollEmployees } from "@/lib/payroll/get-payroll";
-import { isOrgAdmin } from "@/lib/types/database";
+import { canManagePayroll } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
 export default async function PayrollAdminPage() {
   const profile = await getCurrentProfile();
 
-  if (!profile || !isOrgAdmin(profile)) {
+  if (!profile || !canManagePayroll(profile)) {
     redirect("/dashboard");
   }
 

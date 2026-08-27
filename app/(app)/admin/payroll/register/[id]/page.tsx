@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { PayrollRegisterDetail } from "@/components/admin/payroll-register-detail";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { getPayslipSnapshot } from "@/lib/payroll/get-payroll";
-import { isOrgAdmin } from "@/lib/types/database";
+import { canManagePayroll } from "@/lib/types/database";
 
 export default async function PayrollRegisterDetailPage({
   params,
@@ -10,7 +10,7 @@ export default async function PayrollRegisterDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const profile = await getCurrentProfile();
-  if (!profile || !isOrgAdmin(profile)) {
+  if (!profile || !canManagePayroll(profile)) {
     redirect("/dashboard");
   }
 

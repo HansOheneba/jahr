@@ -12,7 +12,7 @@ import { formatRatesUpdated } from "@/lib/fx/format";
 import { getFxRateTable } from "@/lib/fx/get-fx-rates";
 import { getOrgSettings } from "@/lib/org/get-org-settings";
 import { REPORTING_CURRENCIES } from "@/lib/payroll/currencies";
-import { isOrgAdmin } from "@/lib/types/database";
+import { canManagePayroll } from "@/lib/types/database";
 
 const RATE_FORMAT = new Intl.NumberFormat("en-GB", {
   minimumFractionDigits: 2,
@@ -27,7 +27,7 @@ const SOURCE_LABELS: Record<string, string> = {
 export default async function AdminSettingsPage() {
   const profile = await getCurrentProfile();
 
-  if (!profile || !isOrgAdmin(profile)) {
+  if (!profile || !canManagePayroll(profile)) {
     redirect("/dashboard");
   }
 

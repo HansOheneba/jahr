@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
-import { displayName, isOrgAdmin } from "@/lib/types/database";
+import { displayName, canManagePayroll } from "@/lib/types/database";
 import type {
   PayDetailsRecord,
   PayFrequency,
@@ -100,7 +100,7 @@ function parseSnapshotContext(
 
 export async function getPayrollEmployees(): Promise<PayrollEmployeeSummary[]> {
   const viewer = await getCurrentProfile();
-  if (!viewer || !isOrgAdmin(viewer)) {
+  if (!viewer || !canManagePayroll(viewer)) {
     return [];
   }
 
@@ -209,7 +209,7 @@ export async function getPayPackage(
 ): Promise<PayPackage | null> {
   const viewer = await getCurrentProfile();
   if (!viewer) return null;
-  if (viewer.id !== employeeId && !isOrgAdmin(viewer)) {
+  if (viewer.id !== employeeId && !canManagePayroll(viewer)) {
     return null;
   }
 
@@ -307,7 +307,7 @@ export async function getPayslipSnapshot(
     return null;
   }
 
-  if (slip.employee_id !== viewer.id && !isOrgAdmin(viewer)) {
+  if (slip.employee_id !== viewer.id && !canManagePayroll(viewer)) {
     return null;
   }
 
@@ -349,7 +349,7 @@ export async function findPayslipForPeriod(
 ): Promise<PayslipSnapshot | null> {
   const viewer = await getCurrentProfile();
   if (!viewer) return null;
-  if (viewer.id !== employeeId && !isOrgAdmin(viewer)) {
+  if (viewer.id !== employeeId && !canManagePayroll(viewer)) {
     return null;
   }
 

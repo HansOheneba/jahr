@@ -26,6 +26,7 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 import { Separator } from "@/components/ui/separator";
 import {
   canApproveLeave,
+  canManagePayroll,
   canPublishComms,
   canViewPeopleDirectory,
   isOrgAdmin,
@@ -52,6 +53,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const pathname = usePathname();
   const showOrgAdmin = isOrgAdmin(profile);
+  const showPayrollNav = canManagePayroll(profile);
   const showPeopleDirectory = canViewPeopleDirectory(profile);
   const showTeamNav = canApproveLeave(profile);
   const showComms = canPublishComms(profile);
@@ -80,7 +82,7 @@ export function AppSidebar({
           { href: "/admin/organogram", label: "Organogram", icon: Network },
         ]
       : []),
-    ...(showOrgAdmin
+    ...(showPayrollNav
       ? [
           {
             href: "/admin/payroll",
@@ -92,6 +94,15 @@ export function AppSidebar({
             label: "Payslip register",
             icon: ScrollText,
           },
+          {
+            href: "/admin/settings",
+            label: "Org settings",
+            icon: SlidersHorizontal,
+          },
+        ]
+      : []),
+    ...(showOrgAdmin
+      ? [
           {
             href: "/admin/permits",
             label: "Work permits",
@@ -106,11 +117,6 @@ export function AppSidebar({
             href: "/admin/organisation",
             label: "Organisation",
             icon: Building2,
-          },
-          {
-            href: "/admin/settings",
-            label: "Org settings",
-            icon: SlidersHorizontal,
           },
         ]
       : []),

@@ -1,5 +1,7 @@
 import type { AppRole } from "@/lib/types/database";
 
+export const FINANCE_TAG = "finance" as const;
+
 export const PERMISSION_TAG_SLUGS = [
   "super_admin",
   "hr_admin",
@@ -8,6 +10,7 @@ export const PERMISSION_TAG_SLUGS = [
   "manager",
   "business_unit_md",
   "comms",
+  FINANCE_TAG,
 ] as const;
 
 export type PermissionTagSlug = (typeof PERMISSION_TAG_SLUGS)[number];
@@ -20,6 +23,7 @@ export const PERMISSION_TAG_LABELS: Record<PermissionTagSlug, string> = {
   manager: "Manager",
   business_unit_md: "Business unit MD",
   comms: "Comms",
+  finance: "Finance",
 };
 
 /** Tags that grant the org-admin surface (payroll, hire, amend, etc.). */
@@ -64,6 +68,10 @@ export function isOrgAdmin(bearer: TagBearer): boolean {
   return ORG_ADMIN_TAGS.some((slug) => bearer.tags.includes(slug));
 }
 
+export function canManagePayroll(bearer: TagBearer): boolean {
+  return hasTag(bearer, FINANCE_TAG) || isOrgAdmin(bearer);
+}
+
 export function isOrgLeader(bearer: TagBearer): boolean {
   return ORG_LEADER_TAGS.some((slug) => bearer.tags.includes(slug));
 }
@@ -94,6 +102,7 @@ export function canViewEmployeeDetails(
 ): boolean {
   if (viewer.id === target.id) return true;
   if (isOrgAdmin(viewer)) return true;
+  if (canManagePayroll(viewer)) return true;
   return target.manager_id === viewer.id;
 }
 

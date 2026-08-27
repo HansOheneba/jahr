@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { DEFAULT_PACKAGE_LINES } from "@/lib/payroll/types";
 import { withDefaultAmounts } from "@/lib/payroll/totals";
-import { isOrgAdmin } from "@/lib/types/database";
+import { canManagePayroll } from "@/lib/types/database";
 import { createClient } from "@/utils/supabase/server";
 
 /** Idempotent seed of pay_details + default package lines. Safe during RSC render. */
@@ -10,7 +10,7 @@ export async function ensureDefaultPayPackage(
   employeeId: string,
 ): Promise<{ error?: string; success?: boolean }> {
   const profile = await getCurrentProfile();
-  if (!profile || !isOrgAdmin(profile)) {
+  if (!profile || !canManagePayroll(profile)) {
     return { error: "Only org admins can create pay packages." };
   }
 

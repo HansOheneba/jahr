@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import type { PayrollRegisterEntry } from "@/lib/payroll/types";
-import { displayName, isOrgAdmin } from "@/lib/types/database";
+import { displayName, canManagePayroll } from "@/lib/types/database";
 import { createClient } from "@/utils/supabase/server";
 
 function payingEntityFromSnapshot(value: unknown): string | null {
@@ -12,7 +12,7 @@ function payingEntityFromSnapshot(value: unknown): string | null {
 
 export async function getPayrollRegister(): Promise<PayrollRegisterEntry[]> {
   const viewer = await getCurrentProfile();
-  if (!viewer || !isOrgAdmin(viewer)) {
+  if (!viewer || !canManagePayroll(viewer)) {
     return [];
   }
 

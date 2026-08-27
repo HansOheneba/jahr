@@ -3,7 +3,7 @@ import { ensurePayslipSnapshot } from "@/lib/payroll/actions";
 import { parsePeriodKey } from "@/lib/payroll/period";
 import { renderPayslipPdf } from "@/lib/payroll/render-payslip";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
-import { isOrgAdmin } from "@/lib/types/database";
+import { canManagePayroll } from "@/lib/types/database";
 
 export async function GET(request: Request) {
   const viewer = await getCurrentProfile();
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     );
   }
 
-  if (employeeId !== viewer.id && !isOrgAdmin(viewer)) {
+  if (employeeId !== viewer.id && !canManagePayroll(viewer)) {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 

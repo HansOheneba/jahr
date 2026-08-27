@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { getPayPackage } from "@/lib/payroll/get-payroll";
 import { ensureDefaultPayPackage } from "@/lib/payroll/ensure-package";
-import { isOrgAdmin } from "@/lib/types/database";
+import { canManagePayroll } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
 export default async function PayrollEmployeePage({
@@ -16,7 +16,7 @@ export default async function PayrollEmployeePage({
   params: Promise<{ employeeId: string }>;
 }) {
   const profile = await getCurrentProfile();
-  if (!profile || !isOrgAdmin(profile)) {
+  if (!profile || !canManagePayroll(profile)) {
     redirect("/dashboard");
   }
 

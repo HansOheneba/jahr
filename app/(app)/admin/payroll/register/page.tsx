@@ -5,13 +5,13 @@ import { PayrollRegisterExplorer } from "@/components/admin/payroll-register-exp
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { getPayrollRegister } from "@/lib/payroll/get-payroll-register";
-import { isOrgAdmin } from "@/lib/types/database";
+import { canManagePayroll } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
 export default async function PayrollRegisterPage() {
   const profile = await getCurrentProfile();
 
-  if (!profile || !isOrgAdmin(profile)) {
+  if (!profile || !canManagePayroll(profile)) {
     redirect("/dashboard");
   }
 

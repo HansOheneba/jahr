@@ -18,7 +18,7 @@ import {
   type PayPackageLineInput,
 } from "@/lib/payroll/types";
 import { computePayTotals, withDefaultAmounts } from "@/lib/payroll/totals";
-import { isOrgAdmin } from "@/lib/types/database";
+import { canManagePayroll } from "@/lib/types/database";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import {
@@ -53,7 +53,7 @@ export async function savePayPackage(
   input: SavePayPackageInput,
 ): Promise<PayrollActionResult> {
   const profile = await getCurrentProfile();
-  if (!profile || !isOrgAdmin(profile)) {
+  if (!profile || !canManagePayroll(profile)) {
     return { error: "Only org admins can edit pay packages." };
   }
 
@@ -167,7 +167,7 @@ export async function ensurePayslipSnapshot(input: {
   }
 
   const { employeeId, period } = input;
-  if (viewer.id !== employeeId && !isOrgAdmin(viewer)) {
+  if (viewer.id !== employeeId && !canManagePayroll(viewer)) {
     return { error: "You cannot generate this payslip." };
   }
 

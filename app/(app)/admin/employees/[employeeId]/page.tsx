@@ -5,6 +5,7 @@ import { getEmployeeRecord } from "@/lib/employees/get-employee-record";
 import { ensureDefaultPayPackage } from "@/lib/payroll/ensure-package";
 import { getPayPackage } from "@/lib/payroll/get-payroll";
 import {
+  canManagePayroll,
   canViewPeopleDirectory,
   isOrgAdmin,
 } from "@/lib/types/database";
@@ -18,7 +19,7 @@ export default async function EmployeeAdminPage({
 
   if (
     !viewer ||
-    !canViewPeopleDirectory(viewer)
+    (!canViewPeopleDirectory(viewer) && !canManagePayroll(viewer))
   ) {
     redirect("/dashboard");
   }
@@ -31,9 +32,10 @@ export default async function EmployeeAdminPage({
   }
 
   const admin = isOrgAdmin(viewer);
+  const payrollAccess = canManagePayroll(viewer);
   let payPackage = null;
 
-  if (admin) {
+  if (payrollAccess) {
     await ensureDefaultPayPackage(employeeId);
     payPackage = await getPayPackage(employeeId);
   }
