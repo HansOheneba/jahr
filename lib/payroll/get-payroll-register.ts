@@ -4,6 +4,12 @@ import type { PayrollRegisterEntry } from "@/lib/payroll/types";
 import { displayName, isOrgAdmin } from "@/lib/types/database";
 import { createClient } from "@/utils/supabase/server";
 
+function payingEntityFromSnapshot(value: unknown): string | null {
+  if (!value || typeof value !== "object") return null;
+  const entity = (value as Record<string, unknown>).legal_entity_paying;
+  return typeof entity === "string" && entity.trim() ? entity : null;
+}
+
 export async function getPayrollRegister(): Promise<PayrollRegisterEntry[]> {
   const viewer = await getCurrentProfile();
   if (!viewer || !isOrgAdmin(viewer)) {
@@ -27,6 +33,7 @@ export async function getPayrollRegister(): Promise<PayrollRegisterEntry[]> {
       net_pay,
       currency,
       generated_at,
+      snapshot_context,
       employee:profiles!payslips_employee_id_fkey (
         id,
         first_name,
@@ -65,6 +72,7 @@ export async function getPayrollRegister(): Promise<PayrollRegisterEntry[]> {
         net_pay: row.net_pay === null ? null : Number(row.net_pay),
         currency: row.currency ?? "GHS",
         generated_at: row.generated_at,
+        legal_entity_paying: payingEntityFromSnapshot(row.snapshot_context),
         employee: {
           id: employee.id,
           name: displayName(employee),

@@ -17,6 +17,7 @@ import {
   Network,
   ScrollText,
   Settings,
+  SlidersHorizontal,
   Users,
   Wallet,
 } from "lucide-react";
@@ -105,6 +106,11 @@ export function AppSidebar({
             href: "/admin/organisation",
             label: "Organisation",
             icon: Building2,
+          },
+          {
+            href: "/admin/settings",
+            label: "Org settings",
+            icon: SlidersHorizontal,
           },
         ]
       : []),

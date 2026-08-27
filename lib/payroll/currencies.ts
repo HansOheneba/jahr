@@ -3,6 +3,20 @@ import getSymbolFromCurrency from "currency-symbol-map";
 
 export const DEFAULT_CURRENCY = "USD";
 
+/** Matches the pay_details.currency column default. */
+export const DEFAULT_PAY_CURRENCY = "GHS";
+
+/** Currencies org-wide payroll totals can be reported in. */
+export const REPORTING_CURRENCIES = ["GHS", "USD", "GBP"] as const;
+
+export type ReportingCurrency = (typeof REPORTING_CURRENCIES)[number];
+
+export const DEFAULT_REPORTING_CURRENCY: ReportingCurrency = "GHS";
+
+export function isReportingCurrency(code: string): code is ReportingCurrency {
+  return (REPORTING_CURRENCIES as readonly string[]).includes(code);
+}
+
 export interface CurrencyOption {
   code: string;
   name: string;

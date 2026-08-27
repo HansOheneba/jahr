@@ -6,6 +6,10 @@ import { Download, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  UNASSIGNED_ENTITY_KEY,
+  UNASSIGNED_ENTITY_LABEL,
+} from "@/lib/payroll/entity-analysis";
 import type { PayrollRegisterEntry } from "@/lib/payroll/types";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +37,7 @@ function entryHaystack(entry: PayrollRegisterEntry): string {
     entry.employee.name,
     entry.employee.employee_number,
     entry.employee.job_title,
+    entry.legal_entity_paying,
   ]
     .filter(Boolean)
     .join(" ")
@@ -50,6 +55,31 @@ export function PayrollRegisterExplorer({
 }) {
   const [query, setQuery] = useState("");
   const [year, setYear] = useState<string>("all");
+  const [entity, setEntity] = useState<string>("all");
+
+  const entities = useMemo(() => {
+    const counts = new Map<string, number>();
+    let unassigned = 0;
+    for (const entry of entries) {
+      const value = entry.legal_entity_paying?.trim();
+      if (!value) {
+        unassigned += 1;
+        continue;
+      }
+      counts.set(value, (counts.get(value) ?? 0) + 1);
+    }
+    const named = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([label, count]) => ({ key: label, label, count }));
+    if (unassigned > 0) {
+      named.push({
+        key: UNASSIGNED_ENTITY_KEY,
+        label: UNASSIGNED_ENTITY_LABEL,
+        count: unassigned,
+      });
+    }
+    return named;
+  }, [entries]);
 
   const years = useMemo(() => {
     const values = new Set<string>();
@@ -65,10 +95,15 @@ export function PayrollRegisterExplorer({
       if (year !== "all" && yearFromPeriod(entry.period_start) !== year) {
         return false;
       }
+      if (entity === UNASSIGNED_ENTITY_KEY) {
+        if (entry.legal_entity_paying?.trim()) return false;
+      } else if (entity !== "all" && entry.legal_entity_paying !== entity) {
+        return false;
+      }
       if (!normalized) return true;
       return entryHaystack(entry).includes(normalized);
     });
-  }, [entries, query, year]);
+  }, [entries, query, year, entity]);
 
   if (entries.length === 0) {
     return (
@@ -114,6 +149,24 @@ export function PayrollRegisterExplorer({
         </div>
       </div>
 
+      {entities.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          <FilterChip
+            active={entity === "all"}
+            onClick={() => setEntity("all")}
+            label="All entities"
+          />
+          {entities.map((row) => (
+            <FilterChip
+              key={row.key}
+              active={entity === row.key}
+              onClick={() => setEntity(row.key)}
+              label={row.label}
+            />
+          ))}
+        </div>
+      ) : null}
+
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
           <p className="text-sm font-medium tracking-tight">No matching payslips</p>
@@ -158,6 +211,9 @@ export function PayrollRegisterExplorer({
                     {entry.employee.employee_number ?? "No payroll no."}
                     {entry.employee.job_title
                       ? ` · ${entry.employee.job_title}`
+                      : ""}
+                    {entry.legal_entity_paying
+                      ? ` · ${entry.legal_entity_paying}`
                       : ""}
                   </p>
                 </div>

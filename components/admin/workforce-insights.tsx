@@ -22,6 +22,7 @@ import {
   Users,
   UserCheck,
   Venus,
+  Wallet,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -354,8 +355,10 @@ function CompositionCard({
 
 export function WorkforceInsightsView({
   insights,
+  showPayroll = false,
 }: {
   insights: WorkforceInsights;
+  showPayroll?: boolean;
 }) {
   const [barsReady, setBarsReady] = useState(false);
 
@@ -408,6 +411,18 @@ export function WorkforceInsightsView({
               >
                 View alumni
               </Link>
+              {showPayroll ? (
+                <Link
+                  href="/admin/payroll"
+                  className={cn(
+                    buttonVariants({ size: "sm", variant: "outline" }),
+                    "gap-1.5 border-transparent bg-white/80",
+                  )}
+                >
+                  <Wallet className="size-3.5" />
+                  Payroll
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>

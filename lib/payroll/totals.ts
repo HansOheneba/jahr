@@ -1,4 +1,8 @@
-import type { PayLineKind, PayPackageLineInput } from "@/lib/payroll/types";
+import type {
+  PayFrequency,
+  PayLineKind,
+  PayPackageLineInput,
+} from "@/lib/payroll/types";
 
 export function sumByKind(
   lines: Array<{ kind: PayLineKind; amount: number; active?: boolean }>,
@@ -23,6 +27,19 @@ export function computePayTotals(
 
 export function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+export function toMonthlyAmount(
+  amount: number,
+  frequency: PayFrequency,
+): number {
+  if (frequency === "weekly") {
+    return roundMoney((amount * 52) / 12);
+  }
+  if (frequency === "annually") {
+    return roundMoney(amount / 12);
+  }
+  return roundMoney(amount);
 }
 
 export function formatMoney(value: number, currency = "GHS"): string {

@@ -471,7 +471,43 @@ export function FormPageSkeleton({
 export function PayrollListPageSkeleton() {
   return (
     <PageSkeletonFrame>
-      <PageHeaderSkeleton />
+      <PageHeaderSkeleton withAction />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <CardShell key={index} className="p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-7 w-28" />
+              </div>
+              <Skeleton className="size-10 rounded-md" />
+            </div>
+            <Skeleton className="mt-4 h-3 w-40" />
+          </CardShell>
+        ))}
+      </div>
+      <CardShell>
+        <CardHeaderSkeleton lines={2} />
+        <div className="divide-y divide-border">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between gap-3 px-5 py-3.5"
+            >
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-40 max-w-[55%]" />
+                <Skeleton className="h-1.5 w-full rounded-full" />
+              </div>
+              <Skeleton className="h-3.5 w-16" />
+            </div>
+          ))}
+        </div>
+      </CardShell>
+      <div className="flex flex-wrap gap-2">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Skeleton key={index} className="h-8 w-24 rounded-md" />
+        ))}
+      </div>
       <CardShell className="divide-y divide-border">
         {Array.from({ length: 7 }).map((_, index) => (
           <div

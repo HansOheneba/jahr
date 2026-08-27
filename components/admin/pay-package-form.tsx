@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Download, Plus, Trash2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -303,6 +304,7 @@ export function PayPackageForm({ pack }: { pack: PayPackage }) {
         return;
       }
       setSavedSnapshot(nextSnapshot);
+      toast.success("Changes saved");
       router.refresh();
     });
   }
@@ -343,7 +345,7 @@ export function PayPackageForm({ pack }: { pack: PayPackage }) {
           </Field>
           <Field label="Paying entity" htmlFor="pay-entity">
             <Select
-              value={details.payingEntity || undefined}
+              value={details.payingEntity ? details.payingEntity : null}
               onValueChange={(value) => {
                 if (value) setField("payingEntity", value);
               }}

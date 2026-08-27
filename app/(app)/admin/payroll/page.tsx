@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { PayrollList } from "@/components/admin/payroll-list";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
+import { getFxRateTable } from "@/lib/fx/get-fx-rates";
+import { getOrgSettings } from "@/lib/org/get-org-settings";
 import { getPayrollEmployees } from "@/lib/payroll/get-payroll";
 import { isOrgAdmin } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
@@ -14,7 +16,11 @@ export default async function PayrollAdminPage() {
     redirect("/dashboard");
   }
 
-  const employees = await getPayrollEmployees();
+  const [employees, orgSettings, rates] = await Promise.all([
+    getPayrollEmployees(),
+    getOrgSettings(),
+    getFxRateTable(),
+  ]);
 
   return (
     <div className="flex w-full flex-col gap-5">
@@ -22,18 +28,22 @@ export default async function PayrollAdminPage() {
         <div className="space-y-1">
           <h1 className="text-xl font-medium tracking-tight">Payroll</h1>
           <p className="text-sm text-muted-foreground">
-            Set each employee’s pay package. Payslip PDFs generate on download.
+            Pay packages, paying entity, and monthly cost by legal entity.
           </p>
         </div>
         <Link
           href="/admin/payroll/register"
-          className={cn(buttonVariants({ variant: "outline" }))}
+          className={cn(buttonVariants())}
         >
           Payslip register
         </Link>
       </div>
 
-      <PayrollList employees={employees} />
+      <PayrollList
+        employees={employees}
+        rates={rates}
+        reportingCurrency={orgSettings.reportingCurrency}
+      />
     </div>
   );
 }

@@ -14,6 +14,11 @@ import type {
   PayslipSnapshotContext,
   PayslipStatus,
 } from "@/lib/payroll/types";
+import {
+  computePayTotals,
+  roundMoney,
+  sumByKind,
+} from "@/lib/payroll/totals";
 import { createClient } from "@/utils/supabase/server";
 
 function mapLine(row: {
@@ -124,11 +129,13 @@ export async function getPayrollEmployees(): Promise<PayrollEmployeeSummary[]> {
     await Promise.all([
       supabase
         .from("pay_details")
-        .select("employee_id, salary, currency")
+        .select(
+          "employee_id, salary, currency, pay_frequency, legal_entity_paying",
+        )
         .in("employee_id", ids),
       supabase
         .from("pay_package_lines")
-        .select("employee_id")
+        .select("employee_id, kind, amount, active")
         .in("employee_id", ids),
       departmentIds.length
         ? supabase
@@ -141,11 +148,35 @@ export async function getPayrollEmployees(): Promise<PayrollEmployeeSummary[]> {
   const payMap = new Map(
     (payDetails ?? []).map((row) => [row.employee_id, row]),
   );
-  const packageSet = new Set((packageLines ?? []).map((row) => row.employee_id));
+  const linesByEmployee = new Map<
+    string,
+    Array<{ kind: PayLineKind; amount: number; active: boolean }>
+  >();
+  for (const row of packageLines ?? []) {
+    const existing = linesByEmployee.get(row.employee_id) ?? [];
+    existing.push({
+      kind: row.kind as PayLineKind,
+      amount: Number(row.amount),
+      active: row.active,
+    });
+    linesByEmployee.set(row.employee_id, existing);
+  }
   const deptMap = new Map((departments ?? []).map((d) => [d.id, d.name]));
 
   return profiles.map((profile) => {
     const pay = payMap.get(profile.id);
+    const lines = linesByEmployee.get(profile.id) ?? [];
+    const salary =
+      pay?.salary === null || pay?.salary === undefined
+        ? null
+        : Number(pay.salary);
+    const totals = computePayTotals(lines);
+    const employerContributions = roundMoney(
+      sumByKind(lines, "employer_contribution"),
+    );
+    const grossPay =
+      lines.length > 0 ? totals.grossPay : salary;
+
     return {
       id: profile.id,
       first_name: profile.first_name,
@@ -158,11 +189,17 @@ export async function getPayrollEmployees(): Promise<PayrollEmployeeSummary[]> {
         ? (deptMap.get(profile.department_id) ?? null)
         : null,
       avatar_url: profile.avatar_url ?? null,
-      salary: pay?.salary === null || pay?.salary === undefined
-        ? null
-        : Number(pay.salary),
+      salary,
       currency: pay?.currency ?? null,
-      has_package: packageSet.has(profile.id),
+      pay_frequency: pay?.pay_frequency
+        ? (pay.pay_frequency as PayFrequency)
+        : null,
+      legal_entity_paying: pay?.legal_entity_paying ?? null,
+      gross_pay: grossPay,
+      total_deductions: lines.length > 0 ? totals.totalDeductions : null,
+      employer_contributions:
+        lines.length > 0 ? employerContributions : null,
+      has_package: lines.length > 0,
     };
   });
 }

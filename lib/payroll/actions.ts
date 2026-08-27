@@ -3,9 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
+import { getFxRateTable } from "@/lib/fx/get-fx-rates";
+import { getOrgSettings } from "@/lib/org/get-org-settings";
 import { ensureDefaultPayPackage as seedDefaultPayPackage } from "@/lib/payroll/ensure-package";
+import { buildPayslipFxLock } from "@/lib/payroll/payslip-fx";
 import { ensureEmployeePayrollNumber } from "@/lib/payroll/ensure-payroll-number";
 import { capturePayslipSnapshotContext } from "@/lib/payroll/capture-snapshot-context";
+import { DEFAULT_PAY_CURRENCY } from "@/lib/payroll/currencies";
 import { logPayslipAccess } from "@/lib/payroll/log-payslip-access";
 import { allocatePayslipReference } from "@/lib/payroll/payslip-reference";
 import {
@@ -89,7 +93,7 @@ export async function savePayPackage(
     {
       employee_id: employeeId,
       salary,
-      currency: input.currency.trim() || "GHS",
+      currency: input.currency.trim() || DEFAULT_PAY_CURRENCY,
       pay_frequency: input.payFrequency || "monthly",
       legal_entity_paying: input.legalEntityPaying.trim() || null,
       bank_name: input.bankName.trim() || null,
@@ -238,9 +242,19 @@ export async function ensurePayslipSnapshot(input: {
   }));
 
   const totals = computePayTotals(activeLines);
-  const currency = details?.currency ?? "GHS";
+  const currency = details?.currency ?? DEFAULT_PAY_CURRENCY;
   const now = new Date().toISOString();
   const admin = createAdminClient();
+
+  const [orgSettings, fxRates] = await Promise.all([
+    getOrgSettings(),
+    getFxRateTable(),
+  ]);
+  const fxLock = buildPayslipFxLock(
+    currency,
+    orgSettings.reportingCurrency,
+    fxRates,
+  );
 
   let reference: string;
   try {
@@ -279,6 +293,7 @@ export async function ensurePayslipSnapshot(input: {
       generated_by: viewer.id,
       uploaded_at: now,
       snapshot_context: snapshotContext,
+      ...fxLock,
     })
     .select("id")
     .single();

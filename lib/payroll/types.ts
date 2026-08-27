@@ -2,6 +2,19 @@ export type PayLineKind = "earning" | "deduction" | "employer_contribution";
 export type PayFrequency = "monthly" | "weekly" | "annually";
 export type PayslipStatus = "generated";
 
+export const PAY_FREQUENCY_LABELS: Record<PayFrequency, string> = {
+  monthly: "Monthly",
+  weekly: "Weekly",
+  annually: "Annually",
+};
+
+export function formatPayFrequency(
+  frequency: PayFrequency | null | undefined,
+): string | null {
+  if (!frequency) return null;
+  return PAY_FREQUENCY_LABELS[frequency] ?? frequency;
+}
+
 export interface PayPackageLine {
   id: string;
   employee_id: string;
@@ -91,6 +104,7 @@ export interface PayrollRegisterEntry {
   net_pay: number | null;
   currency: string;
   generated_at: string | null;
+  legal_entity_paying: string | null;
   employee: {
     id: string;
     name: string;
@@ -111,6 +125,11 @@ export interface PayrollEmployeeSummary {
   avatar_url: string | null;
   salary: number | null;
   currency: string | null;
+  pay_frequency: PayFrequency | null;
+  legal_entity_paying: string | null;
+  gross_pay: number | null;
+  total_deductions: number | null;
+  employer_contributions: number | null;
   has_package: boolean;
 }
 
