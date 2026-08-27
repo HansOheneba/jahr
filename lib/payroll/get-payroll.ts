@@ -198,6 +198,7 @@ export async function getPayPackage(
         salary: details.salary === null ? null : Number(details.salary),
         currency: details.currency,
         pay_frequency: details.pay_frequency as PayFrequency,
+        legal_entity_paying: details.legal_entity_paying ?? null,
         bank_name: details.bank_name,
         bank_branch: details.bank_branch,
         account_name: details.account_name,

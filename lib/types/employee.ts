@@ -4,7 +4,7 @@ import type { AppRole, EmploymentStatus, ProfileWithOrg } from "@/lib/types/data
 export type EmployeeCategory = "employee" | "contractor" | "intern";
 export type WorkType = "onsite" | "hybrid" | "remote";
 export type EmploymentType = "full_time" | "part_time";
-export type PayFrequency = "monthly" | "weekly";
+export type PayFrequency = "monthly" | "weekly" | "annually";
 export type DocumentKind =
   | "employment_contract"
   | "offer_letter"
@@ -76,6 +76,7 @@ export interface PayDetails {
   salary: number | null;
   currency: string;
   pay_frequency: PayFrequency;
+  legal_entity_paying: string | null;
   bank_name: string | null;
   bank_branch: string | null;
   account_name: string | null;

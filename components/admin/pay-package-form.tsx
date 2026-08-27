@@ -14,11 +14,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { CurrencySelect } from "@/components/admin/currency-select";
 import {
   ensureDefaultPayPackage,
   savePayPackage,
 } from "@/lib/payroll/actions";
 import { periodKey, recentPayPeriods } from "@/lib/payroll/period";
+import { DEFAULT_CURRENCY } from "@/lib/payroll/currencies";
+import { LEGAL_ENTITIES } from "@/lib/payroll/legal-entities";
 import { computePayTotals } from "@/lib/payroll/totals";
 import {
   DEFAULT_PACKAGE_LINES,
@@ -68,9 +71,12 @@ export function PayPackageForm({
       ? String(details.salary)
       : "",
   );
-  const [currency, setCurrency] = useState(details?.currency ?? "GHS");
+  const [currency, setCurrency] = useState(details?.currency ?? DEFAULT_CURRENCY);
   const [payFrequency, setPayFrequency] = useState<PayFrequency>(
     details?.pay_frequency ?? "monthly",
+  );
+  const [legalEntityPaying, setLegalEntityPaying] = useState(
+    details?.legal_entity_paying ?? "",
   );
   const [bankName, setBankName] = useState(details?.bank_name ?? "");
   const [bankBranch, setBankBranch] = useState(details?.bank_branch ?? "");
@@ -143,6 +149,7 @@ export function PayPackageForm({
         salary: salaryNumber,
         currency,
         payFrequency,
+        legalEntityPaying,
         bankName,
         bankBranch,
         accountName,
@@ -190,10 +197,7 @@ export function PayPackageForm({
           />
         </Field>
         <Field label="Currency">
-          <Input
-            value={currency}
-            onChange={(event) => setCurrency(event.target.value)}
-          />
+          <CurrencySelect value={currency} onValueChange={setCurrency} />
         </Field>
         <Field label="Pay frequency">
           <Select
@@ -204,6 +208,7 @@ export function PayPackageForm({
             items={[
               { value: "monthly", label: "Monthly" },
               { value: "weekly", label: "Weekly" },
+              { value: "annually", label: "Annually" },
             ]}
           >
             <SelectTrigger className="w-full">
@@ -212,6 +217,30 @@ export function PayPackageForm({
             <SelectContent>
               <SelectItem value="monthly">Monthly</SelectItem>
               <SelectItem value="weekly">Weekly</SelectItem>
+              <SelectItem value="annually">Annually</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label="Legal entity paying">
+          <Select
+            value={legalEntityPaying || undefined}
+            onValueChange={(value) => {
+              if (value) setLegalEntityPaying(value);
+            }}
+            items={LEGAL_ENTITIES.map((entity) => ({
+              value: entity,
+              label: entity,
+            }))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select legal entity" />
+            </SelectTrigger>
+            <SelectContent>
+              {LEGAL_ENTITIES.map((entity) => (
+                <SelectItem key={entity} value={entity}>
+                  {entity}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>

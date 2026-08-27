@@ -197,6 +197,7 @@ export async function getEmployeeRecord(
               : Number(payDetails.data.salary),
           currency: payDetails.data.currency,
           pay_frequency: payDetails.data.pay_frequency as PayFrequency,
+          legal_entity_paying: payDetails.data.legal_entity_paying ?? null,
           bank_name: payDetails.data.bank_name,
           bank_branch: payDetails.data.bank_branch ?? null,
           account_name: payDetails.data.account_name,

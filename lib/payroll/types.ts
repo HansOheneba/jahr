@@ -1,5 +1,5 @@
 export type PayLineKind = "earning" | "deduction" | "employer_contribution";
-export type PayFrequency = "monthly" | "weekly";
+export type PayFrequency = "monthly" | "weekly" | "annually";
 export type PayslipStatus = "generated";
 
 export interface PayPackageLine {
@@ -27,6 +27,7 @@ export interface PayDetailsRecord {
   salary: number | null;
   currency: string;
   pay_frequency: PayFrequency;
+  legal_entity_paying: string | null;
   bank_name: string | null;
   bank_branch: string | null;
   account_name: string | null;

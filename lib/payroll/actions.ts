@@ -28,6 +28,7 @@ export interface SavePayPackageInput {
   salary: number | null;
   currency: string;
   payFrequency: PayFrequency;
+  legalEntityPaying: string;
   bankName: string;
   bankBranch: string;
   accountName: string;
@@ -85,6 +86,7 @@ export async function savePayPackage(
       salary,
       currency: input.currency.trim() || "GHS",
       pay_frequency: input.payFrequency || "monthly",
+      legal_entity_paying: input.legalEntityPaying.trim() || null,
       bank_name: input.bankName.trim() || null,
       bank_branch: input.bankBranch.trim() || null,
       account_name: input.accountName.trim() || null,
