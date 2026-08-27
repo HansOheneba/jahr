@@ -1,7 +1,7 @@
 import cc from "currency-codes";
 import getSymbolFromCurrency from "currency-symbol-map";
 
-export const DEFAULT_CURRENCY = "GHS";
+export const DEFAULT_CURRENCY = "USD";
 
 export interface CurrencyOption {
   code: string;
@@ -9,7 +9,7 @@ export interface CurrencyOption {
   symbol: string;
 }
 
-const PRIORITY_CODES = ["GHS", "USD", "GBP", "EUR"] as const;
+const PRIORITY_CODES = ["USD", "GHS", "GBP", "EUR"] as const;
 
 function buildCurrencyOption(code: string): CurrencyOption | null {
   const record = cc.code(code);
