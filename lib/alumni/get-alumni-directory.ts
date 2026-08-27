@@ -97,7 +97,7 @@ async function fetchAlumniRecords(): Promise<AlumniRecordEntry[]> {
   const { data, error } = await supabase
     .from("alumni_records")
     .select(
-      "id, first_name, last_name, preferred_name, email, phone, personal_email, start_year, end_year, start_date, termination_date, placement, job_title, notes",
+      "id, first_name, last_name, preferred_name, email, phone, personal_email, start_year, end_year, start_date, termination_date, business_unit_id, placement, job_title, notes",
     )
     .order("last_name", { ascending: true })
     .order("first_name", { ascending: true });
@@ -106,6 +106,19 @@ async function fetchAlumniRecords(): Promise<AlumniRecordEntry[]> {
     if (error) console.error("[fetchAlumniRecords]", error.message);
     return [];
   }
+
+  const businessUnitIds = [
+    ...new Set(data.map((row) => row.business_unit_id).filter(Boolean)),
+  ] as string[];
+
+  const { data: businessUnits } = businessUnitIds.length
+    ? await supabase
+        .from("business_units")
+        .select("id, name")
+        .in("id", businessUnitIds)
+    : { data: [] as Array<{ id: string; name: string }> };
+
+  const unitMap = new Map((businessUnits ?? []).map((row) => [row.id, row.name]));
 
   return data.map((row) => ({
     source: "record" as const,
@@ -120,6 +133,10 @@ async function fetchAlumniRecords(): Promise<AlumniRecordEntry[]> {
     end_year: row.end_year,
     start_date: row.start_date,
     termination_date: row.termination_date,
+    business_unit_id: row.business_unit_id,
+    business_unit_name: row.business_unit_id
+      ? (unitMap.get(row.business_unit_id) ?? null)
+      : null,
     placement: row.placement,
     job_title: row.job_title,
     notes: row.notes,

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AlumniRecordForm } from "@/components/admin/alumni-record-form";
 import { buttonVariants } from "@/components/ui/button";
+import { getOrgOptionsForHire } from "@/lib/employees/actions";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { isOrgAdmin } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,8 @@ export default async function NewAlumniRecordPage() {
   if (!profile || !isOrgAdmin(profile)) {
     redirect("/dashboard");
   }
+
+  const { businessUnits } = await getOrgOptionsForHire();
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
@@ -31,7 +34,7 @@ export default async function NewAlumniRecordPage() {
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6">
-        <AlumniRecordForm />
+        <AlumniRecordForm businessUnits={businessUnits} />
       </div>
     </div>
   );

@@ -12,6 +12,8 @@ export interface AlumniRecord {
   end_year: number | null;
   start_date: string | null;
   termination_date: string | null;
+  business_unit_id: string | null;
+  business_unit_name: string | null;
   placement: string | null;
   job_title: string | null;
   notes: string | null;
@@ -50,6 +52,8 @@ export interface AlumniRecordEntry {
   end_year: number | null;
   start_date: string | null;
   termination_date: string | null;
+  business_unit_id: string | null;
+  business_unit_name: string | null;
   placement: string | null;
   job_title: string | null;
   notes: string | null;
@@ -68,7 +72,7 @@ export interface AlumniRecordInput {
   endYear: string;
   startDate: string;
   terminationDate: string;
-  placement: string;
+  businessUnitId: string;
   jobTitle: string;
   notes: string;
 }

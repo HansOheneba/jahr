@@ -44,12 +44,13 @@ function mapRecord(row: {
   end_year: number | null;
   start_date: string | null;
   termination_date: string | null;
+  business_unit_id: string | null;
   placement: string | null;
   job_title: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
-}): AlumniRecord {
+}, businessUnitName?: string | null): AlumniRecord {
   return {
     id: row.id,
     first_name: row.first_name,
@@ -62,6 +63,8 @@ function mapRecord(row: {
     end_year: row.end_year,
     start_date: row.start_date,
     termination_date: row.termination_date,
+    business_unit_id: row.business_unit_id,
+    business_unit_name: businessUnitName ?? null,
     placement: row.placement,
     job_title: row.job_title,
     notes: row.notes,
@@ -83,6 +86,7 @@ function validateInput(input: AlumniRecordInput): {
     end_year: number | null;
     start_date: string | null;
     termination_date: string | null;
+    business_unit_id: string | null;
     placement: string | null;
     job_title: string | null;
     notes: string | null;
@@ -120,7 +124,8 @@ function validateInput(input: AlumniRecordInput): {
       end_year: endYear,
       start_date: emptyToNull(input.startDate),
       termination_date: emptyToNull(input.terminationDate),
-      placement: emptyToNull(input.placement),
+      business_unit_id: emptyToNull(input.businessUnitId),
+      placement: null,
       job_title: emptyToNull(input.jobTitle),
       notes: emptyToNull(input.notes),
     },
@@ -157,7 +162,17 @@ export async function getAlumniRecord(
     return null;
   }
 
-  return mapRecord(data);
+  let businessUnitName: string | null = null;
+  if (data.business_unit_id) {
+    const { data: unit } = await supabase
+      .from("business_units")
+      .select("name")
+      .eq("id", data.business_unit_id)
+      .maybeSingle();
+    businessUnitName = unit?.name ?? null;
+  }
+
+  return mapRecord(data, businessUnitName);
 }
 
 export async function createAlumniRecord(

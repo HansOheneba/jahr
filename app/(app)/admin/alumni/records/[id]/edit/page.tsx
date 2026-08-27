@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { AlumniRecordForm } from "@/components/admin/alumni-record-form";
 import { buttonVariants } from "@/components/ui/button";
 import { getAlumniRecord } from "@/lib/alumni/actions";
+import { getOrgOptionsForHire } from "@/lib/employees/actions";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { isOrgAdmin } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
@@ -19,7 +20,10 @@ export default async function EditAlumniRecordPage({
   }
 
   const { id } = await params;
-  const record = await getAlumniRecord(id);
+  const [record, { businessUnits }] = await Promise.all([
+    getAlumniRecord(id),
+    getOrgOptionsForHire(),
+  ]);
   if (!record) {
     notFound();
   }
@@ -41,7 +45,7 @@ export default async function EditAlumniRecordPage({
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6">
-        <AlumniRecordForm record={record} />
+        <AlumniRecordForm record={record} businessUnits={businessUnits} />
       </div>
     </div>
   );

@@ -8,6 +8,13 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -38,7 +45,7 @@ function recordToInput(record: AlumniRecord): AlumniRecordInput {
     endYear: record.end_year !== null ? String(record.end_year) : "",
     startDate: record.start_date ?? "",
     terminationDate: record.termination_date ?? "",
-    placement: record.placement ?? "",
+    businessUnitId: record.business_unit_id ?? "",
     jobTitle: record.job_title ?? "",
     notes: record.notes ?? "",
   };
@@ -46,8 +53,10 @@ function recordToInput(record: AlumniRecord): AlumniRecordInput {
 
 export function AlumniRecordForm({
   record,
+  businessUnits,
 }: {
   record?: AlumniRecord;
+  businessUnits: Array<{ id: string; name: string }>;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -71,7 +80,9 @@ export function AlumniRecordForm({
   const [phone, setPhone] = useState(initial?.phone ?? "");
   const [startYear, setStartYear] = useState(initial?.startYear ?? "");
   const [endYear, setEndYear] = useState(initial?.endYear ?? "");
-  const [placement, setPlacement] = useState(initial?.placement ?? "");
+  const [businessUnitId, setBusinessUnitId] = useState(
+    initial?.businessUnitId ?? "",
+  );
   const [preferredName, setPreferredName] = useState(
     initial?.preferredName ?? "",
   );
@@ -102,7 +113,7 @@ export function AlumniRecordForm({
       terminationDate: terminationDate
         ? format(terminationDate, "yyyy-MM-dd")
         : "",
-      placement,
+      businessUnitId,
       jobTitle,
       notes,
     };
@@ -185,12 +196,34 @@ export function AlumniRecordForm({
               placeholder="e.g. 2020"
             />
           </Field>
-          <Field label="Where they worked" className="sm:col-span-2">
-            <Input
-              value={placement}
-              onChange={(event) => setPlacement(event.target.value)}
-              placeholder="Team, role, or business unit"
-            />
+          <Field label="Business unit">
+            <Select
+              value={businessUnitId || "none"}
+              onValueChange={(value) => {
+                if (value !== null) {
+                  setBusinessUnitId(value === "none" ? "" : value);
+                }
+              }}
+              items={[
+                { value: "none", label: "None" },
+                ...businessUnits.map((unit) => ({
+                  value: unit.id,
+                  label: unit.name,
+                })),
+              ]}
+            >
+              <SelectTrigger id="alumni-business-unit" className="w-full">
+                <SelectValue placeholder="Select business unit" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {businessUnits.map((unit) => (
+                  <SelectItem key={unit.id} value={unit.id}>
+                    {unit.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
         </div>
       </section>

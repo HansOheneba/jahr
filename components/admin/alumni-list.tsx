@@ -36,7 +36,7 @@ function alumniPlacement(entry: AlumniDirectoryEntry): string {
       entry.department_name ?? entry.business_unit_name ?? entry.job_title ?? "—"
     );
   }
-  return entry.placement ?? entry.job_title ?? "—";
+  return entry.business_unit_name ?? entry.placement ?? entry.job_title ?? "—";
 }
 
 function alumniTenure(entry: AlumniDirectoryEntry): string {

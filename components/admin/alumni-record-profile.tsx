@@ -64,7 +64,7 @@ export function AlumniRecordProfile({ record }: { record: AlumniRecord }) {
         <Field label="Email" value={record.email} />
         <Field label="Phone" value={record.phone} />
         <Field label="Personal email" value={record.personal_email} />
-        <Field label="Where they worked" value={record.placement} />
+        <Field label="Business unit" value={record.business_unit_name ?? record.placement} />
         <Field label="Job title" value={record.job_title} />
         <Field label="Tenure" value={formatTenure(record)} />
         <Field label="Start year" value={record.start_year} />
