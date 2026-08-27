@@ -280,6 +280,7 @@ function LineTable({
 
 export interface PayslipDocumentProps {
   employee: PayslipEmployeeContext;
+  reference?: string | null;
   periodLabel: string;
   periodStart: string;
   periodEnd: string;
@@ -292,6 +293,7 @@ export interface PayslipDocumentProps {
 
 export function PayslipDocument({
   employee,
+  reference,
   periodLabel,
   periodStart,
   periodEnd,
@@ -344,6 +346,9 @@ export function PayslipDocument({
               label="Payroll No."
               value={employee.employee_number ?? ""}
             />
+            {reference ? (
+              <Field label="Payslip ref." value={reference} />
+            ) : null}
             <Field
               label="Department"
               value={employee.department_name ?? ""}
@@ -426,7 +431,10 @@ export function PayslipDocument({
           </View>
         </View>
 
-        <Text style={styles.footer}>{COMPANY.queryNote}</Text>
+        <Text style={styles.footer}>
+          {reference ? `Ref ${reference}. ` : ""}
+          {COMPANY.queryNote}
+        </Text>
       </Page>
     </Document>
   );

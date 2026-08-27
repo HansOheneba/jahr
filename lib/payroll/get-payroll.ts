@@ -11,6 +11,7 @@ import type {
   PayslipEmployeeContext,
   PayslipLine,
   PayslipSnapshot,
+  PayslipSnapshotContext,
   PayslipStatus,
 } from "@/lib/payroll/types";
 import { createClient } from "@/utils/supabase/server";
@@ -54,6 +55,41 @@ function mapPayslipLine(row: {
     label: row.label,
     amount: Number(row.amount),
     sort_order: row.sort_order,
+  };
+}
+
+function parseSnapshotContext(
+  value: unknown,
+): PayslipSnapshotContext | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const row = value as Record<string, unknown>;
+  if (typeof row.full_name !== "string") {
+    return null;
+  }
+
+  return {
+    full_name: row.full_name,
+    employee_number:
+      typeof row.employee_number === "string" ? row.employee_number : null,
+    job_title: typeof row.job_title === "string" ? row.job_title : null,
+    department_name:
+      typeof row.department_name === "string" ? row.department_name : null,
+    ssnit_number:
+      typeof row.ssnit_number === "string" ? row.ssnit_number : null,
+    tin_number: typeof row.tin_number === "string" ? row.tin_number : null,
+    national_id: typeof row.national_id === "string" ? row.national_id : null,
+    bank_name: typeof row.bank_name === "string" ? row.bank_name : null,
+    bank_branch: typeof row.bank_branch === "string" ? row.bank_branch : null,
+    account_number:
+      typeof row.account_number === "string" ? row.account_number : null,
+    account_name: typeof row.account_name === "string" ? row.account_name : null,
+    legal_entity_paying:
+      typeof row.legal_entity_paying === "string"
+        ? row.legal_entity_paying
+        : null,
   };
 }
 
@@ -251,6 +287,7 @@ export async function getPayslipSnapshot(
   return {
     id: slip.id,
     employee_id: slip.employee_id,
+    reference: slip.reference ?? null,
     period_label: slip.period_label,
     period_start: slip.period_start,
     period_end: slip.period_end,
@@ -263,6 +300,7 @@ export async function getPayslipSnapshot(
     generated_by: slip.generated_by,
     file_url: slip.file_url,
     uploaded_at: slip.uploaded_at,
+    snapshot_context: parseSnapshotContext(slip.snapshot_context),
     lines: (lines ?? []).map(mapPayslipLine),
   };
 }

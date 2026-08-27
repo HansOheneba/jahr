@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { ensureDefaultPayPackage as seedDefaultPayPackage } from "@/lib/payroll/ensure-package";
+import { ensureEmployeePayrollNumber } from "@/lib/payroll/ensure-payroll-number";
+import { capturePayslipSnapshotContext } from "@/lib/payroll/capture-snapshot-context";
+import { logPayslipAccess } from "@/lib/payroll/log-payslip-access";
+import { allocatePayslipReference } from "@/lib/payroll/payslip-reference";
 import {
   DEFAULT_PACKAGE_LINES,
   type PayFrequency,
@@ -11,6 +15,7 @@ import {
 } from "@/lib/payroll/types";
 import { computePayTotals, withDefaultAmounts } from "@/lib/payroll/totals";
 import { isOrgAdmin } from "@/lib/types/database";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import {
   isPeriodBeforeEmployment,
@@ -177,6 +182,11 @@ export async function ensurePayslipSnapshot(input: {
     return { success: true, payslipId: existing.id };
   }
 
+  const payrollNumberResult = await ensureEmployeePayrollNumber(employeeId);
+  if (payrollNumberResult.error) {
+    return { error: payrollNumberResult.error };
+  }
+
   const [
     { data: employee },
     { data: details },
@@ -230,11 +240,33 @@ export async function ensurePayslipSnapshot(input: {
   const totals = computePayTotals(activeLines);
   const currency = details?.currency ?? "GHS";
   const now = new Date().toISOString();
+  const admin = createAdminClient();
+
+  let reference: string;
+  try {
+    reference = await allocatePayslipReference(admin, new Date(now));
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Could not assign a payslip reference.",
+    };
+  }
+
+  const snapshotContext = await capturePayslipSnapshotContext(
+    employeeId,
+    payrollNumberResult.payrollNumber ?? null,
+  );
+  if (!snapshotContext) {
+    return { error: "Employee not found." };
+  }
 
   const { data: slip, error: slipError } = await supabase
     .from("payslips")
     .insert({
       employee_id: employeeId,
+      reference,
       period_label: period.periodLabel,
       period_start: period.periodStart,
       period_end: period.periodEnd,
@@ -246,6 +278,7 @@ export async function ensurePayslipSnapshot(input: {
       generated_at: now,
       generated_by: viewer.id,
       uploaded_at: now,
+      snapshot_context: snapshotContext,
     })
     .select("id")
     .single();
@@ -276,22 +309,22 @@ export async function ensurePayslipSnapshot(input: {
   );
 
   if (linesError) {
-    await supabase.from("payslips").delete().eq("id", slip.id);
+    await admin.from("payslips").delete().eq("id", slip.id);
     return { error: linesError.message };
   }
 
-  await supabase.from("audit_logs").insert({
-    actor_id: viewer.id,
-    subject_id: employeeId,
-    action: "downloaded_payslip",
-    metadata: {
-      payslip_id: slip.id,
-      period_label: period.periodLabel,
-    },
+  await logPayslipAccess({
+    payslipId: slip.id,
+    employeeId,
+    reference,
+    periodLabel: period.periodLabel,
+    action: "generated_payslip",
   });
 
   revalidatePath("/documents");
   revalidatePath("/settings");
   revalidatePath("/admin/payroll");
+  revalidatePath("/admin/payroll/register");
+  revalidatePath(`/admin/employees/${employeeId}`);
   return { success: true, payslipId: slip.id };
 }

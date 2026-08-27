@@ -23,6 +23,11 @@ import type {
   EmploymentType,
   WorkType,
 } from "@/lib/types/employee";
+import {
+  allocatePayrollNumber,
+  isPayrollNumber,
+  needsPayrollNumber,
+} from "@/lib/payroll/payroll-number";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 
@@ -140,23 +145,32 @@ function validateTagAssignment(
   return null;
 }
 
-async function nextEmployeeNumber(
-  supabase: ReturnType<typeof createClient>,
-): Promise<string> {
-  const { data } = await supabase
-    .from("profiles")
-    .select("employee_number")
-    .not("employee_number", "is", null);
-
-  let max = 0;
-  for (const row of data ?? []) {
-    const match = /^JA-(\d+)$/i.exec(row.employee_number ?? "");
-    if (match) {
-      max = Math.max(max, Number(match[1]));
+async function resolveEmployeeNumber(
+  admin: ReturnType<typeof createAdminClient>,
+  manualValue: string,
+): Promise<{ value?: string; error?: string }> {
+  const trimmed = manualValue.trim();
+  if (trimmed) {
+    const normalized = trimmed.toUpperCase();
+    if (!isPayrollNumber(normalized)) {
+      return {
+        error:
+          "Employee number must match JA26-0100 (JA, 2-digit year, 4-character code).",
+      };
     }
+    return { value: normalized };
   }
 
-  return `JA-${String(max + 1).padStart(4, "0")}`;
+  try {
+    return { value: await allocatePayrollNumber(admin) };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Could not assign an employee number.",
+    };
+  }
 }
 
 /**
@@ -304,8 +318,14 @@ export async function createEmployee(
   const supabase = createClient(cookieStore);
   const admin = createAdminClient();
 
-  const employeeNumber =
-    emptyToNull(input.employeeNumber) ?? (await nextEmployeeNumber(supabase));
+  const employeeNumberResult = await resolveEmployeeNumber(
+    admin,
+    input.employeeNumber,
+  );
+  if (employeeNumberResult.error || !employeeNumberResult.value) {
+    return { error: employeeNumberResult.error ?? "Invalid employee number." };
+  }
+  const employeeNumber = employeeNumberResult.value;
 
   const { data: authData, error: authError } = await admin.auth.admin.createUser({
     email,
@@ -437,10 +457,11 @@ export async function updateEmployee(
 
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
+  const admin = createAdminClient();
 
   const { data: existing, error: existingError } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, employee_number")
     .eq("id", employeeId)
     .maybeSingle();
 
@@ -489,6 +510,25 @@ export async function updateEmployee(
       ? emptyToNull(input.leavingReason)
       : null;
 
+  let employeeNumber = existing.employee_number;
+  const manualEmployeeNumber = clean(input.employeeNumber);
+  if (manualEmployeeNumber) {
+    const normalized = manualEmployeeNumber.toUpperCase();
+    if (!isPayrollNumber(normalized)) {
+      return {
+        error:
+          "Employee number must match JA26-0100 (JA, 2-digit year, 4-character code).",
+      };
+    }
+    employeeNumber = normalized;
+  } else if (!employeeNumber || needsPayrollNumber(employeeNumber)) {
+    const assigned = await resolveEmployeeNumber(admin, "");
+    if (assigned.error || !assigned.value) {
+      return { error: assigned.error ?? "Could not assign an employee number." };
+    }
+    employeeNumber = assigned.value;
+  }
+
   const { error: updateError } = await supabase
     .from("profiles")
     .update({
@@ -510,7 +550,7 @@ export async function updateEmployee(
       city: emptyToNull(input.city),
       country: emptyToNull(input.country) ?? "Ghana",
       job_title: jobTitle,
-      employee_number: emptyToNull(input.employeeNumber),
+      employee_number: employeeNumber,
       role: syncRoleFromTags(tags),
       status: input.status,
       employee_category: input.employeeCategory,

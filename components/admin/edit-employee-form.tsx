@@ -368,6 +368,7 @@ export function EditEmployeeForm({
             label="Employee number"
             value={employeeNumber}
             onChange={setEmployeeNumber}
+            hint="Format JA26-0100. Leave blank to keep or auto-assign."
           />
           <div className="space-y-2 sm:col-span-2">
             <Label>Permission tags</Label>

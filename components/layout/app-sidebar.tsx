@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   Megaphone,
   Network,
+  ScrollText,
   Settings,
   Users,
   Wallet,
@@ -84,6 +85,11 @@ export function AppSidebar({
             href: "/admin/payroll",
             label: "Payroll",
             icon: Wallet,
+          },
+          {
+            href: "/admin/payroll/register",
+            label: "Payslip register",
+            icon: ScrollText,
           },
           {
             href: "/admin/permits",
@@ -201,8 +207,7 @@ function NavSection({
         <p className="px-2 pb-1 text-[11px] text-muted-foreground">{label}</p>
       ) : null}
       {items.map((item) => {
-        const active =
-          pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const active = isNavItemActive(pathname, item.href, items);
         const Icon = item.icon;
 
         return (
@@ -227,5 +232,21 @@ function NavSection({
         );
       })}
     </div>
+  );
+}
+
+function isNavItemActive(
+  pathname: string,
+  href: string,
+  items: NavItem[],
+): boolean {
+  if (pathname === href) return true;
+  if (!pathname.startsWith(`${href}/`)) return false;
+
+  return !items.some(
+    (other) =>
+      other.href !== href &&
+      other.href.startsWith(`${href}/`) &&
+      (pathname === other.href || pathname.startsWith(`${other.href}/`)),
   );
 }

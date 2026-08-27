@@ -1,7 +1,6 @@
 import type { CSSProperties } from "react";
 import {
   Body,
-  Column,
   Container,
   Head,
   Heading,
@@ -9,7 +8,6 @@ import {
   Html,
   Img,
   Preview,
-  Row,
   Section,
   Text,
 } from "react-email";
@@ -31,8 +29,8 @@ export function LoginOtpEmail({
   expiresInMinutes = 10,
   logoUrl = getEmailLogoUrl(),
 }: LoginOtpEmailProps) {
-  const digits = code.replace(/\D/g, "").slice(0, 6).split("");
-  const preview = `${code} is your JA Group TMS sign-in code`;
+  const normalizedCode = code.replace(/\D/g, "").slice(0, 6);
+  const preview = `${normalizedCode} is your JA Group TMS sign-in code`;
 
   return (
     <Html lang="en">
@@ -61,13 +59,7 @@ export function LoginOtpEmail({
             </Text>
 
             <Section style={codeSection}>
-              <Row>
-                {digits.map((digit, index) => (
-                  <Column key={`${digit}-${index}`} style={digitColumn}>
-                    <Text style={digitBox}>{digit}</Text>
-                  </Column>
-                ))}
-              </Row>
+              <Text style={codeText}>{normalizedCode}</Text>
             </Section>
 
             <Text style={expiry}>
@@ -165,26 +157,20 @@ const codeSection: CSSProperties = {
   border: `1px solid ${EMAIL_BRAND.border}`,
   borderRadius: "12px",
   margin: "0 0 20px",
-  padding: "20px 12px",
+  padding: "24px 16px",
+  textAlign: "center",
 };
 
-const digitColumn: CSSProperties = {
-  padding: "0 4px",
-  width: `${100 / 6}%`,
-};
-
-const digitBox: CSSProperties = {
-  backgroundColor: EMAIL_BRAND.surface,
-  border: `1px solid ${EMAIL_BRAND.border}`,
-  borderRadius: "6px",
+const codeText: CSSProperties = {
   color: EMAIL_BRAND.text,
   fontFamily:
     'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-  fontSize: "28px",
+  fontSize: "32px",
   fontWeight: 600,
-  letterSpacing: "0",
-  lineHeight: "48px",
+  letterSpacing: "0.32em",
+  lineHeight: "40px",
   margin: 0,
+  paddingLeft: "0.32em",
   textAlign: "center",
 };
 

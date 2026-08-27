@@ -295,7 +295,7 @@ export function AddEmployeeForm({
             label="Employee number"
             value={employeeNumber}
             onChange={setEmployeeNumber}
-            hint="Leave blank to auto-assign (JA-0004…)."
+            hint="Leave blank to auto-assign (e.g. JA26-0100)."
           />
           <div className="space-y-2 sm:col-span-2">
             <Label>Permission tags</Label>

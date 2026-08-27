@@ -32,6 +32,7 @@ export type AuditAction =
   | "approved_leave"
   | "rejected_leave"
   | "downloaded_payslip"
+  | "generated_payslip"
   | "uploaded_document"
   | "changed_password";
 
@@ -98,6 +99,7 @@ export interface EmployeeDocument {
 
 export interface PayslipRecord {
   id: string;
+  reference: string | null;
   period_label: string;
   period_start: string | null;
   period_end: string | null;

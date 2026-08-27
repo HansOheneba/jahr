@@ -116,7 +116,7 @@ export async function getEmployeeRecord(
     supabase
       .from("payslips")
       .select(
-        "id, period_label, period_start, period_end, gross_pay, total_deductions, net_pay, currency, file_url, uploaded_at, generated_at",
+        "id, reference, period_label, period_start, period_end, gross_pay, total_deductions, net_pay, currency, file_url, uploaded_at, generated_at",
       )
       .eq("employee_id", targetId)
       .order("period_start", { ascending: false }),
@@ -212,6 +212,7 @@ export async function getEmployeeRecord(
     })),
     payslips: (payslips.data ?? []).map((slip) => ({
       id: slip.id,
+      reference: slip.reference ?? null,
       period_label: slip.period_label,
       period_start: slip.period_start,
       period_end: slip.period_end,

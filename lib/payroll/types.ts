@@ -48,6 +48,7 @@ export interface PayslipLine {
 export interface PayslipSnapshot {
   id: string;
   employee_id: string;
+  reference: string | null;
   period_label: string;
   period_start: string;
   period_end: string;
@@ -60,7 +61,42 @@ export interface PayslipSnapshot {
   generated_by: string | null;
   file_url: string | null;
   uploaded_at: string;
+  snapshot_context: PayslipSnapshotContext | null;
   lines: PayslipLine[];
+}
+
+export interface PayslipSnapshotContext {
+  full_name: string;
+  employee_number: string | null;
+  job_title: string | null;
+  department_name: string | null;
+  ssnit_number: string | null;
+  tin_number: string | null;
+  national_id: string | null;
+  bank_name: string | null;
+  bank_branch: string | null;
+  account_number: string | null;
+  account_name: string | null;
+  legal_entity_paying: string | null;
+}
+
+export interface PayrollRegisterEntry {
+  id: string;
+  reference: string | null;
+  period_label: string;
+  period_start: string;
+  period_end: string;
+  gross_pay: number | null;
+  total_deductions: number | null;
+  net_pay: number | null;
+  currency: string;
+  generated_at: string | null;
+  employee: {
+    id: string;
+    name: string;
+    employee_number: string | null;
+    job_title: string | null;
+  };
 }
 
 export interface PayrollEmployeeSummary {

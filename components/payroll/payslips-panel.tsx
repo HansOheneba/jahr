@@ -144,15 +144,14 @@ export function PayslipsPanel({
             >
               <div className="min-w-0">
                 <p className="font-medium">{slip.period_label}</p>
-                {slip.net_pay !== null && slip.net_pay !== undefined ? (
-                  <p className="text-xs text-muted-foreground tabular-nums">
-                    Net {slip.currency ?? "GHS"}{" "}
-                    {slip.net_pay.toLocaleString("en-GH", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </p>
-                ) : null}
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {slip.reference ? `${slip.reference} · ` : ""}
+                  Net {slip.currency ?? "GHS"}{" "}
+                  {(slip.net_pay ?? 0).toLocaleString("en-GH", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="rounded-md font-normal">
