@@ -29,8 +29,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E3E8EF",
   },
   logo: {
-    width: 72,
-    height: 28,
+    width: 120,
+    height: 32,
     objectFit: "contain",
   },
   companyBlock: {
@@ -305,7 +305,7 @@ export function PayslipDocument({
 }: PayslipDocumentProps) {
   const logoPath = path.join(
     process.cwd(),
-    "public/logos/JA_logo_black.png",
+    "public/logos/JA_logo_black_text.png",
   );
 
   const earnings = lines.filter((line) => line.kind === "earning");

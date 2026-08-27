@@ -1,6 +1,7 @@
 export const LEGAL_ENTITIES = [
   "JKA Holdings",
   "Celerey Inc.",
+  "HarryHill Consulting Limited",
   "JA Wealth Advisors Limited",
   "JA Financial Advisors Limited",
   "JA Capital Partners Limited",
