@@ -7,6 +7,7 @@ import {
   type DragEvent,
   type KeyboardEvent,
 } from "react";
+import { useRouter } from "next/navigation";
 import { ExternalLink, FileText, Trash2, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -79,6 +80,7 @@ export function DocumentsManager({
   title?: string;
   description?: string;
 }) {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initialKind: DocumentKind =
     defaultKind ?? (canManageHrDocs ? "employment_contract" : "cv");
@@ -202,6 +204,7 @@ export function DocumentsManager({
       }
       setOpen(false);
       resetForm();
+      router.refresh();
     });
   }
 
@@ -213,7 +216,9 @@ export function DocumentsManager({
         const result = await deleteDocument(documentId);
         if (result.error) {
           setError(result.error);
+          return;
         }
+        router.refresh();
       } finally {
         setDeletingId(null);
       }

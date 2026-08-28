@@ -1,12 +1,11 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { HeaderNotifications } from "@/components/layout/header-notifications";
 import { NotificationsBellSkeleton } from "@/components/layout/notifications-bell-skeleton";
+import { SIGN_OUT_PATH } from "@/lib/auth/routes";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
-import { createClient } from "@/utils/supabase/server";
 
 export default async function AppLayout({
   children,
@@ -16,16 +15,10 @@ export default async function AppLayout({
   const profile = await getCurrentProfile();
 
   if (!profile) {
-    // Break login↔dashboard bounce if a JWT exists but the profile row can't load.
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.auth.signOut();
-    }
-    redirect("/login");
+    // A JWT exists but the profile row can't load. Redirecting to /login here
+    // would loop: the proxy sees the still-valid cookie and sends us back.
+    // The sign-out route clears the cookie first, which ends the bounce.
+    redirect(SIGN_OUT_PATH);
   }
 
   return (

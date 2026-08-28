@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,10 +15,10 @@ import {
 import { displayName } from "@/lib/types/database";
 import type { EmployeeProfile } from "@/lib/types/employee";
 import { useAsyncAction } from "@/lib/hooks/use-async-action";
-
 import { cn } from "@/lib/utils";
 
 export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { pending, run: runSave } = useAsyncAction();
   const { pending: photoPending, run: runPhoto } = useAsyncAction();
@@ -61,6 +62,7 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
         return;
       }
       setSaved(true);
+      router.refresh();
     });
   }
 
@@ -75,7 +77,9 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (result.error) {
         setError(result.error);
+        return;
       }
+      router.refresh();
     });
   }
 
@@ -86,7 +90,9 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
       const result = await removeProfilePhoto();
       if (result.error) {
         setError(result.error);
+        return;
       }
+      router.refresh();
     });
   }
 

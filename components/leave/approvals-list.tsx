@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { ChevronDown, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -81,6 +82,8 @@ export function ApprovalsList({
   teamBalances: TeamLeaveBalance[];
   logs: LeaveDecisionLog[];
 }) {
+  const router = useRouter();
+  const { pending, run } = useAsyncAction();
   const [tab, setTab] = useState<TabId>("open");
   const [query, setQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -88,7 +91,6 @@ export function ApprovalsList({
   const [declineNotes, setDeclineNotes] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { run } = useAsyncAction();
 
   const rows = tab === "open" ? open : closed;
   const normalizedQuery = query.trim().toLowerCase();
@@ -116,6 +118,7 @@ export function ApprovalsList({
         setDecliningId(null);
         setDeclineNotes("");
         setExpandedId(null);
+        router.refresh();
       } finally {
         setBusyId(null);
       }
@@ -318,7 +321,7 @@ export function ApprovalsList({
                               buttonVariants({ variant: "outline", size: "sm" }),
                               "gap-1",
                             )}
-                            disabled={isBusy}
+                            disabled={pending}
                           >
                             {isBusy ? <Spinner className="size-3.5" /> : null}
                             Action
@@ -444,7 +447,7 @@ export function ApprovalsList({
                               type="button"
                               variant="destructive"
                               size="sm"
-                              disabled={isBusy}
+                              disabled={pending}
                               onClick={() =>
                                 respond(row.id, false, declineNotes)
                               }

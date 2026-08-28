@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Download, Plus, Trash2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -187,6 +188,7 @@ function buildLineCode(label: string, taken: Set<string>): string {
 }
 
 export function PayPackageForm({ pack }: { pack: PayPackage }) {
+  const router = useRouter();
   const { pending, run } = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
 
@@ -304,6 +306,7 @@ export function PayPackageForm({ pack }: { pack: PayPackage }) {
       }
       setSavedSnapshot(nextSnapshot);
       toast.success("Changes saved");
+      router.refresh();
     });
   }
 

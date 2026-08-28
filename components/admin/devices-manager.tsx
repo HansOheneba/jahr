@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ChevronDown, Laptop, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -89,6 +90,7 @@ export function DevicesManager({
   devices: DeviceRecord[];
   employees: DeviceAssignee[];
 }) {
+  const router = useRouter();
   const { pending, run } = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -142,6 +144,7 @@ export function DevicesManager({
       }
       resetAddForm();
       setAddOpen(false);
+      router.refresh();
     });
   }
 
@@ -161,6 +164,7 @@ export function DevicesManager({
       setAssignDeviceId(null);
       setEmployeeId("");
       setAssignNotes("");
+      router.refresh();
     });
   }
 
@@ -172,6 +176,7 @@ export function DevicesManager({
         setError(result.error);
         return;
       }
+      router.refresh();
     });
   }
 
@@ -183,6 +188,7 @@ export function DevicesManager({
         setError(result.error);
         return;
       }
+      router.refresh();
     });
   }
 

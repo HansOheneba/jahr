@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,7 @@ export function OrgSettingsForm({
 }: {
   reportingCurrency: ReportingCurrency;
 }) {
+  const router = useRouter();
   const { pending, run } = useAsyncAction();
   const [currency, setCurrency] = useState<ReportingCurrency>(
     reportingCurrency,
@@ -47,6 +49,7 @@ export function OrgSettingsForm({
       }
 
       toast.success("Reporting currency saved");
+      router.refresh();
     });
   }
 

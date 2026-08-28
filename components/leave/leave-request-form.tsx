@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   eachDayOfInterval,
   format,
@@ -72,6 +73,7 @@ export function LeaveRequestForm({
   viewerId,
   requiresApproval,
 }: LeaveRequestFormProps) {
+  const router = useRouter();
   const { pending, run } = useAsyncAction();
   const [range, setRange] = useState<DateRange | undefined>();
   const [leaveType, setLeaveType] = useState<LeaveTypeId>("annual");
@@ -204,6 +206,7 @@ export function LeaveRequestForm({
       );
       setRange(undefined);
       setNotes("");
+      router.refresh();
     });
   }
 

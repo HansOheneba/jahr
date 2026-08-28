@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { LeaveRequestForm } from "@/components/leave/leave-request-form";
 import { AUTH_BYPASS } from "@/lib/auth/config";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
+import { SIGN_OUT_PATH } from "@/lib/auth/routes";
 import { summarizeLeaveBalance } from "@/lib/leave/balance";
 import { getLeaveSchedule } from "@/lib/leave/get-schedule";
 import type {
@@ -43,7 +44,7 @@ export default async function LeavePage() {
   const profile = await getCurrentProfile();
 
   if (!profile) {
-    redirect("/login");
+    redirect(SIGN_OUT_PATH);
   }
 
   const canViewTeam = canApproveLeave(profile);

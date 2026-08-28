@@ -15,6 +15,7 @@ import {
   announcementTypeLabel,
 } from "@/lib/announcements/categories";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
+import { SIGN_OUT_PATH } from "@/lib/auth/routes";
 import { hasTag } from "@/lib/auth/permissions";
 import { getEmployeeRecord } from "@/lib/employees/get-employee-record";
 import {
@@ -40,7 +41,7 @@ function greetingForHour(hour: number): string {
 export default async function DashboardPage() {
   const profile = await getCurrentProfile();
   if (!profile) {
-    redirect("/login");
+    redirect(SIGN_OUT_PATH);
   }
 
   const record = await getEmployeeRecord(profile.id);
