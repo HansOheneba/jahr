@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -54,6 +54,7 @@ import {
 } from "@/lib/communications/types";
 import type { WorkType } from "@/lib/types/employee";
 import { cn } from "@/lib/utils";
+import { useAsyncAction } from "@/lib/hooks/use-async-action";
 
 const WORK_TYPE_OPTIONS: Array<{
   value: WorkType;
@@ -196,22 +197,28 @@ export function CommsComposerForm({
       : null,
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pending, startTransition] = useTransition();
-  const [counting, startCountTransition] = useTransition();
+  const { pending, run } = useAsyncAction();
+  const [counting, setCounting] = useState(false);
 
   const wholeCompany =
     businessUnitIds.length === 0 && workTypes.length === 0;
 
   useEffect(() => {
-    startCountTransition(async () => {
-      const result = await previewAnnouncementAudience({
-        businessUnitIds,
-        workTypes,
-      });
+    let cancelled = false;
+    setCounting(true);
+    void previewAnnouncementAudience({
+      businessUnitIds,
+      workTypes,
+    }).then((result) => {
+      if (cancelled) return;
       if (!result.error) {
         setAudienceCount(result.count);
       }
+      setCounting(false);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [businessUnitIds, workTypes]);
 
   const selectedUnitNames = useMemo(() => {
@@ -294,7 +301,7 @@ export function CommsComposerForm({
     if (pending) return;
     setError(null);
     setSuccess(null);
-    startTransition(async () => {
+    void run(async () => {
       const result = await publishAnnouncement({
         title,
         announcementType,
@@ -311,7 +318,6 @@ export function CommsComposerForm({
 
       setConfirmOpen(false);
       router.push("/admin/comms");
-      router.refresh();
     });
   }
 

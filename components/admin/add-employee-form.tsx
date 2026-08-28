@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ import {
 } from "@/lib/employees/immigration";
 import { OFFICE_LOCATIONS } from "@/lib/employees/office-locations";
 import { createEmployee } from "@/lib/employees/actions";
+import { useAsyncAction } from "@/lib/hooks/use-async-action";
 import { displayName, type ProfileWithOrg } from "@/lib/types/database";
 import type {
   EmployeeCategory,
@@ -64,7 +65,7 @@ export function AddEmployeeForm({
   viewer: ProfileWithOrg;
 }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { pending, run } = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
 
   const [firstName, setFirstName] = useState("");
@@ -130,7 +131,7 @@ export function AddEmployeeForm({
 
   function handleSubmit() {
     setError(null);
-    startTransition(async () => {
+    void run(async () => {
       const result = await createEmployee({
         firstName,
         lastName,
@@ -179,7 +180,6 @@ export function AddEmployeeForm({
       }
 
       router.push(`/admin/employees/${result.employeeId}`);
-      router.refresh();
     });
   }
 

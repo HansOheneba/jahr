@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ChevronDown, Laptop, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +42,7 @@ import {
 } from "@/lib/devices/types";
 import { ASSET_KIND_LABELS, type AssetKind } from "@/lib/types/employee";
 import { displayName } from "@/lib/types/database";
+import { useAsyncAction } from "@/lib/hooks/use-async-action";
 import { cn } from "@/lib/utils";
 
 function formatWhen(iso: string | null): string {
@@ -89,8 +89,7 @@ export function DevicesManager({
   devices: DeviceRecord[];
   employees: DeviceAssignee[];
 }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { pending, run } = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [assignDeviceId, setAssignDeviceId] = useState<string | null>(null);
@@ -113,10 +112,6 @@ export function DevicesManager({
     [assignDeviceId, devices],
   );
 
-  function refresh() {
-    router.refresh();
-  }
-
   function resetAddForm() {
     setKind("laptop");
     setName("");
@@ -130,7 +125,7 @@ export function DevicesManager({
 
   function handleCreate() {
     setError(null);
-    startTransition(async () => {
+    void run(async () => {
       const result = await createDevice({
         kind,
         name,
@@ -147,14 +142,13 @@ export function DevicesManager({
       }
       resetAddForm();
       setAddOpen(false);
-      refresh();
     });
   }
 
   function handleAssign() {
     if (!assignDeviceId || !employeeId) return;
     setError(null);
-    startTransition(async () => {
+    void run(async () => {
       const result = await assignDevice({
         deviceId: assignDeviceId,
         employeeId,
@@ -167,31 +161,28 @@ export function DevicesManager({
       setAssignDeviceId(null);
       setEmployeeId("");
       setAssignNotes("");
-      refresh();
     });
   }
 
   function handleReturn(deviceId: string) {
     setError(null);
-    startTransition(async () => {
+    void run(async () => {
       const result = await returnDevice({ deviceId });
       if (result.error) {
         setError(result.error);
         return;
       }
-      refresh();
     });
   }
 
   function handleStatus(deviceId: string, status: Exclude<DeviceStatus, "assigned">) {
     setError(null);
-    startTransition(async () => {
+    void run(async () => {
       const result = await updateDeviceStatus({ deviceId, status });
       if (result.error) {
         setError(result.error);
         return;
       }
-      refresh();
     });
   }
 

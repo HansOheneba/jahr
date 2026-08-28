@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { UserMinus } from "lucide-react";
@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { offboardEmployee } from "@/lib/employees/actions";
+import { useAsyncAction } from "@/lib/hooks/use-async-action";
 
 export function OffboardEmployeeDialog({
   employeeId,
@@ -30,7 +31,7 @@ export function OffboardEmployeeDialog({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const { pending, run } = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
   const [terminationDate, setTerminationDate] = useState<Date | undefined>(
     new Date(),
@@ -39,7 +40,7 @@ export function OffboardEmployeeDialog({
 
   function handleOffboard() {
     setError(null);
-    startTransition(async () => {
+    void run(async () => {
       const result = await offboardEmployee({
         employeeId,
         terminationDate: terminationDate
@@ -55,7 +56,6 @@ export function OffboardEmployeeDialog({
 
       setOpen(false);
       router.push("/admin/alumni");
-      router.refresh();
     });
   }
 

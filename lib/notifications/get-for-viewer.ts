@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   announcementCategoryLabel,
   announcementTypeLabel,
@@ -6,9 +7,9 @@ import { getAnnouncementsForViewer } from "@/lib/announcements/get-for-viewer";
 import type { NotificationItem } from "@/lib/notifications/types";
 
 /** Live notification feed for the header bell (no demo data). */
-export async function getNotificationsForViewer(
+export const getNotificationsForViewer = cache(async (
   limit = 30,
-): Promise<NotificationItem[]> {
+): Promise<NotificationItem[]> => {
   const announcements = await getAnnouncementsForViewer(limit);
 
   return announcements.map((item) => {
@@ -32,4 +33,4 @@ export async function getNotificationsForViewer(
       href: `/announcements/${item.id}`,
     };
   });
-}
+});

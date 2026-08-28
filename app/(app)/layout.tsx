@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
+import { HeaderNotifications } from "@/components/layout/header-notifications";
+import { NotificationsBellSkeleton } from "@/components/layout/notifications-bell-skeleton";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
-import { getNotificationsForViewer } from "@/lib/notifications/get-for-viewer";
 import { createClient } from "@/utils/supabase/server";
 
 export default async function AppLayout({
@@ -26,8 +28,6 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  const notifications = await getNotificationsForViewer(30);
-
   return (
     <div className="flex min-h-full bg-background">
       <div className="hidden shrink-0 md:block">
@@ -37,7 +37,14 @@ export default async function AppLayout({
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <AppHeader profile={profile} notifications={notifications} />
+        <AppHeader
+          profile={profile}
+          notifications={
+            <Suspense fallback={<NotificationsBellSkeleton />}>
+              <HeaderNotifications />
+            </Suspense>
+          }
+        />
         <main className="flex-1 px-4 py-5 md:px-6 lg:px-8">{children}</main>
       </div>
     </div>

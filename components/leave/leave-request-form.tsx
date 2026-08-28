@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import {
   eachDayOfInterval,
   format,
@@ -28,6 +27,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { submitLeaveRequest } from "@/lib/leave/actions";
+import { useAsyncAction } from "@/lib/hooks/use-async-action";
 import { HOLIDAY_COLOR, LEAVE_TYPE_COLORS } from "@/lib/leave/colors";
 import { getHolidayMap } from "@/lib/leave/ghana-holidays";
 import type { ScheduleLeaveEntry } from "@/lib/leave/get-schedule";
@@ -72,7 +72,7 @@ export function LeaveRequestForm({
   viewerId,
   requiresApproval,
 }: LeaveRequestFormProps) {
-  const router = useRouter();
+  const { pending, run } = useAsyncAction();
   const [range, setRange] = useState<DateRange | undefined>();
   const [leaveType, setLeaveType] = useState<LeaveTypeId>("annual");
   const [notes, setNotes] = useState("");
@@ -80,7 +80,6 @@ export function LeaveRequestForm({
   const requests = initialRequests;
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
 
   const today = startOfDay(new Date());
   const selectedType =
@@ -185,7 +184,7 @@ export function LeaveRequestForm({
     const startDate = formatLeaveDateKey(range.from!);
     const endDate = formatLeaveDateKey(range.to!);
 
-    startTransition(async () => {
+    void run(async () => {
       const result = await submitLeaveRequest({
         type: leaveType,
         startDate,
@@ -205,7 +204,6 @@ export function LeaveRequestForm({
       );
       setRange(undefined);
       setNotes("");
-      router.refresh();
     });
   }
 

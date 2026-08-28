@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Download, Plus, Trash2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -26,6 +25,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { CurrencySelect } from "@/components/admin/currency-select";
 import { savePayPackage } from "@/lib/payroll/actions";
+import { useAsyncAction } from "@/lib/hooks/use-async-action";
 import { periodKey, recentPayPeriods } from "@/lib/payroll/period";
 import {
   DEFAULT_CURRENCY,
@@ -187,8 +187,7 @@ function buildLineCode(label: string, taken: Set<string>): string {
 }
 
 export function PayPackageForm({ pack }: { pack: PayPackage }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { pending, run } = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
 
   const [details, setDetails] = useState<PayDetailsDraft>(() =>
@@ -281,7 +280,7 @@ export function PayPackageForm({ pack }: { pack: PayPackage }) {
     );
     const nextSnapshot = snapshot(details, lines);
 
-    startTransition(async () => {
+    void run(async () => {
       const result = await savePayPackage({
         employeeId: pack.employee.id,
         salary: basicLine?.amount ?? null,
@@ -305,7 +304,6 @@ export function PayPackageForm({ pack }: { pack: PayPackage }) {
       }
       setSavedSnapshot(nextSnapshot);
       toast.success("Changes saved");
-      router.refresh();
     });
   }
 

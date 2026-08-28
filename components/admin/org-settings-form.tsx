@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { updateReportingCurrency } from "@/lib/org/actions";
+import { useAsyncAction } from "@/lib/hooks/use-async-action";
 import {
   formatCurrencyLabel,
   REPORTING_CURRENCIES,
@@ -30,8 +30,7 @@ export function OrgSettingsForm({
 }: {
   reportingCurrency: ReportingCurrency;
 }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { pending, run } = useAsyncAction();
   const [currency, setCurrency] = useState<ReportingCurrency>(
     reportingCurrency,
   );
@@ -39,7 +38,7 @@ export function OrgSettingsForm({
   const isDirty = currency !== reportingCurrency;
 
   function handleSave() {
-    startTransition(async () => {
+    void run(async () => {
       const result = await updateReportingCurrency(currency);
 
       if (result.error) {
@@ -48,7 +47,6 @@ export function OrgSettingsForm({
       }
 
       toast.success("Reporting currency saved");
-      router.refresh();
     });
   }
 

@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { UserMenu } from "@/components/layout/user-menu";
-import { NotificationsPanel } from "@/components/notifications/notifications-panel";
-import type { NotificationItem } from "@/lib/notifications/types";
 import type { ProfileWithOrg } from "@/lib/types/database";
 
 const TITLE_BY_PATH: Record<string, string> = {
@@ -28,7 +27,7 @@ const TITLE_BY_PATH: Record<string, string> = {
 
 interface AppHeaderProps {
   profile: ProfileWithOrg;
-  notifications: NotificationItem[];
+  notifications: ReactNode;
 }
 
 export function AppHeader({ profile, notifications }: AppHeaderProps) {
@@ -65,7 +64,7 @@ export function AppHeader({ profile, notifications }: AppHeaderProps) {
         </nav>
 
         <div className="flex shrink-0 items-center gap-1">
-          <NotificationsPanel initialItems={notifications} />
+          {notifications}
           <UserMenu profile={profile} />
         </div>
       </div>

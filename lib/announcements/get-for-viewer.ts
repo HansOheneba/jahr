@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import {
   getAnnouncementCategory,
@@ -91,9 +92,9 @@ function mapAnnouncement(row: {
 }
 
 /** Active announcements visible to the current user (RLS applies audience filters). */
-export async function getAnnouncementsForViewer(
+export const getAnnouncementsForViewer = cache(async (
   limit = 8,
-): Promise<Announcement[]> {
+): Promise<Announcement[]> => {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
@@ -147,7 +148,7 @@ export async function getAnnouncementsForViewer(
   return (rows ?? []).map((row) =>
     mapAnnouncement(row as Parameters<typeof mapAnnouncement>[0]),
   );
-}
+});
 
 /** Single announcement for the signed-in viewer (RLS applies). */
 export async function getAnnouncementForViewer(

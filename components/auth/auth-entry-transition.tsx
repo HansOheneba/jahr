@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { cn } from "@/lib/utils";
 
-const MIN_VISIBLE_MS = 1200;
-const SUCCESS_SETTLE_MS = 380;
+const MIN_VISIBLE_MS = 450;
+const SUCCESS_SETTLE_MS = 200;
+const MAX_WAIT_MS = 8000;
 
 type AuthEntryTransitionProps = {
   /** Auth finished successfully: finish the sequence and call onComplete. */
@@ -31,7 +32,7 @@ export function AuthEntryTransition({
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
-    const minVisible = prefersReducedMotion ? 280 : MIN_VISIBLE_MS;
+    const minVisible = prefersReducedMotion ? 200 : MIN_VISIBLE_MS;
     const settle = prefersReducedMotion ? 0 : SUCCESS_SETTLE_MS;
 
     const elapsed = Date.now() - mountedAt.current;
@@ -44,11 +45,18 @@ export function AuthEntryTransition({
     const doneTimer = window.setTimeout(() => {
       completed.current = true;
       onComplete();
-    }, wait + (prefersReducedMotion ? 0 : 160));
+    }, wait + (prefersReducedMotion ? 0 : 120));
+
+    const safetyTimer = window.setTimeout(() => {
+      if (completed.current) return;
+      completed.current = true;
+      onComplete();
+    }, MAX_WAIT_MS);
 
     return () => {
       window.clearTimeout(settleTimer);
       window.clearTimeout(doneTimer);
+      window.clearTimeout(safetyTimer);
     };
   }, [ready, onComplete]);
 

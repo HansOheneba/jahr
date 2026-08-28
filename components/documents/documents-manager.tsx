@@ -4,11 +4,9 @@ import {
   useMemo,
   useRef,
   useState,
-  useTransition,
   type DragEvent,
   type KeyboardEvent,
 } from "react";
-import { useRouter } from "next/navigation";
 import { ExternalLink, FileText, Trash2, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -32,6 +30,7 @@ import {
 } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
 import { deleteDocument, uploadDocument } from "@/lib/documents/actions";
+import { useAsyncAction } from "@/lib/hooks/use-async-action";
 import {
   EMPLOYEE_UPLOAD_KINDS,
   HR_UPLOAD_KINDS,
@@ -80,7 +79,6 @@ export function DocumentsManager({
   title?: string;
   description?: string;
 }) {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initialKind: DocumentKind =
     defaultKind ?? (canManageHrDocs ? "employment_contract" : "cv");
@@ -90,7 +88,7 @@ export function DocumentsManager({
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const { pending, run } = useAsyncAction();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const kindOptions = useMemo(() => {
@@ -196,7 +194,7 @@ export function DocumentsManager({
     formData.set("file", file);
 
     setError(null);
-    startTransition(async () => {
+    void run(async () => {
       const result = await uploadDocument(formData);
       if (result.error) {
         setError(result.error);
@@ -204,21 +202,21 @@ export function DocumentsManager({
       }
       setOpen(false);
       resetForm();
-      router.refresh();
     });
   }
 
   function handleDelete(documentId: string) {
     setError(null);
     setDeletingId(documentId);
-    startTransition(async () => {
-      const result = await deleteDocument(documentId);
-      setDeletingId(null);
-      if (result.error) {
-        setError(result.error);
-        return;
+    void run(async () => {
+      try {
+        const result = await deleteDocument(documentId);
+        if (result.error) {
+          setError(result.error);
+        }
+      } finally {
+        setDeletingId(null);
       }
-      router.refresh();
     });
   }
 

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { format, getMonth, parseISO } from "date-fns";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
@@ -39,7 +40,7 @@ function greetingForHour(hour: number): string {
 export default async function DashboardPage() {
   const profile = await getCurrentProfile();
   if (!profile) {
-    return null;
+    redirect("/login");
   }
 
   const record = await getEmployeeRecord(profile.id);

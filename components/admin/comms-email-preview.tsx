@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,25 +37,30 @@ export function CommsEmailPreview({
   const [open, setOpen] = useState(false);
   const [html, setHtml] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [loading, setLoading] = useState(false);
 
-  // The draft object is rebuilt on every parent render, so changes are tracked
-  // by value and the latest draft is read from a ref inside the effect.
   const draftSignature = useMemo(() => JSON.stringify(draft), [draft]);
   const draftRef = useRef(draft);
   draftRef.current = draft;
+  const requestId = useRef(0);
 
   useEffect(() => {
     if (!open) return;
 
     const timer = setTimeout(() => {
-      startTransition(async () => {
-        const result = await previewAnnouncementEmail({
-          ...draftRef.current,
-          bodyJson: sanitizeTipTapJson(draftRef.current.bodyJson),
-        });
+      const currentRequest = ++requestId.current;
+      setLoading(true);
+      setError(null);
+
+      void previewAnnouncementEmail({
+        ...draftRef.current,
+        bodyJson: sanitizeTipTapJson(draftRef.current.bodyJson),
+      }).then((result) => {
+        if (currentRequest !== requestId.current) return;
+        setLoading(false);
         if (result.error) {
           setError(result.error);
+          setHtml(null);
           return;
         }
         setError(null);
@@ -65,6 +70,8 @@ export function CommsEmailPreview({
 
     return () => clearTimeout(timer);
   }, [open, draftSignature]);
+
+  const showSkeleton = loading || (!html && !error);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -80,30 +87,29 @@ export function CommsEmailPreview({
         <SheetHeader className="border-b p-4 pr-14">
           <SheetTitle>Email preview</SheetTitle>
           <SheetDescription>
-            The message as recipients will see it in their inbox.
+            How this announcement appears in inboxes.
           </SheetDescription>
         </SheetHeader>
 
-        <div className="min-h-0 flex-1 overflow-hidden bg-muted">
+        <div className="flex-1 overflow-y-auto p-4">
           {error ? (
-            <p className="p-4 text-sm text-destructive" role="alert">
-              {error}
-            </p>
-          ) : html && !pending ? (
-            <iframe
-              title="Email preview"
-              srcDoc={html}
-              // Scripts stay blocked; popups are allowed so the links in the
-              // message are clickable from the preview.
-              sandbox="allow-popups allow-popups-to-escape-sandbox"
-              className="size-full border-0"
+            <p className="text-sm text-destructive">{error}</p>
+          ) : showSkeleton ? (
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-2/3" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ) : html ? (
+            <div
+              className="prose prose-sm max-w-none text-foreground"
+              dangerouslySetInnerHTML={{ __html: html }}
             />
           ) : (
-            <div className="space-y-3 p-4">
-              <Skeleton className="h-16 w-full rounded-xl" />
-              <Skeleton className="h-8 w-2/3" />
-              <Skeleton className="h-40 w-full rounded-xl" />
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Preview could not be generated.
+            </p>
           )}
         </div>
       </SheetContent>

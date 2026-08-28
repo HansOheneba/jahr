@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,11 +13,14 @@ import {
 } from "@/lib/profile/actions";
 import { displayName } from "@/lib/types/database";
 import type { EmployeeProfile } from "@/lib/types/employee";
+import { useAsyncAction } from "@/lib/hooks/use-async-action";
+
 import { cn } from "@/lib/utils";
 
 export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { pending, run: runSave } = useAsyncAction();
+  const { pending: photoPending, run: runPhoto } = useAsyncAction();
   const [firstName, setFirstName] = useState(profile.first_name);
   const [lastName, setLastName] = useState(profile.last_name);
   const [preferredName, setPreferredName] = useState(
@@ -33,8 +35,6 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
   const [country, setCountry] = useState(profile.country || "Ghana");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [pending, startTransition] = useTransition();
-  const [photoPending, startPhotoTransition] = useTransition();
 
   const name = displayName({
     first_name: firstName,
@@ -45,7 +45,7 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
   function handleSave() {
     setError(null);
     setSaved(false);
-    startTransition(async () => {
+    void runSave(async () => {
       const result = await updateProfileSettings({
         firstName,
         lastName,
@@ -61,7 +61,6 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
         return;
       }
       setSaved(true);
-      router.refresh();
     });
   }
 
@@ -71,27 +70,23 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
     setSaved(false);
     const formData = new FormData();
     formData.set("file", file);
-    startPhotoTransition(async () => {
+    void runPhoto(async () => {
       const result = await uploadProfilePhoto(formData);
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (result.error) {
         setError(result.error);
-        return;
       }
-      router.refresh();
     });
   }
 
   function handlePhotoDelete() {
     setError(null);
     setSaved(false);
-    startPhotoTransition(async () => {
+    void runPhoto(async () => {
       const result = await removeProfilePhoto();
       if (result.error) {
         setError(result.error);
-        return;
       }
-      router.refresh();
     });
   }
 

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { AUTH_BYPASS } from "@/lib/auth/config";
 import { DUMMY_PROFILE } from "@/lib/auth/dummy-profile";
@@ -40,7 +41,7 @@ async function loadProfileTags(
   return tags;
 }
 
-export async function getCurrentProfile(): Promise<ProfileWithOrg | null> {
+export const getCurrentProfile = cache(async (): Promise<ProfileWithOrg | null> => {
   if (AUTH_BYPASS) {
     return DUMMY_PROFILE;
   }
@@ -123,6 +124,6 @@ export async function getCurrentProfile(): Promise<ProfileWithOrg | null> {
     isManager: (reportsResult.count ?? 0) > 0,
     tags,
   };
-}
+});
 
 export { loadProfileTags };

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { LeaveRequestForm } from "@/components/leave/leave-request-form";
 import { AUTH_BYPASS } from "@/lib/auth/config";
@@ -42,7 +43,7 @@ export default async function LeavePage() {
   const profile = await getCurrentProfile();
 
   if (!profile) {
-    return null;
+    redirect("/login");
   }
 
   const canViewTeam = canApproveLeave(profile);

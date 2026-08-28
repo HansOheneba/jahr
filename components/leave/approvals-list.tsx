@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { ChevronDown, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +29,7 @@ import {
   formatLeaveDateRange,
 } from "@/lib/leave/working-days";
 import { cn } from "@/lib/utils";
+import { useAsyncAction } from "@/lib/hooks/use-async-action";
 
 type TabId = "open" | "closed";
 
@@ -81,7 +81,6 @@ export function ApprovalsList({
   teamBalances: TeamLeaveBalance[];
   logs: LeaveDecisionLog[];
 }) {
-  const router = useRouter();
   const [tab, setTab] = useState<TabId>("open");
   const [query, setQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -89,7 +88,7 @@ export function ApprovalsList({
   const [declineNotes, setDeclineNotes] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
+  const { run } = useAsyncAction();
 
   const rows = tab === "open" ? open : closed;
   const normalizedQuery = query.trim().toLowerCase();
@@ -101,23 +100,25 @@ export function ApprovalsList({
   function respond(requestId: string, approved: boolean, managerNotes?: string) {
     setError(null);
     setBusyId(requestId);
-    startTransition(async () => {
-      const result = await respondToLeaveRequest({
-        requestId,
-        approved,
-        managerNotes,
-      });
-      setBusyId(null);
+    void run(async () => {
+      try {
+        const result = await respondToLeaveRequest({
+          requestId,
+          approved,
+          managerNotes,
+        });
 
-      if (result.error) {
-        setError(result.error);
-        return;
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+
+        setDecliningId(null);
+        setDeclineNotes("");
+        setExpandedId(null);
+      } finally {
+        setBusyId(null);
       }
-
-      setDecliningId(null);
-      setDeclineNotes("");
-      setExpandedId(null);
-      router.refresh();
     });
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { ChevronDown } from "lucide-react";
@@ -21,6 +21,7 @@ import {
   createAlumniRecord,
   updateAlumniRecord,
 } from "@/lib/alumni/actions";
+import { useAsyncAction } from "@/lib/hooks/use-async-action";
 import type { AlumniRecord, AlumniRecordInput } from "@/lib/alumni/types";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +60,7 @@ export function AlumniRecordForm({
   businessUnits?: Array<{ id: string; name: string }>;
 }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { pending, run } = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
   const [showMore, setShowMore] = useState(
     () =>
@@ -118,7 +119,7 @@ export function AlumniRecordForm({
       notes,
     };
 
-    startTransition(async () => {
+    void run(async () => {
       const result = record
         ? await updateAlumniRecord(record.id, input)
         : await createAlumniRecord(input);
@@ -130,7 +131,6 @@ export function AlumniRecordForm({
 
       if (result.recordId) {
         router.push(`/admin/alumni/records/${result.recordId}`);
-        router.refresh();
       }
     });
   }
