@@ -39,7 +39,7 @@ export function RichTextEditor({
   onChange,
   onEditorReady,
   mentionCandidates = [],
-  placeholder = "Write your announcement…",
+  placeholder = "Write your announcement",
   disabled = false,
   className,
   onSubmitShortcut,

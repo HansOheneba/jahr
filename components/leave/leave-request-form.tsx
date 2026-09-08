@@ -201,8 +201,8 @@ export function LeaveRequestForm({
 
       setSuccess(
         result.autoApproved
-          ? `Leave noted for ${result.days} working day${result.days === 1 ? "" : "s"} - recorded on the calendar (no manager approval needed).`
-          : `Leave request submitted for ${result.days} working day${result.days === 1 ? "" : "s"}. Your manager has been emailed and you will get another email when it is decided.`,
+          ? `Leave recorded for ${result.days} working day${result.days === 1 ? "" : "s"}.`
+          : `Submitted for ${result.days} working day${result.days === 1 ? "" : "s"}.`,
       );
       setRange(undefined);
       setNotes("");
@@ -481,7 +481,7 @@ export function LeaveRequestForm({
                     {workingHoursFromDays(workingDays)}h ({WORKDAY_HOURS}h / day)
                     {selectedType.deductsBalance
                       ? ` · ${remainingAfterRequest} annual left after request`
-                      : " · does not deduct annual balance"}
+                      : " · not counted against annual leave"}
                   </p>
                 </div>
               ) : range?.from ? (
@@ -503,7 +503,7 @@ export function LeaveRequestForm({
                 id="leave-notes"
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                placeholder="Optional context for the approval"
+                placeholder="Notes for your manager"
                 className="min-h-24 rounded-md"
               />
             </div>

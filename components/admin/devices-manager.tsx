@@ -309,7 +309,7 @@ export function DevicesManager({
                   id="device-notes"
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
-                  placeholder="Optional"
+                  placeholder="Notes"
                   rows={3}
                 />
               </div>
@@ -616,7 +616,7 @@ export function DevicesManager({
                 id="assign-notes"
                 value={assignNotes}
                 onChange={(event) => setAssignNotes(event.target.value)}
-                placeholder="Optional handover notes"
+                placeholder="Handover notes"
                 rows={3}
               />
             </div>

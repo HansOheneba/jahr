@@ -45,7 +45,7 @@ export function SupportPageView({ requests }: SupportPageViewProps) {
               Ideas and feedback
             </h1>
             <p className="text-sm text-muted-foreground">
-              Your suggestions and bug reports.
+              Ideas and bug reports.
             </p>
           </div>
           <Button type="button" onClick={openSheet}>
@@ -62,7 +62,7 @@ export function SupportPageView({ requests }: SupportPageViewProps) {
           <SheetHeader>
             <SheetTitle>Add request</SheetTitle>
             <SheetDescription>
-              Suggest an idea or report a bug in the portal.
+              An idea or a bug in the portal.
             </SheetDescription>
           </SheetHeader>
           <SupportRequestForm

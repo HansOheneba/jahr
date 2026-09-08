@@ -438,7 +438,7 @@ export function ApprovalsList({
                             onChange={(event) =>
                               setDeclineNotes(event.target.value)
                             }
-                            placeholder="Reason for declining (optional)"
+                            placeholder="Reason for declining"
                             className="min-h-20"
                             disabled={isBusy}
                           />

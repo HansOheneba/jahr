@@ -116,8 +116,7 @@ export function PermitWatchlist({
             No work permits to track yet
           </p>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            This board lists employees who have a work permit expiry date on
-            their record. Add one and they&apos;ll show up here automatically.
+            Employees with a permit expiry date on file.
           </p>
           <ol className="mt-6 w-full space-y-2.5 rounded-xl border border-border bg-background px-4 py-4 text-left text-sm">
             <li className="flex gap-3">

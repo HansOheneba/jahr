@@ -211,9 +211,6 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
             <h2 className="text-sm font-medium">Your photo</h2>
-            <p className="text-sm text-muted-foreground">
-              This will be displayed on your profile.
-            </p>
           </div>
           <div className="flex items-center gap-4">
             <UserAvatar
@@ -280,7 +277,6 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
           value={preferredName}
           onChange={setPreferredName}
           disabled={busy}
-          hint="Shown instead of your first name when set."
         />
 
         <Field

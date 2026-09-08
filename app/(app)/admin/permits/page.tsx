@@ -18,9 +18,8 @@ export default async function PermitsAdminPage() {
       <div className="space-y-1">
         <h1 className="text-xl font-medium tracking-tight">Work permits</h1>
         <p className="text-sm text-muted-foreground">
-          Track permit expiry across the group. Add expiry dates on each
-          employee&apos;s IDs &amp; immigration section. Expired and near-term
-          dates surface first here.
+          Permits by expiry date. Add dates on each employee&apos;s IDs &amp;
+          immigration profile.
         </p>
       </div>
 

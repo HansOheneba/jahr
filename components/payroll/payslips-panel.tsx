@@ -66,8 +66,7 @@ export function PayslipsPanel({
         <div className="space-y-1">
           <CardTitle className="text-base font-medium">Payslips</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Download a PDF for any month since your start date. The first
-            download locks that month’s figures.
+            Download by month. First download locks the figures.
           </p>
         </div>
         {canGenerate ? (
@@ -124,13 +123,11 @@ export function PayslipsPanel({
       <CardContent className="space-y-2 pt-4">
         {!hasPayPackage ? (
           <p className="text-sm text-muted-foreground">
-            No pay package on file yet. Ask HR to set up earnings and deductions
-            first.
+            No pay package on file. Contact HR.
           </p>
         ) : periods.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No eligible pay periods yet. Payslips become available from your
-            start date.
+            Available from your start date.
           </p>
         ) : payslips.length === 0 ? (
           <p className="text-sm text-muted-foreground">

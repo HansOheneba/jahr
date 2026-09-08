@@ -41,8 +41,8 @@ export default async function OrganogramPage() {
           </h1>
           <p className="max-w-xl text-sm text-muted-foreground">
             {isOrgAdmin(profile)
-              ? "Reporting structure across JA Group. Scroll inside the chart to move around."
-              : "Your reporting line. Scroll inside the chart to move around."}
+              ? "Reporting structure across JA Group."
+              : "Your reporting line."}
           </p>
         </div>
       </div>

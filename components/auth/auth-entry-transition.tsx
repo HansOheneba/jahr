@@ -105,7 +105,7 @@ export function AuthEntryTransition({
             Welcome back
           </p>
           <p className="text-sm text-[#667085]">
-            {showReady ? "Your workspace is ready" : "Getting things ready"}
+            {showReady ? "Ready" : null}
           </p>
         </div>
 

@@ -27,7 +27,7 @@ export function AnnouncementEmail({
   return (
     <BrandedEmail
       preview={`${typeLabel}: ${title}`}
-      eyebrow="Internal Comms"
+      eyebrow="Announcement"
       heading={title}
       ctaLabel="Open in portal"
       ctaHref={ctaHref}
@@ -48,7 +48,7 @@ export function AnnouncementEmail({
             </Text>
           ))}
           <Text style={attachmentHint}>
-            Attached to this email and saved in the portal.
+            Attached here and in the portal.
           </Text>
         </div>
       ) : null}

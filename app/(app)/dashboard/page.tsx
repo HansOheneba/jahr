@@ -260,7 +260,7 @@ export default async function DashboardPage() {
           hint:
             orgAverageAgeSample > 0
               ? `${orgAverageAgeSample} with DOB on file`
-              : "Add dates of birth to unlock",
+              : "Add dates of birth on profiles",
           href: "/admin/insights",
           icon: "people",
           accent: DASHBOARD_COLORS.devices,

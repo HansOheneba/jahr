@@ -35,8 +35,8 @@ export default async function EmployeesAdminPage() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {canAdd
-              ? "Directory, employment status, and quick links into each person's record."
-              : "People who report to you - employment details for your team only."}
+              ? "Active employees and links to each profile."
+              : "People who report to you."}
           </p>
         </div>
         {canAdd ? (

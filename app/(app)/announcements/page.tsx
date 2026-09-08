@@ -14,7 +14,7 @@ export default async function AnnouncementsPage() {
       <div className="space-y-1">
         <h1 className="text-xl font-medium tracking-tight">Announcements</h1>
         <p className="text-sm text-muted-foreground">
-          Internal comms for your business unit and work type.
+          Announcements for your unit and work style.
         </p>
       </div>
 
@@ -25,8 +25,7 @@ export default async function AnnouncementsPage() {
           </div>
           <h2 className="mt-4 text-sm font-medium">No announcements yet</h2>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            When something is published for your audience, it will show up here
-            and in your notifications.
+            Published announcements appear here and in notifications.
           </p>
         </div>
       ) : (

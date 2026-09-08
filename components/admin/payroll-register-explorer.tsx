@@ -110,7 +110,7 @@ export function PayrollRegisterExplorer({
       <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
         <p className="text-sm font-medium tracking-tight">No payslips yet</p>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Generated payslips appear here with a permanent reference number.
+          Generated payslips with reference numbers.
         </p>
       </div>
     );

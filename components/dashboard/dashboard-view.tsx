@@ -357,8 +357,8 @@ export function DashboardView({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">
           <Section
-            title="Internal Comms"
-            description="Latest announcement for you."
+            title="Announcements"
+            description="Latest announcement."
             icon={Megaphone}
             accent={COMMS}
             enter={enter}
@@ -374,7 +374,7 @@ export function DashboardView({
           >
             {announcements.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No announcements for you right now.
+                No announcements.
               </p>
             ) : (
               <ul className="flex flex-col gap-3">
@@ -415,7 +415,7 @@ export function DashboardView({
 
           <Section
             title="Your leave"
-            description="Annual entitlement on a 9-5 working-day calendar."
+            description="Annual leave balance."
             icon={CalendarDays}
             accent={LEAVE}
             enter={enter}
@@ -499,7 +499,7 @@ export function DashboardView({
 
           <Section
             title="Upcoming leave"
-            description="Approved and pending time off on your calendar."
+            description="Upcoming approved and pending leave."
             icon={PartyPopper}
             accent={LEAVE}
             enter={enter}
@@ -568,7 +568,7 @@ export function DashboardView({
           {team.length > 0 ? (
             <Section
               title="Team leave availability"
-              description="Annual days left for people who report to you."
+              description="Annual leave left on your team."
               icon={Users}
               accent={PEOPLE}
               enter={enter}

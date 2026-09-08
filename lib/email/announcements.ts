@@ -108,7 +108,7 @@ export async function sendAnnouncementEmail(input: {
 }): Promise<void> {
   await sendEmail({
     to: input.to,
-    from: formatFromAddress("JA Group Internal Comms"),
+    from: formatFromAddress("JA Group"),
     subject: input.email.subject,
     text: input.email.text,
     html: input.email.html,

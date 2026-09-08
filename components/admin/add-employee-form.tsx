@@ -230,7 +230,7 @@ export function AddEmployeeForm({
             value={nationalId}
             onChange={setNationalId}
             placeholder="National ID / passport ID"
-            hint="Optional. Use the ID number for their country of work."
+            hint="National ID or passport number for their country of work."
           />
           <Field
             label="SSNIT number"
@@ -295,14 +295,10 @@ export function AddEmployeeForm({
             label="Employee number"
             value={employeeNumber}
             onChange={setEmployeeNumber}
-            hint="Leave blank to auto-assign (e.g. JA26-0100)."
+            hint="Auto-assigned if blank (e.g. JA26-0100)."
           />
           <div className="space-y-2 sm:col-span-2">
             <Label>Permission tags</Label>
-            <p className="text-xs text-muted-foreground">
-              Leave empty for a regular employee. Tags grant privileges
-              independently of job title.
-            </p>
             <div className="flex flex-wrap gap-2 pt-1">
               {assignableTags.map((slug) => {
                 const selected = tags.includes(slug);

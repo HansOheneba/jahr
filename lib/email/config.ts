@@ -89,7 +89,7 @@ export const EMAIL_BRAND = {
   success: "#16A34A",
   warning: "#F59E0B",
   error: "#DC2626",
-  footerLine: "People operations for JA Group teams.",
+  footerLine: "JA Group TMS",
   /** Display size for the J.A mark in email headers (source is 300×180). */
   logoWidth: 100,
   logoHeight: 60,

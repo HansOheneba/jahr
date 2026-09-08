@@ -18,8 +18,7 @@ export default async function FeedbackInboxPage() {
       <div className="space-y-1">
         <h1 className="text-xl font-medium tracking-tight">Feedback inbox</h1>
         <p className="text-sm text-muted-foreground">
-          Ideas and bug reports from your team. Update status as you review each
-          one.
+          Ideas and bug reports from your team.
         </p>
       </div>
 

@@ -134,8 +134,7 @@ export default async function OrganisationPage() {
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Organisation</h1>
         <p className="text-muted-foreground">
-          Business units and departments are stored in the database - add or
-          rename them without shipping code.
+          Business units and departments. Edit names here.
         </p>
       </div>
 
@@ -165,7 +164,7 @@ export default async function OrganisationPage() {
                   </p>
                   {unitDepartments.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                      No departments yet - add them from admin tools next.
+                      No departments yet.
                     </p>
                   ) : (
                     <ul className="flex flex-wrap gap-2">

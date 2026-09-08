@@ -96,7 +96,7 @@ function validateInput(input: AlumniRecordInput): {
   const lastName = clean(input.lastName);
 
   if (!firstName || !lastName) {
-    return { error: "First name and last name are required." };
+    return { error: "Add first and last name." };
   }
 
   const startYear = parseYear(input.startYear);

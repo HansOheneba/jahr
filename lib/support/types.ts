@@ -4,14 +4,14 @@ export const SUPPORT_REQUEST_KINDS = [
     id: "idea",
     label: "I have an idea",
     listLabel: "Idea",
-    description: "Suggest a feature or an improvement.",
+    description: "A feature or improvement.",
     detailsPlaceholder: "What should we add, and who would use it?",
   },
   {
     id: "help",
     label: "Report a bug",
     listLabel: "Bug report",
-    description: "Something in the portal is broken or not working as expected.",
+    description: "Something is broken or not working.",
     detailsPlaceholder:
       "What you tried, what happened, and which page or feature.",
   },

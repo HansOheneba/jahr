@@ -18,11 +18,11 @@ const SECTION_COPY: Record<SettingsTab, { title: string; description: string }> 
   {
     general: {
       title: "Profile",
-      description: "Update your photo, name, and contact details.",
+      description: "Photo, name, and contact details.",
     },
     team: {
       title: "Your team",
-      description: "See your reporting line and the people you work with.",
+      description: "Reporting line and teammates.",
     },
   };
 

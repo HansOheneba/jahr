@@ -92,7 +92,7 @@ export function LeaveManagerRequestEmail({
     >
       <EmailIntro>
         {employeeName} submitted a {typeLabel.toLowerCase()} request in{" "}
-        {EMAIL_BRAND.productName}. Please review and respond when you can.
+        {EMAIL_BRAND.productName}. Review when you can.
       </EmailIntro>
       <EmailDetails
         rows={leaveDetailRows({
@@ -106,8 +106,7 @@ export function LeaveManagerRequestEmail({
         })}
       />
       <EmailNote>
-        Approving or declining this request will email {employeeName}{" "}
-        automatically.
+        We&apos;ll email {employeeName} when you approve or decline.
       </EmailNote>
     </BrandedEmail>
   );
@@ -147,9 +146,7 @@ export function LeaveEmployeeSubmissionEmail({
       >
         <EmailIntro>
           Hi {employeeName}, your {typeLabel.toLowerCase()} has been recorded on
-          the JA Group leave calendar. Because you don&apos;t report to a
-          manager, no approval step was needed. This is a notification, not a
-          request awaiting sign-off.
+          the JA Group leave calendar. No approval needed.
         </EmailIntro>
         <EmailDetails
           rows={leaveDetailRows({
@@ -179,8 +176,7 @@ export function LeaveEmployeeSubmissionEmail({
     >
       <EmailIntro>
         Hi {employeeName}, your {typeLabel.toLowerCase()} request is in. Your
-        manager has been notified and will review it shortly. You&apos;ll get
-        another email when it&apos;s decided.
+        manager will review it. We&apos;ll email you when it&apos;s decided.
       </EmailIntro>
       <EmailDetails
         rows={leaveDetailRows({
@@ -243,7 +239,7 @@ export function LeaveEmployeeDecisionEmail({
       />
       {approved ? (
         <EmailNote>
-          The dates are on the shared leave calendar. Have a good break.
+          The dates are on the shared leave calendar.
         </EmailNote>
       ) : (
         <EmailNote>

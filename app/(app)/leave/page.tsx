@@ -95,8 +95,8 @@ export default async function LeavePage() {
         <h1 className="text-xl font-medium tracking-tight">Leave</h1>
         <p className="text-sm text-muted-foreground">
           {profile.manager_id
-            ? "Pick days on the calendar, review the working-day count, then send to your manager for approval. You and your manager will both get email updates."
-            : "Pick days on the calendar and submit - your leave is noted on the calendar because you do not report to a manager."}
+            ? "Pick dates, check the working-day count, and submit for approval."
+            : "Pick dates and submit. Your leave goes on the calendar."}
         </p>
       </div>
 

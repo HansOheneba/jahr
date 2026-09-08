@@ -34,8 +34,7 @@ export default function LoginPage() {
               </h1>
               <div className="h-px w-14 bg-white/50" />
               <p className="text-sm leading-relaxed text-white/85 xl:text-base">
-                Leave, documents, payroll, and your team in one place for
-                everyone at JA Group.
+                Leave, documents, payroll, and your team.
               </p>
             </div>
           </div>

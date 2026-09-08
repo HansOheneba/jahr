@@ -313,7 +313,7 @@ export function EmployeeProfile({
           <Section
             title="Employment contract"
             icon={FileText}
-            description="Latest signed contract on file. Upload more from Documents."
+            description="Latest contract. Upload more in Documents."
           >
             {latestContract ? (
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -369,7 +369,7 @@ export function EmployeeProfile({
             </div>
           </Section>
 
-          <Section title="Human resource information" icon={Briefcase}>
+          <Section title="Employment details" icon={Briefcase}>
             <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
               <Field
                 label="Employee ID"
@@ -580,7 +580,7 @@ export function EmployeeProfile({
             <Section
               title="HR notes"
               icon={FileText}
-              description="Private - not visible to the employee."
+              description="HR only."
             >
               {record.hrNotes.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No HR notes.</p>

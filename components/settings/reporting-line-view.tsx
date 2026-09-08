@@ -256,7 +256,7 @@ export function ReportingLineView({ context }: { context: ReportingLineContext }
               </div>
             ) : (
               <p className="mb-6 max-w-sm text-center text-sm text-muted-foreground">
-                No manager assigned yet. Ask HR to update your reporting line.
+                No manager on file. Contact HR.
               </p>
             )}
 

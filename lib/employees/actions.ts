@@ -288,7 +288,7 @@ export async function createEmployee(
   const tags = parseTagSlugs(input.tags);
 
   if (!firstName || !lastName) {
-    return { error: "First name and last name are required." };
+    return { error: "Add first and last name." };
   }
   if (!email || !email.includes("@")) {
     return { error: "A valid work email is required." };
@@ -437,7 +437,7 @@ export async function updateEmployee(
   const tags = parseTagSlugs(input.tags);
 
   if (!firstName || !lastName) {
-    return { error: "First name and last name are required." };
+    return { error: "Add first and last name." };
   }
   if (!jobTitle) {
     return { error: "Job title is required." };

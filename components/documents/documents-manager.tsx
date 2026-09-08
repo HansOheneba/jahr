@@ -69,7 +69,7 @@ export function DocumentsManager({
   canManageHrDocs = false,
   defaultKind,
   title = "Your documents",
-  description = "Upload CVs, IDs, and certificates. HR can add contracts and NDAs.",
+  description = "CVs, IDs, certificates, contracts.",
 }: {
   employeeId: string;
   viewerId: string;
@@ -292,7 +292,7 @@ export function DocumentsManager({
                     </a>
                   ) : (
                     <Badge variant="outline" className="rounded-md font-normal">
-                      Awaiting file
+                      No file
                     </Badge>
                   )}
                   {removable ? (

@@ -92,7 +92,7 @@ export async function submitLeaveRequest(
 
     if (workingDays > balance.remaining) {
       return {
-        error: `Only ${balance.remaining} annual leave day${balance.remaining === 1 ? "" : "s"} remaining - this request requires ${workingDays}.`,
+        error: `Only ${balance.remaining} annual leave day${balance.remaining === 1 ? "" : "s"} remaining. This request needs ${workingDays}.`,
       };
     }
   }
@@ -113,7 +113,7 @@ export async function submitLeaveRequest(
     status: autoApproved ? "approved" : "pending",
     ...(autoApproved
       ? {
-          manager_notes: "Noted on calendar - no manager approval required.",
+          manager_notes: "Recorded on calendar.",
           manager_response_at: nowIso,
         }
       : {}),

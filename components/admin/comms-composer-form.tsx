@@ -193,7 +193,7 @@ export function CommsComposerForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(
     initialDraft
-      ? "Loaded from a past announcement. Publishing emails the audience again."
+      ? "From a past announcement. Publish to email again."
       : null,
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -328,7 +328,7 @@ export function CommsComposerForm({
       <CardHeader className="border-b">
         <CardTitle>Audience</CardTitle>
         <CardDescription>
-          Everyone by default, or narrow by institution and work style.
+          Whole company, or filter by unit and work style.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -407,7 +407,7 @@ export function CommsComposerForm({
                   {selected
                     ? "Selected"
                     : wholeCompany
-                      ? "Covered by whole company"
+                      ? "Included in whole company"
                       : "Not selected"}
                 </p>
               </div>

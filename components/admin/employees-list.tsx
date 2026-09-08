@@ -122,9 +122,7 @@ export function EmployeesList({
               No alumni yet
             </p>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              When someone leaves JA Group, offboard them from their employee
-              profile. They&apos;ll move here automatically and drop out of the
-              active directory.
+              Offboard from an employee profile.
             </p>
             <ol className="mt-6 w-full space-y-2.5 rounded-xl border border-border bg-background px-4 py-4 text-left text-sm">
               <li className="flex gap-3">

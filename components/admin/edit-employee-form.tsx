@@ -303,7 +303,7 @@ export function EditEmployeeForm({
             value={nationalId}
             onChange={setNationalId}
             placeholder="National ID / passport ID"
-            hint="Optional. Use the ID number for their country of work."
+            hint="National ID or passport number for their country of work."
           />
           <Field
             label="SSNIT number"
@@ -368,14 +368,10 @@ export function EditEmployeeForm({
             label="Employee number"
             value={employeeNumber}
             onChange={setEmployeeNumber}
-            hint="Format JA26-0100. Leave blank to keep or auto-assign."
+            hint="JA26-0100. Blank keeps current or auto-assigns."
           />
           <div className="space-y-2 sm:col-span-2">
             <Label>Permission tags</Label>
-            <p className="text-xs text-muted-foreground">
-              Empty means a regular employee. Privileges come from tags, not
-              job title.
-            </p>
             <div className="flex flex-wrap gap-2 pt-1">
               {assignableTags.map((slug) => {
                 const selected = tags.includes(slug);

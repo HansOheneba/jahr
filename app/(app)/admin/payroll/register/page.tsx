@@ -33,8 +33,8 @@ export default async function PayrollRegisterPage() {
         <div className="space-y-1">
           <h1 className="text-xl font-medium tracking-tight">Payslip register</h1>
           <p className="text-sm text-muted-foreground">
-            Search by reference, employee, or period. Every generated payslip
-            is locked for legal reference.
+            Search by reference, employee, or period. Figures lock after
+            generation.
           </p>
         </div>
       </div>

@@ -228,7 +228,7 @@ export async function ensurePayslipSnapshot(input: {
   if (!lines || lines.length === 0) {
     return {
       error:
-        "No pay package on file. Ask HR to set up earnings and deductions first.",
+        "No pay package on file. Contact HR.",
     };
   }
 

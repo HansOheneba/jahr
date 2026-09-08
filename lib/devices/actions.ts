@@ -35,7 +35,7 @@ export async function createDevice(
   const name = input.name.trim();
   const serialNumber = input.serialNumber.trim();
   if (!name || !serialNumber) {
-    return { error: "Name and serial number are required." };
+    return { error: "Add name and serial number." };
   }
 
   const cookieStore = await cookies();

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "JA Group TMS",
-  description: "JA Group talent management system",
+  description: "JA Group workplace portal",
 };
 
 export default function RootLayout({

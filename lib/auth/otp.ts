@@ -148,7 +148,7 @@ export async function verifyLoginOtpCode(
   if (!email || !code) {
     return {
       ok: false,
-      error: "Email and verification code are required.",
+      error: "Enter your email and code.",
       status: 400,
     };
   }

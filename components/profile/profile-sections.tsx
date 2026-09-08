@@ -199,7 +199,7 @@ export function ProfileSections({
       {hidePayroll ? null : (
         <Section
           title="Payroll"
-          description="Salary details for payslip generation - payments are not processed here."
+          description="For payslip generation only."
         >
           {record.payDetails ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -326,7 +326,7 @@ export function ProfileSections({
       {showHrNotes ? (
         <Section
           title="HR notes"
-          description="Private - not visible to the employee."
+          description="HR only."
         >
           {record.hrNotes.length === 0 ? (
             <p className="text-sm text-muted-foreground">No HR notes.</p>

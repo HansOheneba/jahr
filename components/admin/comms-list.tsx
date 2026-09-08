@@ -26,7 +26,7 @@ function EmptyState({
   showCta,
 }: {
   title: string;
-  description: string;
+  description?: string;
   showCta?: boolean;
 }) {
   return (
@@ -35,9 +35,11 @@ function EmptyState({
         <Megaphone className="size-5" />
       </div>
       <h2 className="mt-4 text-sm font-medium">{title}</h2>
-      <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-        {description}
-      </p>
+      {description ? (
+        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+          {description}
+        </p>
+      ) : null}
       {showCta ? (
         <Link href="/admin/comms/new" className={cn(buttonVariants(), "mt-5")}>
           <Megaphone />
@@ -125,7 +127,6 @@ export function CommsList({ items, businessUnits }: CommsListProps) {
     return (
       <EmptyState
         title="No announcements yet"
-        description="Publish your first announcement to email and the dashboard feed."
         showCta
       />
     );
@@ -150,7 +151,7 @@ export function CommsList({ items, businessUnits }: CommsListProps) {
       {filtered.length === 0 ? (
         <EmptyState
           title="No matching announcements"
-          description="Try a different search."
+          description="No matches."
         />
       ) : (
         <Card className="py-0">

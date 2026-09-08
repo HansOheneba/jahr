@@ -210,14 +210,14 @@ function GenderDistributionCard({
           <div className="min-w-0 space-y-0.5">
             <h2 className="text-sm font-medium">Gender</h2>
             <p className="text-xs text-muted-foreground">
-              Demographic split across the current workforce.
+              Gender split among active employees.
             </p>
           </div>
         </div>
         <div className="space-y-5 p-5">
           {!hasSplit ? (
             <p className="text-sm text-muted-foreground">
-              Add gender on employee profiles to unlock this split.
+              Add gender on employee profiles.
             </p>
           ) : (
             <>
@@ -390,8 +390,7 @@ export function WorkforceInsightsView({
                 Workforce insights
               </h1>
               <p className="max-w-xl text-sm text-muted-foreground">
-                A live read of who is here, who joined or left, and how the
-                company is shaped.
+                Headcount, movement, and team breakdown.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -466,7 +465,7 @@ export function WorkforceInsightsView({
           <div className="space-y-1">
             <SectionLabel>Movement</SectionLabel>
             <p className="text-xs text-muted-foreground">
-              Joins and exits this year, plus how that compares to headcount.
+              New hires and leavers this year.
             </p>
           </div>
         </Enter>
@@ -528,7 +527,7 @@ export function WorkforceInsightsView({
               hint={
                 insights.averageAgeSampleSize > 0
                   ? `From ${insights.averageAgeSampleSize} profiles with a date of birth`
-                  : "Add dates of birth on profiles to unlock this"
+                  : "Add dates of birth on profiles"
               }
               accent={LAVENDER}
               icon={Users}
@@ -556,8 +555,7 @@ export function WorkforceInsightsView({
           <div className="space-y-1">
             <SectionLabel>Composition</SectionLabel>
             <p className="text-xs text-muted-foreground">
-              Where people sit, and how they are engaged. Current workforce
-              only.
+              Department, location, and employment type. Active employees only.
             </p>
           </div>
         </Enter>
@@ -575,7 +573,7 @@ export function WorkforceInsightsView({
             items={insights.byDepartment}
             accent={PEOPLE}
             icon={Building2}
-            emptyLabel="Assign departments on profiles to see this split."
+            emptyLabel="Assign departments on profiles."
             ready={barsReady}
             delayMs={440}
           />
@@ -585,7 +583,7 @@ export function WorkforceInsightsView({
             items={insights.byLocation}
             accent={SKY}
             icon={MapPin}
-            emptyLabel="Add office locations to unlock this view."
+            emptyLabel="Add office locations on profiles."
             ready={barsReady}
             delayMs={480}
           />

@@ -324,7 +324,7 @@ export function NotificationsPanel({ initialItems }: NotificationsPanelProps) {
           {groups.length === 0 ? (
             <div className="px-4 py-12 text-center text-sm text-[#98A2B3]">
               {filter === "unread"
-                ? "You're all caught up."
+                ? "No unread announcements."
                 : "No announcements yet."}
             </div>
           ) : (

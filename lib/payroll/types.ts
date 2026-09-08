@@ -234,5 +234,5 @@ export const COMPANY = {
   name: "JA Group",
   addressLines: ["19 Kotey Crescent", "Labone, Accra", "Ghana"],
   queryNote:
-    "In the event of any queries, kindly contact your HRBP. Thank you.",
+    "Questions? Contact your HRBP.",
 } as const;

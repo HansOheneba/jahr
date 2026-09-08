@@ -44,7 +44,7 @@ export async function updateProfileSettings(input: {
   const firstName = input.firstName.trim();
   const lastName = input.lastName.trim();
   if (!firstName || !lastName) {
-    return { error: "First name and last name are required." };
+    return { error: "Add first and last name." };
   }
 
   const cookieStore = await cookies();

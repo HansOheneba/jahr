@@ -78,8 +78,6 @@ export function LoginOtpEmail({
           <Section style={footer}>
             <Text style={footerText}>
               {EMAIL_BRAND.productName}
-              <br />
-              Secure workplace access for JA Group teams.
             </Text>
           </Section>
         </Container>

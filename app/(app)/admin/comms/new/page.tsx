@@ -66,8 +66,8 @@ export default async function CommsNewPage({ searchParams }: CommsNewPageProps) 
           </h1>
           <p className="text-sm text-muted-foreground">
             {initialDraft
-              ? "Publishing creates a new dashboard post and emails the audience again."
-              : "Goes out by email and to the dashboard feed."}
+              ? "Publishes to the feed and emails the audience again."
+              : "Email and dashboard feed."}
           </p>
         </div>
       </div>
