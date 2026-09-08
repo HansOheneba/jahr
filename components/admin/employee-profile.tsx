@@ -130,11 +130,13 @@ export function EmployeeProfile({
   record,
   viewerId,
   payPackage,
+  legalEntities,
   isAdmin,
 }: {
   record: EmployeeRecord;
   viewerId: string;
   payPackage: PayPackage | null;
+  legalEntities: string[];
   isAdmin: boolean;
 }) {
   const [tab, setTab] = useState<ProfileTab>("profile");
@@ -478,7 +480,7 @@ export function EmployeeProfile({
               icon={Wallet}
               description="Salary, statutory IDs, bank details, and payslip line items."
             >
-              <PayPackageForm pack={payPackage} />
+              <PayPackageForm pack={payPackage} legalEntities={legalEntities} />
             </Section>
           ) : null}
           <PayslipsPanel

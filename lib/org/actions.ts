@@ -41,6 +41,39 @@ export async function updateReportingCurrency(
   }
 
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/payroll");
+  revalidatePath("/admin/payroll", "layout");
+  return { success: true };
+}
+
+export async function createLegalEntity(
+  name: string,
+): Promise<OrgSettingsActionResult> {
+  const profile = await getCurrentProfile();
+  if (!profile || !canManagePayroll(profile)) {
+    return { error: "Only org admins can add paying entities." };
+  }
+
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return { error: "Enter a company name." };
+  }
+
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { error } = await supabase.from("legal_entities").insert({
+    name: trimmed,
+    created_by: profile.id,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "That paying entity already exists." };
+    }
+    return { error: error.message };
+  }
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/payroll", "layout");
   return { success: true };
 }

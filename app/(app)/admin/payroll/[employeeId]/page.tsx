@@ -5,6 +5,7 @@ import { PayPackageForm } from "@/components/admin/pay-package-form";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
+import { getLegalEntityNames } from "@/lib/payroll/get-legal-entities";
 import { getPayPackage } from "@/lib/payroll/get-payroll";
 import { ensureDefaultPayPackage } from "@/lib/payroll/ensure-package";
 import { canManagePayroll } from "@/lib/types/database";
@@ -22,7 +23,11 @@ export default async function PayrollEmployeePage({
 
   const { employeeId } = await params;
   await ensureDefaultPayPackage(employeeId);
-  const pack = await getPayPackage(employeeId);
+
+  const [pack, legalEntities] = await Promise.all([
+    getPayPackage(employeeId),
+    getLegalEntityNames(),
+  ]);
 
   if (!pack) {
     notFound();
@@ -64,7 +69,7 @@ export default async function PayrollEmployeePage({
         </div>
       </div>
 
-      <PayPackageForm pack={pack} />
+      <PayPackageForm pack={pack} legalEntities={legalEntities} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { LegalEntitiesForm } from "@/components/admin/legal-entities-form";
 import { OrgSettingsForm } from "@/components/admin/org-settings-form";
 import {
   Card,
@@ -11,6 +12,7 @@ import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { formatRatesUpdated } from "@/lib/fx/format";
 import { getFxRateTable } from "@/lib/fx/get-fx-rates";
 import { getOrgSettings } from "@/lib/org/get-org-settings";
+import { getLegalEntities } from "@/lib/payroll/get-legal-entities";
 import { REPORTING_CURRENCIES } from "@/lib/payroll/currencies";
 import { canManagePayroll } from "@/lib/types/database";
 
@@ -31,9 +33,10 @@ export default async function AdminSettingsPage() {
     redirect("/dashboard");
   }
 
-  const [settings, rates] = await Promise.all([
+  const [settings, rates, legalEntities] = await Promise.all([
     getOrgSettings(),
     getFxRateTable(),
+    getLegalEntities(),
   ]);
 
   const ratesUpdated = formatRatesUpdated(rates.updatedAt);
@@ -51,6 +54,18 @@ export default async function AdminSettingsPage() {
         </CardHeader>
         <CardContent>
           <OrgSettingsForm reportingCurrency={settings.reportingCurrency} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Paying entities</CardTitle>
+          <CardDescription>
+            Legal entities used when assigning pay packages.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LegalEntitiesForm entities={legalEntities} />
         </CardContent>
       </Card>
 

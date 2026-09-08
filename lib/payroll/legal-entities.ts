@@ -1,4 +1,5 @@
-export const LEGAL_ENTITIES = [
+/** Fallback list when the database table is unavailable or empty. */
+export const DEFAULT_LEGAL_ENTITIES = [
   "JKA Holdings",
   "Celerey Inc.",
   "HarryHill Consulting Limited",
@@ -7,10 +8,5 @@ export const LEGAL_ENTITIES = [
   "JA Capital Partners Limited",
   "Portfolio Planners Limited",
   "JA Elements Ghana Limited",
+  "Collins and Cooper Limited",
 ] as const;
-
-export type LegalEntity = (typeof LEGAL_ENTITIES)[number];
-
-export function isLegalEntity(value: string): value is LegalEntity {
-  return (LEGAL_ENTITIES as readonly string[]).includes(value);
-}

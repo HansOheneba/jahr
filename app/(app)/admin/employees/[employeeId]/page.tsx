@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { EmployeeProfile } from "@/components/admin/employee-profile";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { getEmployeeRecord } from "@/lib/employees/get-employee-record";
+import { getLegalEntityNames } from "@/lib/payroll/get-legal-entities";
 import { ensureDefaultPayPackage } from "@/lib/payroll/ensure-package";
 import { getPayPackage } from "@/lib/payroll/get-payroll";
 import {
@@ -34,10 +35,14 @@ export default async function EmployeeAdminPage({
   const admin = isOrgAdmin(viewer);
   const payrollAccess = canManagePayroll(viewer);
   let payPackage = null;
+  let legalEntities: string[] = [];
 
   if (payrollAccess) {
     await ensureDefaultPayPackage(employeeId);
-    payPackage = await getPayPackage(employeeId);
+    [payPackage, legalEntities] = await Promise.all([
+      getPayPackage(employeeId),
+      getLegalEntityNames(),
+    ]);
   }
 
   return (
@@ -45,6 +50,7 @@ export default async function EmployeeAdminPage({
       record={record}
       viewerId={viewer.id}
       payPackage={payPackage}
+      legalEntities={legalEntities}
       isAdmin={admin}
     />
   );

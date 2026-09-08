@@ -32,7 +32,6 @@ import {
   DEFAULT_CURRENCY,
   getCurrencyOption,
 } from "@/lib/payroll/currencies";
-import { LEGAL_ENTITIES } from "@/lib/payroll/legal-entities";
 import { computePayTotals, formatMoney, sumByKind } from "@/lib/payroll/totals";
 import {
   DEFAULT_PACKAGE_LINES,
@@ -187,7 +186,13 @@ function buildLineCode(label: string, taken: Set<string>): string {
   return code;
 }
 
-export function PayPackageForm({ pack }: { pack: PayPackage }) {
+export function PayPackageForm({
+  pack,
+  legalEntities,
+}: {
+  pack: PayPackage;
+  legalEntities: string[];
+}) {
   const router = useRouter();
   const { pending, run } = useAsyncAction();
   const [error, setError] = useState<string | null>(null);
@@ -206,6 +211,13 @@ export function PayPackageForm({ pack }: { pack: PayPackage }) {
   const [downloadPeriod, setDownloadPeriod] = useState(() =>
     periodKey(periods[0].periodStart),
   );
+
+  const entityOptions = useMemo(() => {
+    const names = new Set(legalEntities);
+    const current = details.payingEntity.trim();
+    if (current) names.add(current);
+    return [...names].sort((a, b) => a.localeCompare(b));
+  }, [legalEntities, details.payingEntity]);
 
   const numericLines = useMemo(
     () =>
@@ -350,7 +362,7 @@ export function PayPackageForm({ pack }: { pack: PayPackage }) {
               onValueChange={(value) => {
                 if (value) setField("payingEntity", value);
               }}
-              items={LEGAL_ENTITIES.map((entity) => ({
+              items={entityOptions.map((entity) => ({
                 value: entity,
                 label: entity,
               }))}
@@ -359,7 +371,7 @@ export function PayPackageForm({ pack }: { pack: PayPackage }) {
                 <SelectValue placeholder="Select entity" />
               </SelectTrigger>
               <SelectContent>
-                {LEGAL_ENTITIES.map((entity) => (
+                {entityOptions.map((entity) => (
                   <SelectItem key={entity} value={entity}>
                     {entity}
                   </SelectItem>
