@@ -167,8 +167,8 @@ function PersonBox({
   delayMs: number;
 }) {
   const institution = unitLabel(node.businessUnitName);
-  const jobTitle = node.jobTitle ?? "Team member";
-  const department = node.departmentName ?? "-";
+  const jobTitle = node.jobTitle?.trim() || null;
+  const department = node.departmentName?.trim() || null;
   const tags = formatTags(node.tags);
   const href = `/admin/employees/${node.id}`;
 
@@ -208,18 +208,22 @@ function PersonBox({
           >
             {node.name}
           </p>
-          <p
-            className="mt-0.5 line-clamp-2 min-h-[26px] text-[10px] leading-[13px] text-muted-foreground"
-            title={jobTitle}
-          >
-            {jobTitle}
-          </p>
-          <p
-            className="mt-0.5 truncate text-[10px] leading-tight text-muted-foreground"
-            title={department}
-          >
-            {department}
-          </p>
+          {jobTitle ? (
+            <p
+              className="mt-0.5 line-clamp-2 text-[10px] leading-[13px] text-muted-foreground"
+              title={jobTitle}
+            >
+              {jobTitle}
+            </p>
+          ) : null}
+          {department ? (
+            <p
+              className="mt-0.5 truncate text-[10px] leading-tight text-muted-foreground"
+              title={department}
+            >
+              {department}
+            </p>
+          ) : null}
           <p
             className="mt-auto truncate pt-1 text-[9px] font-medium tracking-wide text-accent-blue uppercase"
             title={tags}
