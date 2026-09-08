@@ -140,9 +140,20 @@ export function EmailIntro({ children }: { children: ReactNode }) {
   return <Text style={intro}>{children}</Text>;
 }
 
-/** Small caps line under the heading, for category / type style context. */
-export function EmailMeta({ children }: { children: ReactNode }) {
-  return <Text style={meta}>{children}</Text>;
+/** Type kicker plus a quieter published line under the heading. */
+export function EmailMeta({
+  kicker,
+  children,
+}: {
+  kicker: string;
+  children: ReactNode;
+}) {
+  return (
+    <>
+      <Text style={metaKicker}>{kicker}</Text>
+      <Text style={meta}>{children}</Text>
+    </>
+  );
 }
 
 export function EmailDetails({ rows }: { rows: EmailDetailRow[] }) {
@@ -222,14 +233,22 @@ const headingStyle: CSSProperties = {
   margin: "0 0 12px",
 };
 
+const metaKicker: CSSProperties = {
+  color: EMAIL_BRAND.text,
+  fontSize: "12px",
+  fontWeight: 600,
+  letterSpacing: "0.1em",
+  lineHeight: "16px",
+  margin: "0 0 4px",
+  textTransform: "uppercase",
+};
+
 const meta: CSSProperties = {
   color: EMAIL_BRAND.mutedText,
-  fontSize: "11px",
-  fontWeight: 600,
-  letterSpacing: "0.08em",
-  lineHeight: "16px",
+  fontSize: "13px",
+  fontWeight: 400,
+  lineHeight: "18px",
   margin: "0 0 20px",
-  textTransform: "uppercase",
 };
 
 const intro: CSSProperties = {

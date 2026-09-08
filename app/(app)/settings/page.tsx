@@ -1,30 +1,42 @@
 import { redirect } from "next/navigation";
-import { SettingsForm } from "@/components/settings/settings-form";
-import {
-  FormPageCard,
-  FormPageShell,
-} from "@/components/layout/form-page-shell";
+import { Suspense } from "react";
+import { FormPageShell } from "@/components/layout/form-page-shell";
+import { SettingsWorkspace } from "@/components/settings/settings-workspace";
+import { getReportingLineContext } from "@/lib/employees/get-reporting-context";
 import { getEmployeeRecord } from "@/lib/employees/get-employee-record";
 
-export default async function SettingsPage() {
-  const record = await getEmployeeRecord();
+type SettingsTab = "general" | "team";
 
-  if (!record) {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
+  const initialTab: SettingsTab = tab === "team" ? "team" : "general";
+
+  const [record, teamContext] = await Promise.all([
+    getEmployeeRecord(),
+    getReportingLineContext(),
+  ]);
+
+  if (!record || !teamContext) {
     redirect("/login");
   }
 
   return (
-    <FormPageShell width="sm">
-      <div className="space-y-1">
-        <h1 className="text-xl font-medium tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Update your photo, name, and contact details.
-        </p>
+    <FormPageShell width="xl">
+      <div
+        className="flex min-h-[min(520px,calc(100svh-14rem))] flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card"
+      >
+        <Suspense>
+          <SettingsWorkspace
+            profile={record.profile}
+            teamContext={teamContext}
+            initialTab={initialTab}
+          />
+        </Suspense>
       </div>
-
-      <FormPageCard>
-        <SettingsForm profile={record.profile} />
-      </FormPageCard>
     </FormPageShell>
   );
 }

@@ -10,7 +10,6 @@ export interface AnnouncementEmailProps {
   title: string;
   /** Email-safe HTML fragment derived from TipTap JSON (not stored). */
   bodyHtml: string;
-  categoryLabel: string;
   typeLabel: string;
   publishedAtLabel: string;
   attachmentNames?: string[];
@@ -20,7 +19,6 @@ export interface AnnouncementEmailProps {
 export function AnnouncementEmail({
   title,
   bodyHtml,
-  categoryLabel,
   typeLabel,
   publishedAtLabel,
   attachmentNames = [],
@@ -35,8 +33,8 @@ export function AnnouncementEmail({
       ctaHref={ctaHref}
       disclaimer={EMAIL_CONFIDENTIALITY.body}
     >
-      <EmailMeta>
-        {categoryLabel} · {typeLabel} · Published {publishedAtLabel}
+      <EmailMeta kicker={typeLabel}>
+        Published {publishedAtLabel}
       </EmailMeta>
       <div style={bodyShell} dangerouslySetInnerHTML={{ __html: bodyHtml }} />
       {attachmentNames.length > 0 ? (

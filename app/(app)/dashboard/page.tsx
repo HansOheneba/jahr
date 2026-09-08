@@ -10,13 +10,9 @@ import {
   type DashboardTeamMember,
 } from "@/components/dashboard/shared";
 import { getAnnouncementsForViewer } from "@/lib/announcements/get-for-viewer";
-import {
-  announcementCategoryLabel,
-  announcementTypeLabel,
-} from "@/lib/announcements/categories";
+import { announcementTypeLabel } from "@/lib/announcements/categories";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { SIGN_OUT_PATH } from "@/lib/auth/routes";
-import { hasTag } from "@/lib/auth/permissions";
 import { getEmployeeRecord } from "@/lib/employees/get-employee-record";
 import {
   formatAverageAge,
@@ -334,9 +330,6 @@ export default async function DashboardPage() {
       announcements={announcements.map((item) => ({
         id: item.id,
         title: item.title,
-        category: item.category,
-        announcementType: item.announcement_type,
-        categoryLabel: announcementCategoryLabel(item.category),
         typeLabel: announcementTypeLabel(item.announcement_type),
         body: item.body,
         bodyJson: item.body_json,
@@ -349,21 +342,6 @@ export default async function DashboardPage() {
         name: item.name,
         dateLabel: format(parseISO(item.holiday_date), "EEE d MMM"),
       }))}
-      reportingLine={
-        hasTag(profile, "ceo") || hasTag(profile, "super_admin")
-          ? {
-              label: "Organisation",
-              name: "You lead JA Group",
-              detail: profile.job_title ?? "Chief Executive Officer",
-            }
-          : {
-              label: "Reports to",
-              name: profile.manager
-                ? displayName(profile.manager)
-                : "Not assigned",
-              detail: profile.manager?.job_title ?? "Ask HR to set your manager",
-            }
-      }
       canApprove={canApprove}
       isAdmin={admin}
     />

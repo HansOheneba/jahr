@@ -5,10 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { AttachmentList } from "@/components/communications/attachment-list";
 import { MessageContent } from "@/components/communications/message-content";
 import { Badge } from "@/components/ui/badge";
-import {
-  announcementCategoryLabel,
-  announcementTypeLabel,
-} from "@/lib/announcements/categories";
+import { announcementTypeLabel } from "@/lib/announcements/categories";
 import { getAnnouncementForViewer } from "@/lib/announcements/get-for-viewer";
 
 interface AnnouncementDetailPageProps {
@@ -37,7 +34,6 @@ export default async function AnnouncementDetailPage({
         </Link>
         <div className="space-y-2">
           <Badge variant="secondary" className="rounded-md font-normal">
-            {announcementCategoryLabel(announcement.category)} ·{" "}
             {announcementTypeLabel(announcement.announcement_type)}
           </Badge>
           <h1 className="text-xl font-medium tracking-tight">
@@ -45,7 +41,10 @@ export default async function AnnouncementDetailPage({
           </h1>
           <p className="text-sm text-muted-foreground tabular-nums">
             Published{" "}
-            {format(parseISO(announcement.published_at), "d MMM yyyy · HH:mm")}
+            {format(
+              parseISO(announcement.published_at),
+              "d MMM yyyy 'at' HH:mm",
+            )}
           </p>
         </div>
       </div>

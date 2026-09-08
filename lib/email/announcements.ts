@@ -1,10 +1,8 @@
 import { render } from "@react-email/render";
 import { AnnouncementEmail } from "@/emails/announcement";
-import type { AnnouncementType } from "@/lib/announcements/categories";
 import {
-  announcementCategoryLabel,
   announcementTypeLabel,
-  getAnnouncementCategory,
+  type AnnouncementType,
 } from "@/lib/announcements/categories";
 import { tipTapJsonToEmailHtml } from "@/lib/communications/email-html";
 import type { JSONContent } from "@/lib/communications/types";
@@ -37,29 +35,15 @@ export interface PreparedAnnouncementEmail {
   text: string;
 }
 
-function announcementLabels(announcementType: AnnouncementType) {
-  return {
-    typeLabel: announcementTypeLabel(announcementType),
-    categoryLabel: announcementCategoryLabel(
-      getAnnouncementCategory(announcementType),
-    ),
-  };
-}
-
 /** The HTML mail clients receive. Shared by the send path and composer preview. */
 export async function renderAnnouncementEmailHtml(
   input: AnnouncementEmailContent,
 ): Promise<string> {
-  const { typeLabel, categoryLabel } = announcementLabels(
-    input.announcementType,
-  );
-
   return render(
     AnnouncementEmail({
       title: input.title,
       bodyHtml: tipTapJsonToEmailHtml(input.bodyJson),
-      categoryLabel,
-      typeLabel,
+      typeLabel: announcementTypeLabel(input.announcementType),
       publishedAtLabel: input.publishedAtLabel,
       attachmentNames: input.attachmentNames ?? [],
       ctaHref: getPortalUrl(
@@ -78,9 +62,7 @@ export async function renderAnnouncementEmailHtml(
 export async function buildAnnouncementEmail(
   input: AnnouncementEmailContent,
 ): Promise<PreparedAnnouncementEmail> {
-  const { typeLabel, categoryLabel } = announcementLabels(
-    input.announcementType,
-  );
+  const typeLabel = announcementTypeLabel(input.announcementType);
   const attachmentNames = input.attachmentNames ?? [];
 
   const attachmentNote =
@@ -95,14 +77,12 @@ export async function buildAnnouncementEmail(
 
   const text = [
     input.title,
-    `Category: ${categoryLabel}`,
-    `Type: ${typeLabel}`,
+    typeLabel,
+    `Published ${input.publishedAtLabel}`,
     "",
     input.body,
     "",
     ...attachmentNote,
-    `Published: ${input.publishedAtLabel}`,
-    "",
     `View in portal: ${getPortalUrl(
       input.announcementId
         ? `/announcements/${input.announcementId}`

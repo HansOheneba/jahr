@@ -2,10 +2,7 @@ import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import { Megaphone } from "lucide-react";
 import { getAnnouncementsForViewer } from "@/lib/announcements/get-for-viewer";
-import {
-  announcementCategoryLabel,
-  announcementTypeLabel,
-} from "@/lib/announcements/categories";
+import { announcementTypeLabel } from "@/lib/announcements/categories";
 import { MessageContent } from "@/components/communications/message-content";
 import { Badge } from "@/components/ui/badge";
 
@@ -46,7 +43,6 @@ export default async function AnnouncementsPage() {
                       variant="secondary"
                       className="rounded-md font-normal"
                     >
-                      {announcementCategoryLabel(item.category)} ·{" "}
                       {announcementTypeLabel(item.announcement_type)}
                     </Badge>
                     <h2 className="mt-2 text-sm font-medium">{item.title}</h2>

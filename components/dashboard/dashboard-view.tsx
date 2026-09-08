@@ -207,7 +207,6 @@ export function DashboardView({
   team,
   birthdays,
   holidays,
-  reportingLine,
   canApprove,
   isAdmin,
 }: {
@@ -224,7 +223,6 @@ export function DashboardView({
   team: DashboardTeamMember[];
   birthdays: DashboardBirthday[];
   holidays: DashboardHoliday[];
-  reportingLine: { label: string; name: string; detail: string };
   canApprove: boolean;
   isAdmin: boolean;
 }) {
@@ -389,8 +387,8 @@ export function DashboardView({
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-[11px] font-medium text-[#174EA6]">
-                            {item.categoryLabel} · {item.typeLabel}
+                          <p className="text-[11px] font-medium tracking-[0.08em] text-[#174EA6] uppercase">
+                            {item.typeLabel}
                           </p>
                           <p className="mt-0.5 text-sm font-medium">
                             {item.title}
@@ -700,26 +698,13 @@ export function DashboardView({
 
           <Section
             title="Coming up"
-            description="Public holidays, birthdays, and your reporting line."
+            description="Public holidays and birthdays this month."
             icon={Gift}
             accent={PAYROLL}
             enter={enter}
             delayMs={440}
           >
             <div className="space-y-4">
-              <div
-                className="rounded-md border border-border px-3 py-2.5"
-                style={{ background: tint(BLUE, 7) }}
-              >
-                <p className="text-xs text-muted-foreground">
-                  {reportingLine.label}
-                </p>
-                <p className="mt-0.5 text-sm font-medium">{reportingLine.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {reportingLine.detail}
-                </p>
-              </div>
-
               <div>
                 <p className="mb-2 text-xs font-medium text-muted-foreground">
                   Holidays

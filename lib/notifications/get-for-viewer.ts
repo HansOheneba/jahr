@@ -1,8 +1,5 @@
 import { cache } from "react";
-import {
-  announcementCategoryLabel,
-  announcementTypeLabel,
-} from "@/lib/announcements/categories";
+import { announcementTypeLabel } from "@/lib/announcements/categories";
 import { getAnnouncementsForViewer } from "@/lib/announcements/get-for-viewer";
 import type { NotificationItem } from "@/lib/notifications/types";
 
@@ -14,7 +11,6 @@ export const getNotificationsForViewer = cache(async (
 
   return announcements.map((item) => {
     const typeLabel = announcementTypeLabel(item.announcement_type);
-    const categoryLabel = announcementCategoryLabel(item.category);
     const preview = item.body.trim().replace(/\s+/g, " ").slice(0, 120);
 
     return {
@@ -26,10 +22,10 @@ export const getNotificationsForViewer = cache(async (
       subject: item.title,
       body:
         preview.length > 0
-          ? `${categoryLabel} · ${typeLabel}. ${preview}${
+          ? `${typeLabel}. ${preview}${
               item.body.trim().length > 120 ? "…" : ""
             }`
-          : `${categoryLabel} · ${typeLabel}`,
+          : typeLabel,
       href: `/announcements/${item.id}`,
     };
   });

@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 const widthClasses = {
   sm: "max-w-2xl",
   md: "max-w-3xl",
+  lg: "max-w-5xl",
+  xl: "max-w-6xl",
   full: "max-w-none",
 } as const;
 
@@ -27,7 +29,7 @@ export function FormPageShell({
     >
       <div
         className={cn(
-          "relative mx-auto flex w-full flex-col gap-5",
+          "relative mx-auto flex w-full flex-1 flex-col gap-5",
           widthClasses[width],
         )}
       >

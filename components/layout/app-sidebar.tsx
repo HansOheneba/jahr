@@ -13,7 +13,9 @@ import {
   IdCard,
   Laptop,
   LayoutDashboard,
+  Lightbulb,
   Megaphone,
+  MessageSquare,
   Network,
   ScrollText,
   Settings,
@@ -64,6 +66,7 @@ export function AppSidebar({
     { href: "/announcements", label: "Announcements", icon: Megaphone },
     { href: "/leave", label: "Leave", icon: CalendarDays },
     { href: "/documents", label: "Documents", icon: FileText },
+    { href: "/support", label: "Ideas & feedback", icon: Lightbulb },
   ];
 
   const teamNav: NavItem[] = showTeamNav
@@ -104,6 +107,11 @@ export function AppSidebar({
     ...(showOrgAdmin
       ? [
           {
+            href: "/admin/feedback",
+            label: "Feedback inbox",
+            icon: MessageSquare,
+          },
+          {
             href: "/admin/permits",
             label: "Work permits",
             icon: IdCard,
@@ -122,8 +130,7 @@ export function AppSidebar({
       : []),
   ];
 
-  const settingsActive =
-    pathname === "/settings" || pathname.startsWith("/settings/");
+  const settingsActive = pathname.startsWith("/settings");
 
   return (
     <aside

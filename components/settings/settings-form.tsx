@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,11 +17,26 @@ import type { EmployeeProfile } from "@/lib/types/employee";
 import { useAsyncAction } from "@/lib/hooks/use-async-action";
 import { cn } from "@/lib/utils";
 
+function emptyValue(value: string | null | undefined): string {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : "-";
+}
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium text-foreground">{value}</p>
+    </div>
+  );
+}
+
 export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { pending, run: runSave } = useAsyncAction();
   const { pending: photoPending, run: runPhoto } = useAsyncAction();
+  const [editing, setEditing] = useState(false);
   const [firstName, setFirstName] = useState(profile.first_name);
   const [lastName, setLastName] = useState(profile.last_name);
   const [preferredName, setPreferredName] = useState(
@@ -37,11 +52,42 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  useEffect(() => {
+    setFirstName(profile.first_name);
+    setLastName(profile.last_name);
+    setPreferredName(profile.preferred_name ?? "");
+    setPhone(profile.phone ?? "");
+    setPersonalEmail(profile.personal_email ?? "");
+    setAddressLine(profile.address_line ?? "");
+    setCity(profile.city ?? "");
+    setCountry(profile.country || "Ghana");
+  }, [profile]);
+
   const name = displayName({
     first_name: firstName,
     last_name: lastName,
     preferred_name: preferredName || null,
   });
+
+  const displayNameValue = displayName(profile);
+
+  function resetForm() {
+    setFirstName(profile.first_name);
+    setLastName(profile.last_name);
+    setPreferredName(profile.preferred_name ?? "");
+    setPhone(profile.phone ?? "");
+    setPersonalEmail(profile.personal_email ?? "");
+    setAddressLine(profile.address_line ?? "");
+    setCity(profile.city ?? "");
+    setCountry(profile.country || "Ghana");
+    setError(null);
+    setSaved(false);
+  }
+
+  function handleCancel() {
+    resetForm();
+    setEditing(false);
+  }
 
   function handleSave() {
     setError(null);
@@ -62,6 +108,7 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
         return;
       }
       setSaved(true);
+      setEditing(false);
       router.refresh();
     });
   }
@@ -98,14 +145,68 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
 
   const busy = pending || photoPending;
 
+  if (!editing) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-end">
+          <Button type="button" variant="outline" onClick={() => setEditing(true)}>
+            Edit
+          </Button>
+        </div>
+
+        <section className="space-y-5 border-b border-border pb-8">
+          <h2 className="text-sm font-medium">Your photo</h2>
+          <div className="flex items-center gap-4">
+            <UserAvatar
+              name={displayNameValue}
+              src={profile.avatar_url}
+              gender={profile.gender}
+              className="size-16"
+            />
+            <p className="text-sm text-muted-foreground">
+              Shown on your profile across JA Group TMS.
+            </p>
+          </div>
+        </section>
+
+        <section className="space-y-5 border-b border-border pb-8">
+          <h2 className="text-sm font-medium">Contact</h2>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <ReadOnlyField label="First name" value={profile.first_name} />
+            <ReadOnlyField label="Last name" value={profile.last_name} />
+            <ReadOnlyField
+              label="Preferred name"
+              value={emptyValue(profile.preferred_name)}
+            />
+            <ReadOnlyField label="Work email" value={profile.email} />
+            <ReadOnlyField
+              label="Personal email"
+              value={emptyValue(profile.personal_email)}
+            />
+            <ReadOnlyField label="Phone" value={emptyValue(profile.phone)} />
+          </div>
+        </section>
+
+        <section className="space-y-5">
+          <h2 className="text-sm font-medium">Address</h2>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <ReadOnlyField
+              label="Street address"
+              value={emptyValue(profile.address_line)}
+            />
+            <ReadOnlyField label="City" value={emptyValue(profile.city)} />
+            <ReadOnlyField
+              label="Country"
+              value={emptyValue(profile.country || "Ghana")}
+            />
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap gap-2">
-        <span className="inline-flex h-9 items-center rounded-md border border-border bg-card px-3 text-sm font-medium shadow-sm">
-          General
-        </span>
-      </div>
-
       <section className="space-y-6 border-b border-border pb-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
@@ -249,7 +350,10 @@ export function SettingsForm({ profile }: { profile: EmployeeProfile }) {
         <p className="text-sm text-success">Your changes have been saved.</p>
       ) : null}
 
-      <div className="flex justify-end border-t border-border pt-6">
+      <div className="flex justify-end gap-2 border-t border-border pt-6">
+        <Button type="button" variant="outline" onClick={handleCancel} disabled={busy}>
+          Cancel
+        </Button>
         <Button
           type="button"
           onClick={handleSave}
@@ -293,9 +397,7 @@ function Field({
         readOnly={readOnly}
         disabled={disabled}
         onChange={
-          onChange
-            ? (event) => onChange(event.target.value)
-            : undefined
+          onChange ? (event) => onChange(event.target.value) : undefined
         }
         className={cn(readOnly && "bg-secondary text-muted-foreground")}
       />
