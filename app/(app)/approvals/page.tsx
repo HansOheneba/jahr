@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { ApprovalsList } from "@/components/leave/approvals-list";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { getApprovalsWorkspace } from "@/lib/leave/get-approvals";
-import { canApproveLeave } from "@/lib/types/database";
+import { canApproveLeave, isOrgAdmin } from "@/lib/types/database";
 
 export default async function ApprovalsPage() {
   const profile = await getCurrentProfile();
@@ -11,6 +11,7 @@ export default async function ApprovalsPage() {
   }
 
   const workspace = await getApprovalsWorkspace(profile);
+  const orgWideView = isOrgAdmin(profile);
 
   return (
     <div className="flex w-full flex-col gap-5">
@@ -19,8 +20,9 @@ export default async function ApprovalsPage() {
           Leave applications
         </h1>
         <p className="text-sm text-muted-foreground">
-          Approve or decline team leave. Working time is counted on 9–5 days
-          (weekends and Ghana public holidays excluded).
+          {orgWideView
+            ? "Approve or decline leave across the organisation. Working time is counted on 9–5 days (weekends and Ghana public holidays excluded)."
+            : "Approve or decline leave for people who report to you. Working time is counted on 9–5 days (weekends and Ghana public holidays excluded)."}
         </p>
       </div>
 
@@ -29,6 +31,7 @@ export default async function ApprovalsPage() {
         closed={workspace.closed}
         teamBalances={workspace.teamBalances}
         logs={workspace.logs}
+        orgWideView={orgWideView}
       />
     </div>
   );

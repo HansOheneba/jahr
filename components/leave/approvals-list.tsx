@@ -76,11 +76,14 @@ export function ApprovalsList({
   closed,
   teamBalances,
   logs,
+  orgWideView = false,
 }: {
   open: ApprovalQueueRecord[];
   closed: ApprovalQueueRecord[];
   teamBalances: TeamLeaveBalance[];
   logs: LeaveDecisionLog[];
+  /** Org admins see leave for the whole organisation, not only direct reports. */
+  orgWideView?: boolean;
 }) {
   const router = useRouter();
   const { pending, run } = useAsyncAction();
@@ -132,8 +135,9 @@ export function ApprovalsList({
           <div className="space-y-0.5">
             <h2 className="text-sm font-medium">Team leave availability</h2>
             <p className="text-xs text-muted-foreground">
-              Annual leave remaining for people who report to you ({WORKDAY_HOURS}
-              h workdays).
+              {orgWideView
+                ? `Annual leave remaining across the organisation (${WORKDAY_HOURS}h workdays).`
+                : `Annual leave remaining for people who report to you (${WORKDAY_HOURS}h workdays).`}
             </p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
@@ -490,7 +494,9 @@ export function ApprovalsList({
           <div className="border-b border-border px-4 py-3">
             <h2 className="text-sm font-medium">Decision log</h2>
             <p className="text-xs text-muted-foreground">
-              Recent approvals and declines for your team.
+              {orgWideView
+                ? "Recent approvals and declines across the organisation."
+                : "Recent approvals and declines for people who report to you."}
             </p>
           </div>
           <ul className="divide-y divide-border">
