@@ -10,3 +10,7 @@ export const DEFAULT_LEGAL_ENTITIES = [
   "JA Elements Ghana Limited",
   "Collins and Cooper Limited",
 ] as const;
+
+export function isPersistedLegalEntity(id: string): boolean {
+  return !id.startsWith("fallback-");
+}
