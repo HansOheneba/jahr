@@ -14,7 +14,7 @@ export default async function AnnouncementsPage() {
       <div className="space-y-1">
         <h1 className="text-xl font-medium tracking-tight">Announcements</h1>
         <p className="text-sm text-muted-foreground">
-          Announcements for your unit and work style.
+          Announcements for you.
         </p>
       </div>
 
