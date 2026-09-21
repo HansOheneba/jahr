@@ -9,8 +9,7 @@ import {
   notifyEmployeeOfLeaveSubmission,
   notifyManagerOfLeaveRequest,
 } from "@/lib/email/leave";
-import { summarizeLeaveBalance } from "@/lib/leave/balance";
-import { LEAVE_TYPES, type LeaveStatus, type LeaveTypeId } from "@/lib/leave/types";
+import { LEAVE_TYPES, type LeaveTypeId } from "@/lib/leave/types";
 import { countWorkingDays } from "@/lib/leave/working-days";
 import { displayName } from "@/lib/types/database";
 import { createClient } from "@/utils/supabase/server";
@@ -65,38 +64,6 @@ export async function submitLeaveRequest(
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
-  if (leaveType.deductsBalance) {
-    const year = start.getFullYear();
-    const { data: existing, error: existingError } = await supabase
-      .from("leave_requests")
-      .select("type, status, start_date, working_days")
-      .eq("employee_id", profile.id)
-      .in("status", ["pending", "approved"])
-      .gte("start_date", `${year}-01-01`)
-      .lte("start_date", `${year}-12-31`);
-
-    if (existingError) {
-      return { error: existingError.message };
-    }
-
-    const balance = summarizeLeaveBalance(
-      (existing ?? []).map((row) => ({
-        type: row.type as LeaveTypeId,
-        status: row.status as LeaveStatus,
-        startDate: row.start_date,
-        workingDays: Number(row.working_days),
-      })),
-      profile.annual_leave_entitlement,
-      start,
-    );
-
-    if (workingDays > balance.remaining) {
-      return {
-        error: `Only ${balance.remaining} annual leave day${balance.remaining === 1 ? "" : "s"} remaining. This request needs ${workingDays}.`,
-      };
-    }
-  }
-
   const notes = input.notes.trim();
   const requiresApproval = Boolean(profile.manager_id);
   const autoApproved = !requiresApproval;
@@ -110,6 +77,7 @@ export async function submitLeaveRequest(
     end_date: input.endDate,
     working_days: workingDays,
     notes,
+    submitted_at: nowIso,
     status: autoApproved ? "approved" : "pending",
     ...(autoApproved
       ? {

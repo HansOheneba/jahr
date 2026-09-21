@@ -6,6 +6,7 @@ import {
   isSameDay,
   isSameMonth,
   isSameYear,
+  parseISO,
   startOfDay,
 } from "date-fns";
 import { getHolidayMap, isPublicHoliday } from "@/lib/leave/ghana-holidays";
@@ -68,6 +69,19 @@ export function formatLeaveDateRange(start: Date, end: Date): string {
 
 export function formatLeaveDateKey(date: Date): string {
   return format(date, "yyyy-MM-dd");
+}
+
+/** Calendar date for stored timestamptz (Ghana / UTC, no local timezone shift). */
+export function formatLeaveTimestampDate(iso: string): string {
+  const instant = parseISO(iso);
+  const calendar = new Date(
+    Date.UTC(
+      instant.getUTCFullYear(),
+      instant.getUTCMonth(),
+      instant.getUTCDate(),
+    ),
+  );
+  return format(calendar, "d MMM yyyy");
 }
 
 export function leaveReference(id: string): string {

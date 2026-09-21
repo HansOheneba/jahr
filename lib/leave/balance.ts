@@ -10,13 +10,11 @@ interface BalanceInput {
 const ANNUAL_TYPE: LeaveTypeId = "annual";
 
 /**
- * Annual leave balance for the calendar year containing `referenceDate`.
- * Only `annual` requests count against the entitlement - other leave types
- * are tracked but uncapped, matching the original HR portal's rules.
+ * Annual leave usage for the calendar year containing `referenceDate`.
+ * Only `annual` requests are counted; other leave types are tracked separately.
  */
 export function summarizeLeaveBalance(
   requests: BalanceInput[],
-  entitlement: number,
   referenceDate: Date = new Date(),
 ): LeaveBalanceSummary {
   const year = referenceDate.getFullYear();
@@ -35,10 +33,5 @@ export function summarizeLeaveBalance(
     }
   }
 
-  return {
-    entitlement,
-    used,
-    pending,
-    remaining: Math.max(entitlement - used - pending, 0),
-  };
+  return { used, pending };
 }

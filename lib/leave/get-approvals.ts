@@ -59,8 +59,7 @@ const PREVIEW_OPEN: ApprovalQueueRecord[] = [
     managerNotes: null,
     managerResponseAt: null,
     submittedAt: "2026-04-20T09:00:00.000Z",
-    annualRemaining: 18,
-    annualEntitlement: 25,
+    annualUsed: 2,
     annualPending: 5,
   },
 ];
@@ -72,8 +71,6 @@ const PREVIEW_TEAM: TeamLeaveBalance[] = [
     jobTitle: "Product Designer",
     avatarUrl: null,
     gender: "female",
-    remaining: 18,
-    entitlement: 25,
     used: 2,
     pending: 5,
   },
@@ -83,8 +80,6 @@ const PREVIEW_TEAM: TeamLeaveBalance[] = [
     jobTitle: "Software Engineer",
     avatarUrl: null,
     gender: "male",
-    remaining: 21,
-    entitlement: 25,
     used: 4,
     pending: 0,
   },
@@ -110,7 +105,7 @@ function mapApproval(
   row: LeaveRow,
   balanceByEmployee: Map<
     string,
-    { remaining: number; entitlement: number; pending: number }
+    { used: number; pending: number }
   >,
 ): ApprovalQueueRecord {
   const workingDays = Number(row.working_days);
@@ -134,8 +129,7 @@ function mapApproval(
     managerNotes: row.manager_notes,
     managerResponseAt: row.manager_response_at,
     submittedAt: row.submitted_at,
-    annualRemaining: balance?.remaining ?? null,
-    annualEntitlement: balance?.entitlement ?? null,
+    annualUsed: balance?.used ?? null,
     annualPending: balance?.pending ?? null,
   };
 }
@@ -217,25 +211,10 @@ export async function getApprovalsWorkspace(viewer: {
 
   const balanceByEmployee = new Map<
     string,
-    { remaining: number; entitlement: number; pending: number; used: number }
+    { used: number; pending: number }
   >();
 
   if (balanceIds.length > 0) {
-    const entitlementById = new Map(
-      team.map((person) => [
-        person.id,
-        Number(person.annual_leave_entitlement ?? 25),
-      ]),
-    );
-    for (const row of rows) {
-      if (!entitlementById.has(row.employee_id)) {
-        entitlementById.set(
-          row.employee_id,
-          Number(row.employee?.annual_leave_entitlement ?? 25),
-        );
-      }
-    }
-
     const { data: yearRequests } = await supabase
       .from("leave_requests")
       .select("employee_id, type, status, start_date, working_days")
@@ -266,17 +245,13 @@ export async function getApprovalsWorkspace(viewer: {
     }
 
     for (const employeeId of balanceIds) {
-      const entitlement = entitlementById.get(employeeId) ?? 25;
       const summary = summarizeLeaveBalance(
         byEmployee.get(employeeId) ?? [],
-        entitlement,
         new Date(),
       );
       balanceByEmployee.set(employeeId, {
-        remaining: summary.remaining,
-        entitlement: summary.entitlement,
-        pending: summary.pending,
         used: summary.used,
+        pending: summary.pending,
       });
     }
   }
@@ -295,9 +270,6 @@ export async function getApprovalsWorkspace(viewer: {
       jobTitle: person.job_title,
       avatarUrl: person.avatar_url,
       gender: person.gender,
-      remaining: balance?.remaining ?? Number(person.annual_leave_entitlement ?? 25),
-      entitlement:
-        balance?.entitlement ?? Number(person.annual_leave_entitlement ?? 25),
       used: balance?.used ?? 0,
       pending: balance?.pending ?? 0,
     };

@@ -38,8 +38,8 @@ export interface DashboardTeamMember {
   jobTitle: string | null;
   avatarUrl: string | null;
   gender: string | null;
-  remaining: number;
-  entitlement: number;
+  used: number;
+  pending: number;
 }
 
 export interface DashboardBirthday {

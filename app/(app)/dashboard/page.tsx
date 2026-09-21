@@ -52,13 +52,8 @@ export default async function DashboardPage() {
   const firstName = displayName(profile).split(" ")[0] || "there";
 
   const annual = record?.leaveBalances.find((row) => row.leave_type === "annual");
-  const leaveEntitlement =
-    annual?.entitlement ?? profile.annual_leave_entitlement;
   const leaveUsed = annual?.used ?? 0;
   const leavePending = annual?.pending ?? 0;
-  const leaveRemaining = annual
-    ? Math.max(annual.entitlement - annual.used - annual.pending, 0)
-    : leaveEntitlement;
 
   const schedule = await getLeaveSchedule({
     viewerId: profile.id,
@@ -160,18 +155,15 @@ export default async function DashboardPage() {
     }
 
     team = teamProfiles.slice(0, 6).map((person) => {
-      const summary = summarizeLeaveBalance(
-        byEmployee.get(person.id) ?? [],
-        Number(person.annual_leave_entitlement ?? 25),
-      );
+      const summary = summarizeLeaveBalance(byEmployee.get(person.id) ?? []);
       return {
         id: person.id,
         name: displayName(person),
         jobTitle: person.job_title,
         avatarUrl: person.avatar_url,
         gender: person.gender,
-        remaining: summary.remaining,
-        entitlement: summary.entitlement,
+        used: summary.used,
+        pending: summary.pending,
       };
     });
   }
@@ -244,15 +236,11 @@ export default async function DashboardPage() {
         },
         {
           label: "Your leave",
-          value: `${leaveRemaining}`,
-          hint: `${leaveEntitlement} day entitlement`,
+          value: `${leaveUsed}`,
+          hint: `${leavePending} pending this year`,
           href: "/leave",
           icon: "leave",
           accent: DASHBOARD_COLORS.leave,
-          progress:
-            leaveEntitlement <= 0
-              ? 0
-              : Math.round((leaveRemaining / leaveEntitlement) * 100),
         },
         {
           label: "Avg age",
@@ -268,16 +256,12 @@ export default async function DashboardPage() {
       ]
     : [
         {
-          label: "Annual leave left",
-          value: String(leaveRemaining),
-          hint: `${leaveUsed} used · ${leavePending} pending`,
+          label: "Annual leave used",
+          value: String(leaveUsed),
+          hint: `${leavePending} pending this year`,
           href: "/leave",
           icon: "leave",
           accent: DASHBOARD_COLORS.leave,
-          progress:
-            leaveEntitlement <= 0
-              ? 0
-              : Math.round((leaveRemaining / leaveEntitlement) * 100),
         },
         {
           label: canApprove ? "Waiting on you" : "Pending requests",
@@ -322,8 +306,6 @@ export default async function DashboardPage() {
         profile.department?.name ?? profile.job_title ?? "Team",
       ].join(" · ")}
       kpis={kpis}
-      leaveRemaining={leaveRemaining}
-      leaveEntitlement={leaveEntitlement}
       leaveUsed={leaveUsed}
       leavePending={leavePending}
       upcomingLeave={upcomingLeave}

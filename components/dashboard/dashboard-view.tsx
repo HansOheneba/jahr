@@ -198,8 +198,6 @@ export function DashboardView({
   firstName,
   subtitle,
   kpis,
-  leaveRemaining,
-  leaveEntitlement,
   leaveUsed,
   leavePending,
   upcomingLeave,
@@ -214,8 +212,6 @@ export function DashboardView({
   firstName: string;
   subtitle: string;
   kpis: DashboardKpi[];
-  leaveRemaining: number;
-  leaveEntitlement: number;
   leaveUsed: number;
   leavePending: number;
   upcomingLeave: DashboardLeaveItem[];
@@ -235,12 +231,6 @@ export function DashboardView({
     const timer = window.setTimeout(() => setMetersOn(true), 40);
     return () => window.clearTimeout(timer);
   }, [enter]);
-
-  const leavePct =
-    leaveEntitlement <= 0
-      ? 0
-      : Math.min(100, Math.round((leaveRemaining / leaveEntitlement) * 100));
-  const ringPct = metersOn ? leavePct : 0;
 
   return (
     <div className="flex w-full flex-col gap-5">
@@ -415,7 +405,7 @@ export function DashboardView({
 
           <Section
             title="Your leave"
-            description="Annual leave balance."
+            description="Annual leave taken this year."
             icon={CalendarDays}
             accent={LEAVE}
             enter={enter}
@@ -430,56 +420,20 @@ export function DashboardView({
             }
           >
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="relative mx-auto flex size-28 shrink-0 items-center justify-center sm:mx-0">
-                <svg viewBox="0 0 36 36" className="size-full -rotate-90">
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="15.5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    pathLength={100}
-                    className="text-secondary"
-                  />
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="15.5"
-                    fill="none"
-                    stroke={LEAVE}
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    pathLength={100}
-                    strokeDasharray={`${ringPct} ${100 - ringPct}`}
-                    className="transition-[stroke-dasharray] duration-700 ease-dash"
-                    style={{
-                      transitionDelay: enter ? "200ms" : "0ms",
-                    }}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-medium tracking-tight tabular-nums">
-                    <CountUp value={leaveRemaining} enabled={enter} />
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">days</span>
-                </div>
+              <div className="mx-auto flex size-28 shrink-0 flex-col items-center justify-center rounded-full border border-border sm:mx-0">
+                <span className="text-2xl font-medium tracking-tight tabular-nums">
+                  <CountUp value={leaveUsed} enabled={enter} />
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  days used
+                </span>
               </div>
-              <div className="grid flex-1 gap-3 sm:grid-cols-3">
+              <div className="grid flex-1 gap-3 sm:grid-cols-2">
                 <div
                   className="rounded-md border border-border px-3 py-2.5"
                   style={{ background: tint(LEAVE, 8) }}
                 >
-                  <p className="text-xs text-muted-foreground">Entitlement</p>
-                  <p className="mt-0.5 text-sm font-medium tabular-nums">
-                    <CountUp value={leaveEntitlement} enabled={enter} /> days
-                  </p>
-                </div>
-                <div
-                  className="rounded-md border border-border px-3 py-2.5"
-                  style={{ background: tint(PAYROLL, 8) }}
-                >
-                  <p className="text-xs text-muted-foreground">Used</p>
+                  <p className="text-xs text-muted-foreground">Approved</p>
                   <p className="mt-0.5 text-sm font-medium tabular-nums">
                     <CountUp value={leaveUsed} enabled={enter} /> days
                   </p>
@@ -567,8 +521,8 @@ export function DashboardView({
 
           {team.length > 0 ? (
             <Section
-              title="Team leave availability"
-              description="Annual leave left on your team."
+              title="Team annual leave"
+              description="Days taken this year on your team."
               icon={Users}
               accent={PEOPLE}
               enter={enter}
@@ -585,14 +539,7 @@ export function DashboardView({
               }
             >
               <div className="grid gap-2 sm:grid-cols-2">
-                {team.map((person) => {
-                  const pct =
-                    person.entitlement <= 0
-                      ? 0
-                      : Math.round(
-                          (person.remaining / person.entitlement) * 100,
-                        );
-                  return (
+                {team.map((person) => (
                     <Link
                       key={person.id}
                       href={`/admin/employees/${person.id}`}
@@ -614,23 +561,23 @@ export function DashboardView({
                             {person.jobTitle ?? "Team member"}
                           </p>
                         </div>
-                        <p className="text-sm font-medium tabular-nums">
-                          <CountUp value={person.remaining} enabled={enter} />
-                        </p>
-                      </div>
-                      <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-secondary">
-                        <div
-                          className="h-full rounded-full transition-[width] duration-700 ease-dash"
-                          style={{
-                            width: `${metersOn ? pct : 0}%`,
-                            background: LEAVE,
-                            transitionDelay: enter ? "280ms" : "0ms",
-                          }}
-                        />
+                        <div className="text-right">
+                          <p className="text-sm font-medium tabular-nums">
+                            <CountUp value={person.used} enabled={enter} />
+                            <span className="text-xs font-normal text-muted-foreground">
+                              {" "}
+                              used
+                            </span>
+                          </p>
+                          {person.pending > 0 ? (
+                            <p className="text-[11px] text-muted-foreground tabular-nums">
+                              {person.pending} pending
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
                     </Link>
-                  );
-                })}
+                ))}
               </div>
             </Section>
           ) : null}

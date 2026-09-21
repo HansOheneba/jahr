@@ -136,21 +136,7 @@ export function LeaveRequestForm({
   const workingDays =
     range?.from && range?.to ? countWorkingDays(range.from, range.to) : 0;
 
-  const pendingDays = requests
-    .filter(
-      (request) => request.status === "pending" && request.type === "annual",
-    )
-    .reduce((sum, request) => sum + request.workingDays, 0);
-
-  const remainingAfterRequest =
-    balance.remaining -
-    pendingDays -
-    (selectedType.deductsBalance ? workingDays : 0);
-
-  const canSubmit =
-    Boolean(range?.from && range?.to) &&
-    workingDays > 0 &&
-    (!selectedType.deductsBalance || remainingAfterRequest >= 0);
+  const canSubmit = Boolean(range?.from && range?.to) && workingDays > 0;
 
   function handleSelect(next: DateRange | undefined) {
     setError(null);
@@ -173,13 +159,6 @@ export function LeaveRequestForm({
 
     if (workingDays <= 0) {
       setError("Selected range has no working days.");
-      return;
-    }
-
-    if (selectedType.deductsBalance && remainingAfterRequest < 0) {
-      setError(
-        `Not enough annual leave. You have ${balance.remaining - pendingDays} days available.`,
-      );
       return;
     }
 
@@ -408,17 +387,9 @@ export function LeaveRequestForm({
 
       <div className="flex flex-col gap-4">
         <Card>
-          <CardContent className="grid grid-cols-3 divide-x divide-border pt-(--card-spacing)">
-            <BalanceStat label="Entitlement" value={`${balance.entitlement}d`} />
-            <BalanceStat
-              label="Used / pending"
-              value={`${balance.used}d / ${balance.pending + pendingDays}d`}
-            />
-            <BalanceStat
-              label="Remaining"
-              value={`${Math.max(balance.remaining - pendingDays, 0)}d`}
-              emphasize
-            />
+          <CardContent className="grid grid-cols-2 divide-x divide-border pt-(--card-spacing)">
+            <BalanceStat label="Annual used" value={`${balance.used}d`} emphasize />
+            <BalanceStat label="Pending" value={`${balance.pending}d`} />
           </CardContent>
         </Card>
 
@@ -480,8 +451,8 @@ export function LeaveRequestForm({
                     {workingDays} working day{workingDays === 1 ? "" : "s"} ·{" "}
                     {workingHoursFromDays(workingDays)}h ({WORKDAY_HOURS}h / day)
                     {selectedType.deductsBalance
-                      ? ` · ${remainingAfterRequest} annual left after request`
-                      : " · not counted against annual leave"}
+                      ? " · counts toward annual leave"
+                      : " · not counted as annual leave"}
                   </p>
                 </div>
               ) : range?.from ? (

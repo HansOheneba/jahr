@@ -17,7 +17,7 @@ export const LEAVE_TYPES: LeaveTypeOption[] = [
   {
     id: "annual",
     label: "Annual leave",
-    description: "Paid annual leave (default 25 days / year)",
+    description: "Paid annual leave",
     deductsBalance: true,
   },
   {
@@ -55,10 +55,8 @@ export const LEAVE_TYPES: LeaveTypeOption[] = [
 export type LeaveStatus = "pending" | "approved" | "rejected";
 
 export interface LeaveBalanceSummary {
-  entitlement: number;
   used: number;
   pending: number;
-  remaining: number;
 }
 
 export interface LeaveRequestDraft {
@@ -97,8 +95,7 @@ export interface ApprovalQueueRecord extends PendingApprovalRecord {
   reference: string;
   workingHours: number;
   managerResponseAt: string | null;
-  annualRemaining: number | null;
-  annualEntitlement: number | null;
+  annualUsed: number | null;
   annualPending: number | null;
 }
 
@@ -108,8 +105,6 @@ export interface TeamLeaveBalance {
   jobTitle: string | null;
   avatarUrl: string | null;
   gender: string | null;
-  remaining: number;
-  entitlement: number;
   used: number;
   pending: number;
 }

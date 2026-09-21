@@ -28,6 +28,7 @@ import {
   WORKDAY_HOURS,
   formatLeaveDate,
   formatLeaveDateRange,
+  formatLeaveTimestampDate,
 } from "@/lib/leave/working-days";
 import { cn } from "@/lib/utils";
 import { useAsyncAction } from "@/lib/hooks/use-async-action";
@@ -133,11 +134,11 @@ export function ApprovalsList({
       {teamBalances.length > 0 ? (
         <section className="space-y-3">
           <div className="space-y-0.5">
-            <h2 className="text-sm font-medium">Team leave availability</h2>
+            <h2 className="text-sm font-medium">Team annual leave</h2>
             <p className="text-xs text-muted-foreground">
               {orgWideView
-                ? `Annual leave remaining across the organisation (${WORKDAY_HOURS}h workdays).`
-                : `Annual leave remaining for people who report to you (${WORKDAY_HOURS}h workdays).`}
+                ? `Days taken and pending this year (${WORKDAY_HOURS}h workdays).`
+                : `Days taken and pending for your team this year (${WORKDAY_HOURS}h workdays).`}
             </p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
@@ -160,15 +161,14 @@ export function ApprovalsList({
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium tabular-nums">
-                    {person.remaining}
+                    {person.used}
                     <span className="text-xs font-normal text-muted-foreground">
-                      /{person.entitlement}
+                      {" "}
+                      used
                     </span>
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {person.pending > 0
-                      ? `${person.pending} pending`
-                      : `${person.used} used`}
+                    {person.pending > 0 ? `${person.pending} pending` : "—"}
                   </p>
                 </div>
               </div>
@@ -282,8 +282,11 @@ export function ApprovalsList({
                       </Link>
                       <p className="truncate text-xs text-muted-foreground">
                         {row.employeeJobTitle ?? "Team member"}
-                        {row.annualRemaining !== null
-                          ? ` · ${row.annualRemaining} days left`
+                        {row.annualUsed !== null
+                          ? ` · ${row.annualUsed} annual used`
+                          : ""}
+                        {row.annualPending
+                          ? ` · ${row.annualPending} pending`
                           : ""}
                       </p>
                     </div>
@@ -305,7 +308,7 @@ export function ApprovalsList({
                       {row.workingHours.toFixed(1)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {format(parseISO(row.submittedAt), "d MMM yyyy")}
+                      {formatLeaveTimestampDate(row.submittedAt)}
                     </p>
 
                     <div>
@@ -398,13 +401,13 @@ export function ApprovalsList({
                             {row.workingHours}h (9–5)
                           </p>
                         </div>
-                        {row.annualRemaining !== null ? (
+                        {row.annualUsed !== null ? (
                           <div>
                             <p className="text-xs text-muted-foreground">
-                              Annual leave left
+                              Annual leave this year
                             </p>
                             <p className="text-sm font-medium">
-                              {row.annualRemaining} of {row.annualEntitlement}
+                              {row.annualUsed} used
                               {row.annualPending
                                 ? ` · ${row.annualPending} pending`
                                 : ""}

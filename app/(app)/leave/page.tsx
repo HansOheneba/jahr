@@ -84,10 +84,7 @@ export default async function LeavePage() {
     isManager: profile.isManager || profile.tags.includes("manager"),
   });
 
-  const balance = summarizeLeaveBalance(
-    requests,
-    profile.annual_leave_entitlement,
-  );
+  const balance = summarizeLeaveBalance(requests);
 
   return (
     <div className="flex w-full flex-col gap-5">

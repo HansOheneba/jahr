@@ -36,6 +36,7 @@ import {
   renderAnnouncementEmailHtml,
   sendAnnouncementEmail,
 } from "@/lib/email/announcements";
+import { runInRateLimitedBatches } from "@/lib/email/rate-limited-send";
 import type { EmailAttachment } from "@/lib/email/resend";
 import type { WorkType } from "@/lib/types/employee";
 import { createClient } from "@/utils/supabase/server";
@@ -283,15 +284,13 @@ export async function publishAnnouncement(
     attachmentNames: emailAttachments.map((file) => file.filename),
   });
 
-  // Await sends so the server action does not finish before Resend returns.
-  await Promise.all(
-    recipients.map((recipient) =>
-      sendAnnouncementEmail({
-        to: recipient.email,
-        email,
-        attachments: emailAttachments,
-      }),
-    ),
+  // Throttle Resend calls (10 req/s limit); parallel bursts caused 429s.
+  await runInRateLimitedBatches(recipients, (recipient) =>
+    sendAnnouncementEmail({
+      to: recipient.email,
+      email,
+      attachments: emailAttachments,
+    }),
   );
 
   revalidatePath("/dashboard");

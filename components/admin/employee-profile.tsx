@@ -523,10 +523,6 @@ export function EmployeeProfile({
                   const label =
                     LEAVE_TYPES.find((type) => type.id === balance.leave_type)
                       ?.label ?? balance.leave_type;
-                  const remaining = Math.max(
-                    balance.entitlement - balance.used - balance.pending,
-                    0,
-                  );
                   return (
                     <div
                       key={`${balance.leave_type}-${balance.year}`}
@@ -534,15 +530,14 @@ export function EmployeeProfile({
                     >
                       <p className="text-sm font-medium">{label}</p>
                       <p className="mt-1 text-2xl font-medium tracking-tight">
-                        {remaining}
+                        {balance.used}
                         <span className="text-sm font-normal text-muted-foreground">
                           {" "}
-                          remaining
+                          days used
                         </span>
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {balance.used} used · {balance.pending} pending ·{" "}
-                        {balance.entitlement} entitlement
+                        {balance.pending} pending
                       </p>
                     </div>
                   );
