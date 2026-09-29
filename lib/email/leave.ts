@@ -38,14 +38,17 @@ export async function notifyManagerOfLeaveRequest(input: {
   endDate: string;
   workingDays: number;
   notes: string;
+  pastLeave: boolean;
 }): Promise<void> {
   const typeLabel = leaveTypeLabel(input.type);
 
   await sendEmail({
     to: input.managerEmail,
-    subject: `Leave to review - ${input.employeeName} (${typeLabel})`,
+    subject: `${input.pastLeave ? "Past leave" : "Leave"} to review - ${input.employeeName} (${typeLabel})`,
     text: [
-      `${input.employeeName} submitted a leave request.`,
+      input.pastLeave
+        ? `${input.employeeName} logged leave they already took.`
+        : `${input.employeeName} submitted a leave request.`,
       "",
       `Type: ${typeLabel}`,
       `Dates: ${formatRange(input.startDate, input.endDate)}`,
@@ -69,6 +72,7 @@ export async function notifyEmployeeOfLeaveSubmission(input: {
   workingDays: number;
   notes?: string;
   autoApproved: boolean;
+  pastLeave: boolean;
 }): Promise<void> {
   const typeLabel = leaveTypeLabel(input.type);
   const range = formatRange(input.startDate, input.endDate);
@@ -107,13 +111,19 @@ export async function notifyEmployeeOfLeaveSubmission(input: {
 
   await sendEmail({
     to: input.employeeEmail,
-    subject: `Leave request submitted - ${typeLabel}`,
+    subject: input.pastLeave
+      ? `Past leave logged - ${typeLabel}`
+      : `Leave request submitted - ${typeLabel}`,
     text: [
       `Hi ${input.employeeName},`,
       "",
-      `Your ${typeLabel.toLowerCase()} request (${range}, ${duration}) has been submitted.`,
+      input.pastLeave
+        ? `Your past ${typeLabel.toLowerCase()} (${range}, ${duration}) is logged and under review.`
+        : `Your ${typeLabel.toLowerCase()} request (${range}, ${duration}) has been submitted.`,
       "",
-      "Your manager has been notified and will review it. You'll get another email when it's decided.",
+      input.pastLeave
+        ? "You'll get another email when it's confirmed."
+        : "Your manager has been notified and will review it. You'll get another email when it's decided.",
       input.notes?.trim() ? `\nNotes: ${input.notes.trim()}` : "",
       "",
       `View leave: ${getPortalUrl("/leave")}`,
@@ -130,6 +140,7 @@ export async function notifyEmployeeOfLeaveSubmission(input: {
       workingDays: input.workingDays,
       notes: input.notes,
       autoApproved: false,
+      pastLeave: input.pastLeave,
     }),
   });
 }

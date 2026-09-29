@@ -3,16 +3,35 @@ import { cookies } from "next/headers";
 import { AUTH_BYPASS } from "@/lib/auth/config";
 import { DUMMY_PROFILE } from "@/lib/auth/dummy-profile";
 import {
-  isPermissionTagSlug,
+  permissionTagsFromRows,
+  type PermissionTagRow,
   type PermissionTagSlug,
 } from "@/lib/auth/permissions";
 import { createClient } from "@/utils/supabase/server";
-import type {
-  BusinessUnit,
-  Department,
-  Profile,
-  ProfileWithOrg,
-} from "@/lib/types/database";
+import { firstRelation } from "@/utils/supabase/relations";
+import type { Profile, ProfileWithOrg } from "@/lib/types/database";
+
+/**
+ * `profile_permission_tags` has two foreign keys to `profiles` (`profile_id`
+ * and `assigned_by`), so the embed must name the constraint to stay valid.
+ */
+export const PERMISSION_TAGS_EMBED =
+  "profile_permission_tags!profile_permission_tags_profile_id_fkey ( tag:permission_tags ( slug ) )";
+
+const CURRENT_PROFILE_SELECT = `
+  *,
+  business_unit:business_units ( id, name, slug ),
+  department:departments ( id, name, slug ),
+  manager:profiles!manager_id ( id, first_name, last_name, email, job_title ),
+  ${PERMISSION_TAGS_EMBED}
+`;
+
+interface CurrentProfileRow extends Profile {
+  business_unit: ProfileWithOrg["business_unit"] | ProfileWithOrg["business_unit"][];
+  department: ProfileWithOrg["department"] | ProfileWithOrg["department"][];
+  manager: ProfileWithOrg["manager"] | ProfileWithOrg["manager"][];
+  profile_permission_tags: PermissionTagRow[] | null;
+}
 
 async function loadProfileTags(
   supabase: ReturnType<typeof createClient>,
@@ -28,17 +47,7 @@ async function loadProfileTags(
     return [];
   }
 
-  const tags: PermissionTagSlug[] = [];
-  for (const row of data ?? []) {
-    const tag = Array.isArray(row.tag) ? row.tag[0] : row.tag;
-    const slug = tag && typeof tag === "object" && "slug" in tag
-      ? String((tag as { slug: string }).slug)
-      : null;
-    if (slug && isPermissionTagSlug(slug)) {
-      tags.push(slug);
-    }
-  }
-  return tags;
+  return permissionTagsFromRows(data);
 }
 
 export const getCurrentProfile = cache(async (): Promise<ProfileWithOrg | null> => {
@@ -49,80 +58,51 @@ export const getCurrentProfile = cache(async (): Promise<ProfileWithOrg | null> 
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Middleware already validated the session with getUser on this request.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims.sub;
 
-  if (!user) {
+  if (!userId) {
     return null;
   }
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (error) {
-    console.error("[getCurrentProfile]", error.message);
-    return null;
-  }
-
-  if (!profile) {
-    return null;
-  }
-
-  const typed = profile as Profile;
-
-  const [
-    businessUnitResult,
-    departmentResult,
-    managerResult,
-    reportsResult,
-    tags,
-  ] = await Promise.all([
-    typed.business_unit_id
-      ? supabase
-          .from("business_units")
-          .select("id, name, slug")
-          .eq("id", typed.business_unit_id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    typed.department_id
-      ? supabase
-          .from("departments")
-          .select("id, name, slug")
-          .eq("id", typed.department_id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    typed.manager_id
-      ? supabase
-          .from("profiles")
-          .select("id, first_name, last_name, email, job_title")
-          .eq("id", typed.manager_id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
+  const [profileResult, reportsResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select(CURRENT_PROFILE_SELECT)
+      .eq("id", userId)
+      .maybeSingle<CurrentProfileRow>(),
     supabase
       .from("profiles")
       .select("id", { count: "exact", head: true })
-      .eq("manager_id", user.id)
+      .eq("manager_id", userId)
       .eq("status", "active"),
-    loadProfileTags(supabase, user.id),
   ]);
 
+  if (profileResult.error) {
+    console.error("[getCurrentProfile]", profileResult.error.message);
+    return null;
+  }
+
+  if (!profileResult.data) {
+    return null;
+  }
+
+  const {
+    business_unit,
+    department,
+    manager,
+    profile_permission_tags,
+    ...profile
+  } = profileResult.data;
+
   return {
-    ...typed,
-    business_unit: (businessUnitResult.data as Pick<
-      BusinessUnit,
-      "id" | "name" | "slug"
-    > | null) ?? null,
-    department: (departmentResult.data as Pick<
-      Department,
-      "id" | "name" | "slug"
-    > | null) ?? null,
-    manager: managerResult.data as ProfileWithOrg["manager"],
+    ...profile,
+    business_unit: firstRelation(business_unit),
+    department: firstRelation(department),
+    manager: firstRelation(manager),
     isManager: (reportsResult.count ?? 0) > 0,
-    tags,
+    tags: permissionTagsFromRows(profile_permission_tags),
   };
 });
 

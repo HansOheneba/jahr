@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -130,9 +131,12 @@ export function PayslipsPanel({
             Available from your start date.
           </p>
         ) : payslips.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No payslips generated yet. Pick a month above to create one.
-          </p>
+          <EmptyState
+            size="compact"
+            kind="payroll"
+            title="No payslips yet"
+            description="Pick a month above to create one."
+          />
         ) : (
           payslips.map((slip) => (
             <div

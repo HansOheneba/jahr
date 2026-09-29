@@ -10,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   annualize,
@@ -411,9 +412,12 @@ export function PayrollEntityAnalysis({
         </div>
 
         {analysis.byEntity.length === 0 && needsSetup.count === 0 ? (
-          <p className="px-5 py-10 text-center text-sm text-muted-foreground">
-            No priced payroll yet.
-          </p>
+          <EmptyState
+            size="compact"
+            kind="payroll"
+            title="No priced payroll yet"
+            description="Pay packages show up here once they are set."
+          />
         ) : (
           <ul className="divide-y divide-border">
             {analysis.byEntity.map((entity) => (

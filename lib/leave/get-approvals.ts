@@ -9,6 +9,7 @@ import type {
   TeamLeaveBalance,
 } from "@/lib/leave/types";
 import {
+  isLoggedPastLeave,
   leaveReference,
   workingHoursFromDays,
 } from "@/lib/leave/working-days";
@@ -61,6 +62,7 @@ const PREVIEW_OPEN: ApprovalQueueRecord[] = [
     submittedAt: "2026-04-20T09:00:00.000Z",
     annualUsed: 2,
     annualPending: 5,
+    loggedPast: false,
   },
 ];
 
@@ -131,6 +133,7 @@ function mapApproval(
     submittedAt: row.submitted_at,
     annualUsed: balance?.used ?? null,
     annualPending: balance?.pending ?? null,
+    loggedPast: isLoggedPastLeave(row.end_date, row.submitted_at),
   };
 }
 

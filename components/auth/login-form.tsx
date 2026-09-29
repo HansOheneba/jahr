@@ -26,8 +26,10 @@ export function LoginForm() {
 
   const [sendState, sendAction, sendPending] = useActionState(
     async (prev: AuthActionState, formData: FormData) => {
+      const submitted = String(formData.get("email") ?? "").trim();
       const result = await sendLoginOtp(prev, formData);
       if (result.success) {
+        setEmail(submitted);
         setOtpSent(true);
       }
       return result;
@@ -72,18 +74,20 @@ export function LoginForm() {
 
   if (!otpSent) {
     return (
-      <form action={sendAction} className="flex flex-col gap-4">
+      <form action={sendAction} autoComplete="on" className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">Work email</Label>
           <Input
             id="email"
             name="email"
             type="email"
+            inputMode="email"
             autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
             required
             placeholder="you@jagroup.co"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            defaultValue={email || undefined}
             className="h-11"
           />
         </div>

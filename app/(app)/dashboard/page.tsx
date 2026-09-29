@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { format, getMonth, parseISO } from "date-fns";
+import { differenceInCalendarDays, format, getMonth, parseISO } from "date-fns";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import {
   DASHBOARD_COLORS,
@@ -13,13 +13,15 @@ import { getAnnouncementsForViewer } from "@/lib/announcements/get-for-viewer";
 import { announcementTypeLabel } from "@/lib/announcements/categories";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { SIGN_OUT_PATH } from "@/lib/auth/routes";
-import { getEmployeeRecord } from "@/lib/employees/get-employee-record";
 import {
   formatAverageAge,
   getWorkforceInsights,
 } from "@/lib/employees/get-workforce-insights";
 import { summarizeLeaveBalance } from "@/lib/leave/balance";
-import { getLeaveSchedule } from "@/lib/leave/get-schedule";
+import {
+  getLeaveSchedule,
+  type ScheduleLeaveEntry,
+} from "@/lib/leave/get-schedule";
 import type { LeaveStatus, LeaveTypeId } from "@/lib/leave/types";
 import {
   canApproveLeave,
@@ -28,10 +30,131 @@ import {
 } from "@/lib/types/database";
 import { createClient } from "@/utils/supabase/server";
 
+interface DashboardPersonal {
+  leaveUsed: number;
+  leavePending: number;
+  documentCount: number;
+  deviceCount: number;
+  latestPayslipLabel: string | null;
+}
+
+async function getDashboardPersonal(
+  supabase: ReturnType<typeof createClient>,
+  employeeId: string,
+  year: number,
+): Promise<DashboardPersonal> {
+  const [leaveResult, documentsResult, payslipResult, devicesResult] =
+    await Promise.all([
+      supabase
+        .from("leave_requests")
+        .select("type, status, start_date, working_days")
+        .eq("employee_id", employeeId)
+        .in("status", ["pending", "approved"])
+        .gte("start_date", `${year}-01-01`)
+        .lte("start_date", `${year}-12-31`),
+      supabase
+        .from("documents")
+        .select("id", { count: "exact", head: true })
+        .eq("employee_id", employeeId),
+      supabase
+        .from("payslips")
+        .select("period_label")
+        .eq("employee_id", employeeId)
+        .order("period_start", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("device_assignments")
+        .select("id", { count: "exact", head: true })
+        .eq("employee_id", employeeId)
+        .is("returned_at", null),
+    ]);
+
+  const summary = summarizeLeaveBalance(
+    (leaveResult.data ?? []).map((row) => ({
+      type: row.type as LeaveTypeId,
+      status: row.status as LeaveStatus,
+      startDate: row.start_date,
+      workingDays: Number(row.working_days),
+    })),
+  );
+
+  return {
+    leaveUsed: summary.used,
+    leavePending: summary.pending,
+    documentCount: documentsResult.count ?? 0,
+    deviceCount: devicesResult.count ?? 0,
+    latestPayslipLabel: payslipResult.data?.period_label ?? null,
+  };
+}
+
 function greetingForHour(hour: number): string {
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
   return "Good evening";
+}
+
+function daysAgoLabel(endDate: string, todayKey: string): string {
+  const days = differenceInCalendarDays(parseISO(todayKey), parseISO(endDate));
+  if (days <= 0) return "Ended today";
+  if (days === 1) return "Ended 1 day ago";
+  return `Ended ${days} days ago`;
+}
+
+function shortLeaveRange(startDate: string, endDate: string): string {
+  const start = parseISO(startDate);
+  const end = parseISO(endDate);
+  if (startDate === endDate) return format(start, "d MMM");
+  if (format(start, "yyyy-MM") === format(end, "yyyy-MM")) {
+    return `${format(start, "d")}–${format(end, "d MMM")}`;
+  }
+  return `${format(start, "d MMM")}–${format(end, "d MMM")}`;
+}
+
+function ownLeaveKpi(
+  schedule: ScheduleLeaveEntry[],
+  viewerId: string,
+  todayKey: string,
+): DashboardKpi {
+  const own = schedule
+    .filter((entry) => entry.person.id === viewerId)
+    .sort((a, b) => a.startDate.localeCompare(b.startDate));
+  const next = own.find((entry) => entry.endDate >= todayKey);
+  const last = [...own]
+    .reverse()
+    .find((entry) => entry.endDate < todayKey);
+  const featured = next ?? last;
+
+  if (!featured) {
+    return {
+      label: "Your leave",
+      value: "None booked",
+      hint: "Request time off",
+      href: "/leave",
+      icon: "leave",
+      accent: DASHBOARD_COLORS.leave,
+    };
+  }
+
+  const dayLabel = `${featured.workingDays} day${featured.workingDays === 1 ? "" : "s"}`;
+  const typeLabel = leaveTypeLabel(featured.type);
+
+  return {
+    label: next
+      ? featured.status === "pending"
+        ? "Leave pending"
+        : "Next leave"
+      : "Last leave",
+    value: shortLeaveRange(featured.startDate, featured.endDate),
+    hint: next
+      ? featured.status === "pending"
+        ? `${typeLabel}, waiting for approval`
+        : `${typeLabel}, ${dayLabel}`
+      : `${typeLabel}, ${daysAgoLabel(featured.endDate, todayKey)}`,
+    href: "/leave",
+    icon: "leave",
+    accent: DASHBOARD_COLORS.leave,
+  };
 }
 
 export default async function DashboardPage() {
@@ -40,7 +163,6 @@ export default async function DashboardPage() {
     redirect(SIGN_OUT_PATH);
   }
 
-  const record = await getEmployeeRecord(profile.id);
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
   const hour = new Date().getHours();
@@ -51,17 +173,64 @@ export default async function DashboardPage() {
   const canApprove = canApproveLeave(profile);
   const firstName = displayName(profile).split(" ")[0] || "there";
 
-  const annual = record?.leaveBalances.find((row) => row.leave_type === "annual");
-  const leaveUsed = annual?.used ?? 0;
-  const leavePending = annual?.pending ?? 0;
+  const [
+    personal,
+    schedule,
+    announcements,
+    holidaysResult,
+    pendingApprovalsResult,
+    teamProfilesResult,
+    insights,
+  ] = await Promise.all([
+    getDashboardPersonal(supabase, profile.id, year),
+    getLeaveSchedule({
+      viewerId: profile.id,
+      isOrgAdmin: admin,
+      isManager: profile.isManager,
+    }),
+    getAnnouncementsForViewer(1),
+    supabase
+      .from("holidays")
+      .select("name, holiday_date")
+      .gte("holiday_date", todayKey)
+      .order("holiday_date", { ascending: true })
+      .limit(3),
+    canApprove
+      ? admin
+        ? supabase
+            .from("leave_requests")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "pending")
+        : supabase
+            .from("leave_requests")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "pending")
+            .eq("manager_id", profile.id)
+      : Promise.resolve({ count: 0 }),
+    profile.isManager || admin
+      ? admin
+        ? supabase
+            .from("profiles")
+            .select(
+              "id, first_name, last_name, preferred_name, job_title, avatar_url, gender, annual_leave_entitlement, date_of_birth, manager_id",
+            )
+            .eq("status", "active")
+            .order("first_name", { ascending: true })
+            .limit(12)
+        : supabase
+            .from("profiles")
+            .select(
+              "id, first_name, last_name, preferred_name, job_title, avatar_url, gender, annual_leave_entitlement, date_of_birth, manager_id",
+            )
+            .eq("manager_id", profile.id)
+            .neq("status", "terminated")
+            .order("first_name", { ascending: true })
+      : Promise.resolve({ data: [] }),
+    admin ? getWorkforceInsights() : Promise.resolve(null),
+  ]);
 
-  const schedule = await getLeaveSchedule({
-    viewerId: profile.id,
-    isOrgAdmin: admin,
-    isManager: profile.isManager,
-  });
-
-  const announcements = await getAnnouncementsForViewer(1);
+  const leaveUsed = personal.leaveUsed;
+  const leavePending = personal.leavePending;
 
   const upcomingLeave: DashboardLeaveItem[] = schedule
     .filter((entry) => entry.endDate >= todayKey)
@@ -79,47 +248,7 @@ export default async function DashboardPage() {
       isSelf: entry.person.id === profile.id,
     }));
 
-  const [{ data: holidays }, pendingApprovalsResult, teamProfilesResult] =
-    await Promise.all([
-      supabase
-        .from("holidays")
-        .select("name, holiday_date")
-        .gte("holiday_date", todayKey)
-        .order("holiday_date", { ascending: true })
-        .limit(3),
-      canApprove
-        ? admin
-          ? supabase
-              .from("leave_requests")
-              .select("id", { count: "exact", head: true })
-              .eq("status", "pending")
-          : supabase
-              .from("leave_requests")
-              .select("id", { count: "exact", head: true })
-              .eq("status", "pending")
-              .eq("manager_id", profile.id)
-        : Promise.resolve({ count: 0 }),
-      profile.isManager || admin
-        ? admin
-          ? supabase
-              .from("profiles")
-              .select(
-                "id, first_name, last_name, preferred_name, job_title, avatar_url, gender, annual_leave_entitlement, date_of_birth, manager_id",
-              )
-              .eq("status", "active")
-              .order("first_name", { ascending: true })
-              .limit(12)
-          : supabase
-              .from("profiles")
-              .select(
-                "id, first_name, last_name, preferred_name, job_title, avatar_url, gender, annual_leave_entitlement, date_of_birth, manager_id",
-              )
-              .eq("manager_id", profile.id)
-              .neq("status", "terminated")
-              .order("first_name", { ascending: true })
-        : Promise.resolve({ data: [] }),
-    ]);
-
+  const holidays = holidaysResult.data;
   const teamProfiles = teamProfilesResult.data ?? [];
   const teamIds = teamProfiles.map((person) => person.id);
   let team: DashboardTeamMember[] = [];
@@ -197,20 +326,17 @@ export default async function DashboardPage() {
       dateLabel: format(parseISO(person.date_of_birth as string), "d MMMM"),
     }));
 
-  let orgEmployees = 0;
-  let orgAverageAge: number | null = null;
-  let orgAverageAgeSample = 0;
-
-  if (admin) {
-    const insights = await getWorkforceInsights();
-    orgEmployees = insights.activeEmployees;
-    orgAverageAge = insights.averageAgeYears;
-    orgAverageAgeSample = insights.averageAgeSampleSize;
-  }
+  const orgEmployees = insights?.activeEmployees ?? 0;
+  const orgAverageAge = insights?.averageAgeYears ?? null;
+  const orgAverageAgeSample = insights?.averageAgeSampleSize ?? 0;
 
   const pendingApprovals = pendingApprovalsResult.count ?? 0;
-  const latestPayslip = record?.payslips[0] ?? null;
-  const deviceCount = record?.assets.length ?? 0;
+  const latestPayslip = personal.latestPayslipLabel
+    ? { period_label: personal.latestPayslipLabel }
+    : null;
+  const deviceCount = personal.deviceCount;
+
+  const leaveKpi = ownLeaveKpi(schedule, profile.id, todayKey);
 
   const kpis: DashboardKpi[] = admin
     ? [
@@ -234,14 +360,7 @@ export default async function DashboardPage() {
               ? 100
               : Math.max(8, 100 - pendingApprovals * 12),
         },
-        {
-          label: "Your leave",
-          value: `${leaveUsed}`,
-          hint: `${leavePending} pending this year`,
-          href: "/leave",
-          icon: "leave",
-          accent: DASHBOARD_COLORS.leave,
-        },
+        leaveKpi,
         {
           label: "Avg age",
           value: formatAverageAge(orgAverageAge),
@@ -255,14 +374,7 @@ export default async function DashboardPage() {
         },
       ]
     : [
-        {
-          label: "Annual leave used",
-          value: String(leaveUsed),
-          hint: `${leavePending} pending this year`,
-          href: "/leave",
-          icon: "leave",
-          accent: DASHBOARD_COLORS.leave,
-        },
+        leaveKpi,
         {
           label: canApprove ? "Waiting on you" : "Pending requests",
           value: String(canApprove ? pendingApprovals : leavePending),
@@ -273,7 +385,7 @@ export default async function DashboardPage() {
         },
         {
           label: "Documents",
-          value: String(record?.documents.length ?? 0),
+          value: String(personal.documentCount),
           hint: "On your file",
           href: "/documents",
           icon: "docs",

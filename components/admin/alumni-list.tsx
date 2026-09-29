@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Eye, MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -96,18 +97,18 @@ export function AlumniList({ alumni }: { alumni: AlumniDirectoryEntry[] }) {
 
   if (alumni.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card px-6 py-12">
-        <div className="mx-auto flex max-w-md flex-col items-center text-center">
-          <p className="text-sm font-medium tracking-tight">No alumni yet</p>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Offboard from an employee profile, or add someone without a JA
-            account.
-          </p>
-          <Link href="/admin/alumni/new" className={cn(buttonVariants(), "mt-6")}>
+      <EmptyState
+        surface
+        kind="alumni"
+        title="No alumni yet"
+        description="Offboard from an employee profile, or add someone without a JA account."
+        className="py-12"
+        action={
+          <Link href="/admin/alumni/new" className={cn(buttonVariants())}>
             Add alumni
           </Link>
-        </div>
-      </div>
+        }
+      />
     );
   }
 

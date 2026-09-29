@@ -72,16 +72,22 @@ export function formatLeaveDateKey(date: Date): string {
 }
 
 /** Calendar date for stored timestamptz (Ghana / UTC, no local timezone shift). */
-export function formatLeaveTimestampDate(iso: string): string {
+function timestampCalendarDate(iso: string): Date {
   const instant = parseISO(iso);
-  const calendar = new Date(
-    Date.UTC(
-      instant.getUTCFullYear(),
-      instant.getUTCMonth(),
-      instant.getUTCDate(),
-    ),
+  return new Date(
+    instant.getUTCFullYear(),
+    instant.getUTCMonth(),
+    instant.getUTCDate(),
   );
-  return format(calendar, "d MMM yyyy");
+}
+
+export function formatLeaveTimestampDate(iso: string): string {
+  return format(timestampCalendarDate(iso), "d MMM yyyy");
+}
+
+/** True when leave was logged after it ended, i.e. past leave awaiting review. */
+export function isLoggedPastLeave(endDate: string, submittedAt: string): boolean {
+  return endDate < formatLeaveDateKey(timestampCalendarDate(submittedAt));
 }
 
 export function leaveReference(id: string): string {

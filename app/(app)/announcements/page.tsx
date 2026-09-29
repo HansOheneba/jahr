@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
-import { Megaphone } from "lucide-react";
 import { getAnnouncementsForViewer } from "@/lib/announcements/get-for-viewer";
 import { announcementTypeLabel } from "@/lib/announcements/categories";
 import { MessageContent } from "@/components/communications/message-content";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function AnnouncementsPage() {
   const announcements = await getAnnouncementsForViewer(50);
@@ -19,15 +19,13 @@ export default async function AnnouncementsPage() {
       </div>
 
       {announcements.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-md bg-secondary text-muted-foreground">
-            <Megaphone className="size-5" />
-          </div>
-          <h2 className="mt-4 text-sm font-medium">No announcements yet</h2>
-          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            Published announcements appear here and in notifications.
-          </p>
-        </div>
+        <EmptyState
+          surface
+          kind="announcements"
+          title="No announcements yet"
+          description="Published announcements appear here and in notifications."
+          className="py-14"
+        />
       ) : (
         <ul className="flex flex-col gap-3">
           {announcements.map((item) => (

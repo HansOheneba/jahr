@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/empty-state";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import type { OrganogramNode } from "@/lib/employees/get-directory";
 import { PERMISSION_TAG_LABELS } from "@/lib/auth/permissions";
@@ -170,22 +171,16 @@ function PersonBox({
   const jobTitle = node.jobTitle?.trim() || null;
   const department = node.departmentName?.trim() || null;
   const tags = formatTags(node.tags);
-  const href = `/admin/employees/${node.id}`;
+  const className = cn(
+    "flex h-[138px] w-[148px] flex-col items-center rounded-xl border border-border bg-card px-2 py-2 text-center",
+    "shadow-[0_1px_2px_rgba(16,24,40,0.04)]",
+    node.profileHref
+      ? "group transition-[background-color,border-color,transform,box-shadow] duration-150 ease-out hover:border-[color-mix(in_srgb,var(--accent-blue)_32%,var(--border))] hover:bg-secondary/35 hover:shadow-[0_4px_12px_rgba(16,24,40,0.06)] active:scale-[0.98] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0070F3]/35"
+      : undefined,
+  );
 
-  return (
-    <Enter delayMs={delayMs}>
-      <Link
-        href={href}
-        className={cn(
-          "group flex h-[138px] w-[148px] flex-col items-center rounded-xl border border-border bg-card px-2 py-2 text-center",
-          "shadow-[0_1px_2px_rgba(16,24,40,0.04)]",
-          "transition-[background-color,border-color,transform,box-shadow] duration-150 ease-out",
-          "hover:border-[color-mix(in_srgb,var(--accent-blue)_32%,var(--border))] hover:bg-secondary/35",
-          "hover:shadow-[0_4px_12px_rgba(16,24,40,0.06)]",
-          "active:scale-[0.98] motion-reduce:active:scale-100",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0070F3]/35",
-        )}
-      >
+  const body = (
+    <>
         <div
           className={cn(
             "inline-flex h-4 max-w-full shrink-0 items-center truncate rounded px-1.5 text-[9px] font-medium tracking-wide",
@@ -231,7 +226,18 @@ function PersonBox({
             {tags}
           </p>
         </div>
-      </Link>
+    </>
+  );
+
+  return (
+    <Enter delayMs={delayMs}>
+      {node.profileHref ? (
+        <Link href={node.profileHref} className={className}>
+          {body}
+        </Link>
+      ) : (
+        <div className={className}>{body}</div>
+      )}
     </Enter>
   );
 }
@@ -418,9 +424,13 @@ export function OrganogramTree({ roots }: { roots: OrganogramNode[] }) {
 
   if (roots.length === 0) {
     return (
-      <div className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">
-        No reporting lines visible for your account.
-      </div>
+      <EmptyState
+        surface
+        kind="org"
+        title="No reporting lines"
+        description="None are visible for your account."
+        className="min-h-0 flex-1 py-10"
+      />
     );
   }
 

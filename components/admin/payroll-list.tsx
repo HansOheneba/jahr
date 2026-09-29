@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -120,7 +121,14 @@ export function PayrollList({
   }
 
   if (employees.length === 0) {
-    return <p className="text-sm text-muted-foreground">No employees found.</p>;
+    return (
+      <EmptyState
+        surface
+        kind="people"
+        title="No employees yet"
+        description="People with a profile show up here for payroll."
+      />
+    );
   }
 
   const ratesUpdated = formatRatesUpdated(rates.updatedAt);
@@ -196,11 +204,12 @@ export function PayrollList({
         </div>
 
         {visible.length === 0 ? (
-          <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
-            <p className="text-sm font-medium tracking-tight">
-              No people in this entity
-            </p>
-          </div>
+          <EmptyState
+            surface
+            size="compact"
+            kind="search"
+            title="No people in this entity"
+          />
         ) : (
           <div className="overflow-hidden rounded-xl border border-border bg-card">
             <ul className="divide-y divide-border">

@@ -90,7 +90,7 @@ export function SettingsWorkspace({
         </nav>
       </div>
 
-      <div className="relative flex-1">
+      <div className="relative min-h-0 flex-1">
         <div
           className={cn(
             activeTab === "general" ? "block" : "hidden",
@@ -102,7 +102,10 @@ export function SettingsWorkspace({
         </div>
 
         <div
-          className={cn(activeTab === "team" ? "block" : "hidden", "h-full")}
+          className={cn(
+            activeTab === "team" ? "block" : "hidden",
+            "h-full overflow-y-auto",
+          )}
           aria-hidden={activeTab !== "team"}
         >
           <ReportingLineView context={teamContext} />

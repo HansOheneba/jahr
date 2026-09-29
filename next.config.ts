@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
     },
+    // Dynamic routes otherwise refetch on every click (stale time 0).
+    staleTimes: {
+      dynamic: 30,
+    },
   },
 };
 

@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Popover,
   PopoverContent,
@@ -322,11 +323,16 @@ export function NotificationsPanel({ initialItems }: NotificationsPanelProps) {
 
         <div className="max-h-[min(70vh,520px)] overflow-y-auto">
           {groups.length === 0 ? (
-            <div className="px-4 py-12 text-center text-sm text-[#98A2B3]">
-              {filter === "unread"
-                ? "No unread announcements."
-                : "No announcements yet."}
-            </div>
+            <EmptyState
+              size="compact"
+              kind={filter === "unread" ? "search" : "inbox"}
+              title={
+                filter === "unread"
+                  ? "No unread announcements"
+                  : "No announcements yet"
+              }
+              className="py-8"
+            />
           ) : (
             groups.map((group) => (
               <section key={group.key}>

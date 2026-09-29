@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Download, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import {
   UNASSIGNED_ENTITY_KEY,
@@ -107,12 +108,13 @@ export function PayrollRegisterExplorer({
 
   if (entries.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
-        <p className="text-sm font-medium tracking-tight">No payslips yet</p>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Generated payslips with reference numbers.
-        </p>
-      </div>
+      <EmptyState
+        surface
+        kind="payroll"
+        title="No payslips yet"
+        description="Generated payslips with reference numbers."
+        className="py-12"
+      />
     );
   }
 
@@ -168,12 +170,13 @@ export function PayrollRegisterExplorer({
       ) : null}
 
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
-          <p className="text-sm font-medium tracking-tight">No matching payslips</p>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Try a reference like PS26-0100, an employee name, or a different year.
-          </p>
-        </div>
+        <EmptyState
+          surface
+          size="compact"
+          kind="search"
+          title="No matching payslips"
+          description="Try a reference like PS26-0100, an employee name, or a different year."
+        />
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="hidden grid-cols-[7.5rem_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_7rem] gap-4 border-b border-border px-4 py-3 text-left text-xs text-muted-foreground lg:grid">

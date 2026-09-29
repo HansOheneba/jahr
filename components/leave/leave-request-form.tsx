@@ -9,13 +9,16 @@ import {
   parseISO,
   startOfDay,
   startOfMonth,
+  subDays,
+  subMonths,
 } from "date-fns";
 import type { DateRange } from "react-day-picker";
-import { CalendarDays, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -26,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { submitLeaveRequest } from "@/lib/leave/actions";
 import { useAsyncAction } from "@/lib/hooks/use-async-action";
@@ -35,6 +39,7 @@ import type { ScheduleLeaveEntry } from "@/lib/leave/get-schedule";
 import {
   LEAVE_TYPES,
   type LeaveBalanceSummary,
+  type LeaveEntryKind,
   type LeaveRequestDraft,
   type LeaveTypeId,
 } from "@/lib/leave/types";
@@ -59,6 +64,22 @@ interface LeaveRequestFormProps {
   requiresApproval: boolean;
 }
 
+const ENTRY_KIND_OPTIONS: { id: LeaveEntryKind; label: string }[] = [
+  { id: "request", label: "Request leave" },
+  { id: "past", label: "Log past leave" },
+];
+
+function isLeaveEntryKind(value: string): value is LeaveEntryKind {
+  return ENTRY_KIND_OPTIONS.some((option) => option.id === value);
+}
+
+function requestStatusLabel(request: LeaveRequestDraft): string {
+  if (request.status === "pending") {
+    return request.loggedPast ? "Under review" : "Pending";
+  }
+  return request.status === "approved" ? "Approved" : "Rejected";
+}
+
 function entryCoversDay(entry: ScheduleLeaveEntry, day: Date): boolean {
   const start = startOfDay(parseISO(entry.startDate));
   const end = startOfDay(parseISO(entry.endDate));
@@ -75,6 +96,7 @@ export function LeaveRequestForm({
 }: LeaveRequestFormProps) {
   const router = useRouter();
   const { pending, run } = useAsyncAction();
+  const [entryKind, setEntryKind] = useState<LeaveEntryKind>("request");
   const [range, setRange] = useState<DateRange | undefined>();
   const [leaveType, setLeaveType] = useState<LeaveTypeId>("annual");
   const [notes, setNotes] = useState("");
@@ -84,6 +106,8 @@ export function LeaveRequestForm({
   const [success, setSuccess] = useState<string | null>(null);
 
   const today = startOfDay(new Date());
+  const loggingPast = entryKind === "past";
+  const needsReview = loggingPast || requiresApproval;
   const selectedType =
     LEAVE_TYPES.find((type) => type.id === leaveType) ?? LEAVE_TYPES[0];
 
@@ -144,6 +168,17 @@ export function LeaveRequestForm({
     setRange(next);
   }
 
+  function switchEntryKind(next: LeaveEntryKind) {
+    setEntryKind(next);
+    setRange(undefined);
+    setError(null);
+    setSuccess(null);
+    // Two months are shown, so past mode opens on last month and this one.
+    setMonth(
+      next === "past" ? startOfMonth(subMonths(today, 1)) : startOfMonth(today),
+    );
+  }
+
   function clearSelection() {
     setRange(undefined);
     setNotes("");
@@ -167,6 +202,7 @@ export function LeaveRequestForm({
 
     void run(async () => {
       const result = await submitLeaveRequest({
+        kind: entryKind,
         type: leaveType,
         startDate,
         endDate,
@@ -178,10 +214,13 @@ export function LeaveRequestForm({
         return;
       }
 
+      const dayLabel = `${result.days} working day${result.days === 1 ? "" : "s"}`;
       setSuccess(
-        result.autoApproved
-          ? `Leave recorded for ${result.days} working day${result.days === 1 ? "" : "s"}.`
-          : `Submitted for ${result.days} working day${result.days === 1 ? "" : "s"}.`,
+        loggingPast
+          ? `Logged ${dayLabel}. Under review.`
+          : result.autoApproved
+            ? `Leave recorded for ${dayLabel}.`
+            : `Submitted for ${dayLabel}.`,
       );
       setRange(undefined);
       setNotes("");
@@ -198,14 +237,35 @@ export function LeaveRequestForm({
               Select dates
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Click a start day, then an end day. Weekends and Ghana public
-              holidays are skipped in the day count.
+              {loggingPast
+                ? "Pick the days you already took off. Weekends and Ghana public holidays are skipped."
+                : "Click a start day, then an end day. Weekends and Ghana public holidays are skipped in the day count."}
             </p>
           </div>
-          <Badge variant="outline" className="rounded-md font-normal">
-            <CalendarDays />
-            Calendar
-          </Badge>
+          <ToggleGroup
+            value={[entryKind]}
+            onValueChange={(next) => {
+              const [selected] = next;
+              if (selected && isLeaveEntryKind(selected)) {
+                switchEntryKind(selected);
+              }
+            }}
+            variant="outline"
+            spacing={0}
+            aria-label="Leave entry"
+            className="shrink-0"
+          >
+            {ENTRY_KIND_OPTIONS.map((option) => (
+              <ToggleGroupItem
+                key={option.id}
+                value={option.id}
+                className="px-3"
+                disabled={pending}
+              >
+                {option.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
         </CardHeader>
         <CardContent className="pt-4">
           <div className="mb-4 flex flex-wrap gap-2">
@@ -235,7 +295,9 @@ export function LeaveRequestForm({
               onMonthChange={setMonth}
               selected={range}
               onSelect={handleSelect}
-              disabled={{ before: today }}
+              disabled={
+                loggingPast ? { after: subDays(today, 1) } : { before: today }
+              }
               showOutsideDays={false}
               className="mx-auto w-full max-w-3xl [--cell-size:--spacing(10)] p-0 md:max-w-none md:[--cell-size:--spacing(11)]"
               modifiers={{
@@ -395,7 +457,9 @@ export function LeaveRequestForm({
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base font-medium">Request details</CardTitle>
+            <CardTitle className="text-base font-medium">
+              {loggingPast ? "Past leave details" : "Request details"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -468,7 +532,7 @@ export function LeaveRequestForm({
 
             <div className="space-y-2">
               <Label htmlFor="leave-notes">
-                {requiresApproval ? "Note for your manager" : "Notes"}
+                {needsReview ? "Note for your reviewer" : "Notes"}
               </Label>
               <Textarea
                 id="leave-notes"
@@ -501,7 +565,11 @@ export function LeaveRequestForm({
                 disabled={!canSubmit || pending}
               >
                 {pending ? <Spinner className="mr-1" /> : null}
-                {requiresApproval ? "Submit request" : "Record leave"}
+                {loggingPast
+                  ? "Log past leave"
+                  : requiresApproval
+                    ? "Submit request"
+                    : "Record leave"}
               </Button>
               <Button
                 type="button"
@@ -523,9 +591,12 @@ export function LeaveRequestForm({
           </CardHeader>
           <CardContent className="space-y-2">
             {requests.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No leave requests yet.
-              </p>
+              <EmptyState
+                size="compact"
+                kind="leave"
+                title="No leave requests yet"
+                description="Submitted requests show up here."
+              />
             ) : (
               requests.map((request) => {
                 const colors = LEAVE_TYPE_COLORS[request.type];
@@ -549,12 +620,13 @@ export function LeaveRequestForm({
                         {format(new Date(request.startDate), "d MMM")} –{" "}
                         {format(new Date(request.endDate), "d MMM yyyy")} ·{" "}
                         {request.workingDays}d
+                        {request.loggedPast ? " · Logged past leave" : ""}
                       </p>
                     </div>
                     <Badge
                       variant="outline"
                       className={cn(
-                        "rounded-md capitalize",
+                        "shrink-0 rounded-md",
                         request.status === "pending" &&
                           "border-transparent bg-[color-mix(in_srgb,var(--primary)_12%,white)] text-primary",
                         request.status === "approved" &&
@@ -563,7 +635,7 @@ export function LeaveRequestForm({
                           "border-transparent bg-destructive/10 text-destructive",
                       )}
                     >
-                      {request.status}
+                      {requestStatusLabel(request)}
                     </Badge>
                   </div>
                 );

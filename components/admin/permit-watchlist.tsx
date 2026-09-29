@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { differenceInCalendarDays, format, parseISO, startOfDay } from "date-fns";
-import { Eye, IdCard } from "lucide-react";
+import { Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { EmptyIllustration, EmptyState } from "@/components/ui/empty-state";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   IMMIGRATION_STATUS_LABELS,
@@ -109,9 +110,7 @@ export function PermitWatchlist({
     return (
       <div className="rounded-xl border border-border bg-card px-6 py-12">
         <div className="mx-auto flex max-w-md flex-col items-center text-center">
-          <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-[color-mix(in_srgb,#0070F3_8%,white)] text-[#0070F3]">
-            <IdCard className="size-6" />
-          </div>
+          <EmptyIllustration kind="permit" className="mb-4 h-[104px] w-[148px]" />
           <p className="text-sm font-medium tracking-tight">
             No work permits to track yet
           </p>
@@ -207,9 +206,11 @@ export function PermitWatchlist({
         </div>
 
         {visible.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-            No people in this window.
-          </p>
+          <EmptyState
+            size="compact"
+            kind="search"
+            title="No people in this window"
+          />
         ) : (
           <ul className="divide-y divide-border">
             {visible.map(({ person, days }) => {

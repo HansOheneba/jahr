@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { MessageContent } from "@/components/communications/message-content";
 import {
@@ -296,7 +297,14 @@ export function DashboardView({
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">{kpi.label}</p>
-                  <p className="text-2xl font-medium tracking-tight tabular-nums">
+                  <p
+                    className={cn(
+                      "font-medium tracking-tight",
+                      countable !== null
+                        ? "text-2xl tabular-nums"
+                        : "text-lg leading-tight",
+                    )}
+                  >
                     {countable !== null ? (
                       <CountUp value={countable} enabled={enter} />
                     ) : (
@@ -363,9 +371,12 @@ export function DashboardView({
             }
           >
             {announcements.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No announcements.
-              </p>
+              <EmptyState
+                size="compact"
+                kind="announcements"
+                title="No announcements yet"
+                className="px-0 py-2"
+              />
             ) : (
               <ul className="flex flex-col gap-3">
                 {announcements.slice(0, 1).map((item) => (
@@ -460,12 +471,20 @@ export function DashboardView({
             delayMs={400}
           >
             {upcomingLeave.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nothing booked ahead.{" "}
-                <Link href="/leave" className="text-[#0B4FBF] hover:underline">
-                  Plan time off
-                </Link>
-              </p>
+              <EmptyState
+                size="compact"
+                kind="leave"
+                title="Nothing booked ahead"
+                className="px-0 py-2"
+                action={
+                  <Link
+                    href="/leave"
+                    className="text-sm font-medium text-[#0B4FBF] hover:underline"
+                  >
+                    Plan time off
+                  </Link>
+                }
+              />
             ) : (
               <ul className="flex flex-col gap-2">
                 {upcomingLeave.map((item) => (

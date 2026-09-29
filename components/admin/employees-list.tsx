@@ -3,16 +3,10 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Eye,
-  GraduationCap,
-  Mars,
-  MoreHorizontal,
-  Venus,
-  Wallet,
-} from "lucide-react";
+import { Eye, Mars, MoreHorizontal, Venus, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { EmptyIllustration, EmptyState } from "@/components/ui/empty-state";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -115,9 +109,7 @@ export function EmployeesList({
       return (
         <div className="rounded-xl border border-border bg-card px-6 py-12">
           <div className="mx-auto flex max-w-md flex-col items-center text-center">
-            <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-[color-mix(in_srgb,#2EC4B6_10%,white)] text-[#0F766E]">
-              <GraduationCap className="size-6" />
-            </div>
+            <EmptyIllustration kind="alumni" className="mb-4 h-[104px] w-[148px]" />
             <p className="text-sm font-medium tracking-tight">
               No alumni yet
             </p>
@@ -165,9 +157,26 @@ export function EmployeesList({
     }
 
     return (
-      <p className="py-10 text-center text-sm text-muted-foreground">
-        No employees visible for your account.
-      </p>
+      <EmptyState
+        surface
+        kind="people"
+        title={canManagePay ? "No employees yet" : "No one reports to you"}
+        description={
+          canManagePay
+            ? "Add someone to start the directory."
+            : "Direct reports show up here."
+        }
+        action={
+          canManagePay ? (
+            <Link
+              href="/admin/employees/new"
+              className={cn(buttonVariants())}
+            >
+              Add employee
+            </Link>
+          ) : null
+        }
+      />
     );
   }
 
@@ -250,9 +259,11 @@ export function EmployeesList({
         </div>
 
         {visible.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-            No people in this group.
-          </p>
+          <EmptyState
+            size="compact"
+            kind="search"
+            title="No people in this group"
+          />
         ) : (
           <ul className="divide-y divide-border">
             {visible.map((employee) => {

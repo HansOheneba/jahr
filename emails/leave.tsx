@@ -69,6 +69,8 @@ export interface LeaveManagerRequestEmailProps {
   endDate: string;
   workingDays: number;
   notes: string;
+  /** Leave already taken, logged for confirmation. */
+  pastLeave?: boolean;
 }
 
 /** Sent to a manager when a direct report submits leave. */
@@ -79,20 +81,26 @@ export function LeaveManagerRequestEmail({
   endDate,
   workingDays,
   notes,
+  pastLeave = false,
 }: LeaveManagerRequestEmailProps) {
   const typeLabel = leaveTypeLabel(type);
 
   return (
     <BrandedEmail
-      preview={`${employeeName} requested ${typeLabel}`}
+      preview={
+        pastLeave
+          ? `${employeeName} logged past ${typeLabel.toLowerCase()}`
+          : `${employeeName} requested ${typeLabel}`
+      }
       eyebrow="Leave to review"
-      heading="New leave request"
+      heading={pastLeave ? "Past leave to review" : "New leave request"}
       ctaLabel="Review in approvals"
       ctaHref={getPortalUrl("/approvals")}
     >
       <EmailIntro>
-        {employeeName} submitted a {typeLabel.toLowerCase()} request in{" "}
-        {EMAIL_BRAND.productName}. Review when you can.
+        {pastLeave
+          ? `${employeeName} logged ${typeLabel.toLowerCase()} they already took. Confirm the dates when you can.`
+          : `${employeeName} submitted a ${typeLabel.toLowerCase()} request in ${EMAIL_BRAND.productName}. Review when you can.`}
       </EmailIntro>
       <EmailDetails
         rows={leaveDetailRows({
@@ -121,6 +129,8 @@ export interface LeaveEmployeeSubmissionEmailProps {
   notes?: string;
   /** True when the employee has no manager: leave is noted, not "approved". */
   autoApproved: boolean;
+  /** Leave already taken, logged for confirmation. */
+  pastLeave?: boolean;
 }
 
 /** Confirmation to the employee after they submit leave. */
@@ -132,6 +142,7 @@ export function LeaveEmployeeSubmissionEmail({
   workingDays,
   notes,
   autoApproved,
+  pastLeave = false,
 }: LeaveEmployeeSubmissionEmailProps) {
   const typeLabel = leaveTypeLabel(type);
 
@@ -168,15 +179,20 @@ export function LeaveEmployeeSubmissionEmail({
 
   return (
     <BrandedEmail
-      preview={`Your ${typeLabel.toLowerCase()} request was submitted`}
+      preview={
+        pastLeave
+          ? `Your past ${typeLabel.toLowerCase()} is under review`
+          : `Your ${typeLabel.toLowerCase()} request was submitted`
+      }
       eyebrow="Leave request"
-      heading="Request submitted"
+      heading={pastLeave ? "Past leave logged" : "Request submitted"}
       ctaLabel="View my leave"
       ctaHref={getPortalUrl("/leave")}
     >
       <EmailIntro>
-        Hi {employeeName}, your {typeLabel.toLowerCase()} request is in. Your
-        manager will review it. We&apos;ll email you when it&apos;s decided.
+        {pastLeave
+          ? `Hi ${employeeName}, your past ${typeLabel.toLowerCase()} is logged and under review. We'll email you when it's confirmed.`
+          : `Hi ${employeeName}, your ${typeLabel.toLowerCase()} request is in. Your manager will review it. We'll email you when it's decided.`}
       </EmailIntro>
       <EmailDetails
         rows={leaveDetailRows({
@@ -185,7 +201,7 @@ export function LeaveEmployeeSubmissionEmail({
           endDate,
           workingDays,
           notes,
-          statusLabel: "Pending manager approval",
+          statusLabel: pastLeave ? "Under review" : "Pending manager approval",
         })}
       />
     </BrandedEmail>

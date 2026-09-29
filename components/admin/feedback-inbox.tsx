@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select,
   SelectContent,
@@ -182,11 +183,20 @@ export function FeedbackInbox({ requests }: { requests: SupportRequest[] }) {
           ) : null}
 
           {filtered.length === 0 ? (
-            <p className="py-2 text-sm text-muted-foreground">
-              {requests.length === 0
-                ? "No feedback yet."
-                : "No requests match these filters."}
-            </p>
+            <EmptyState
+              size={requests.length === 0 ? "default" : "compact"}
+              kind={requests.length === 0 ? "ideas" : "search"}
+              title={
+                requests.length === 0
+                  ? "No feedback yet"
+                  : "No requests match these filters"
+              }
+              description={
+                requests.length === 0
+                  ? "Ideas and bug reports from the team."
+                  : "Try another status or type."
+              }
+            />
           ) : (
             filtered.map((request) => (
               <div

@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,10 +40,13 @@ function typeLabel(type: ApprovalQueueRecord["type"]): string {
   return LEAVE_TYPES.find((option) => option.id === type)?.label ?? type;
 }
 
-function statusBadge(status: ApprovalQueueRecord["status"]) {
+function statusBadge(
+  status: ApprovalQueueRecord["status"],
+  loggedPast = false,
+) {
   if (status === "pending") {
     return {
-      label: "Submitted",
+      label: loggedPast ? "Under review" : "Submitted",
       className: "border-transparent bg-[#0070F3]/10 text-[#0B4FBF]",
     };
   }
@@ -249,15 +253,26 @@ export function ApprovalsList({
         </div>
 
         {visible.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-            {tab === "open"
-              ? "No open leave applications."
-              : "No closed applications yet."}
-          </p>
+          <EmptyState
+            size="compact"
+            kind={normalizedQuery ? "search" : "leave"}
+            title={
+              normalizedQuery
+                ? "No matching applications"
+                : tab === "open"
+                  ? "No open leave applications"
+                  : "No closed applications yet"
+            }
+            description={
+              normalizedQuery
+                ? "Try a name, reference, or leave type."
+                : undefined
+            }
+          />
         ) : (
           <ul className="divide-y divide-border">
             {visible.map((row) => {
-              const badge = statusBadge(row.status);
+              const badge = statusBadge(row.status, row.loggedPast);
               const isBusy = busyId === row.id;
               const isExpanded = expandedId === row.id;
               const isDeclining = decliningId === row.id;
@@ -291,7 +306,14 @@ export function ApprovalsList({
                       </p>
                     </div>
 
-                    <p className="text-sm">{typeLabel(row.type)}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm">{typeLabel(row.type)}</p>
+                      {row.loggedPast ? (
+                        <p className="text-[11px] text-muted-foreground">
+                          Past leave
+                        </p>
+                      ) : null}
+                    </div>
 
                     <div className="min-w-0">
                       <p className="text-sm">{dateRange}</p>
@@ -338,7 +360,7 @@ export function ApprovalsList({
                             <DropdownMenuItem
                               onClick={() => respond(row.id, true)}
                             >
-                              Approve
+                              {row.loggedPast ? "Confirm" : "Approve"}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {

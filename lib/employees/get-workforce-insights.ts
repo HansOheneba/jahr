@@ -17,6 +17,7 @@ import type {
 } from "@/lib/types/employee";
 import type { EmploymentStatus } from "@/lib/types/database";
 import { createClient } from "@/utils/supabase/server";
+import { firstRelation } from "@/utils/supabase/relations";
 
 export type {
   WorkforceBreakdownItem,
@@ -41,6 +42,7 @@ interface InsightProfileRow {
   department_id: string | null;
   manager_id: string | null;
   gender: string | null;
+  department: { name: string } | { name: string }[] | null;
 }
 
 const EMPLOYMENT_TYPE_LABELS: Record<EmploymentType, string> = {
@@ -97,7 +99,8 @@ export async function getWorkforceInsights(
       `
       id, status, start_date, termination_date, date_of_birth,
       employment_type, employee_category, office_location,
-      department_id, manager_id, gender
+      department_id, manager_id, gender,
+      department:departments ( name )
     `,
     );
 
@@ -161,25 +164,6 @@ export async function getWorkforceInsights(
   const employeesPerManager =
     managerCount === 0 ? null : nonManagerCount / managerCount;
 
-  const departmentIds = [
-    ...new Set(
-      current
-        .map((row) => row.department_id)
-        .filter((id): id is string => Boolean(id)),
-    ),
-  ];
-
-  const deptMap = new Map<string, string>();
-  if (departmentIds.length > 0) {
-    const { data: departments } = await supabase
-      .from("departments")
-      .select("id, name")
-      .in("id", departmentIds);
-    for (const dept of departments ?? []) {
-      deptMap.set(dept.id, dept.name);
-    }
-  }
-
   const byDepartment = new Map<string, { label: string; count: number }>();
   const byLocation = new Map<string, { label: string; count: number }>();
   const byEmploymentType = new Map<string, { label: string; count: number }>();
@@ -190,7 +174,7 @@ export async function getWorkforceInsights(
       bump(
         byDepartment,
         row.department_id,
-        deptMap.get(row.department_id) ?? "Unknown",
+        firstRelation(row.department)?.name ?? "Unknown",
       );
     } else {
       bump(byDepartment, "unassigned", "Unassigned");

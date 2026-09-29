@@ -262,7 +262,7 @@ async function replaceProfileTags(options: {
 function revalidateEmployeePaths(employeeId: string) {
   revalidatePath("/admin/employees");
   revalidatePath("/admin/alumni");
-  revalidatePath("/admin/organogram");
+  revalidatePath("/organogram");
   revalidatePath("/admin/payroll");
   revalidatePath(`/admin/employees/${employeeId}`);
   revalidatePath(`/admin/employees/${employeeId}/edit`);

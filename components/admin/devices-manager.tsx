@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ChevronDown, Laptop, Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -337,13 +338,13 @@ export function DevicesManager({
       ) : null}
 
       {devices.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card px-4 py-12 text-center">
-          <Laptop className="mx-auto mb-3 size-8 text-muted-foreground" />
-          <p className="text-sm font-medium">No devices yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Add a laptop, phone, or other company asset to start tracking it.
-          </p>
-        </div>
+        <EmptyState
+          surface
+          kind="devices"
+          title="No devices yet"
+          description="Add a laptop, phone, or other company asset to start tracking it."
+          className="py-12"
+        />
       ) : (
         <ul className="overflow-hidden rounded-xl border border-border bg-card">
           {devices.map((device) => {

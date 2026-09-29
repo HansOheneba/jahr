@@ -9,8 +9,15 @@ import {
   notifyEmployeeOfLeaveSubmission,
   notifyManagerOfLeaveRequest,
 } from "@/lib/email/leave";
-import { LEAVE_TYPES, type LeaveTypeId } from "@/lib/leave/types";
-import { countWorkingDays } from "@/lib/leave/working-days";
+import {
+  LEAVE_TYPES,
+  type LeaveEntryKind,
+  type LeaveTypeId,
+} from "@/lib/leave/types";
+import {
+  countWorkingDays,
+  formatLeaveDateKey,
+} from "@/lib/leave/working-days";
 import { displayName } from "@/lib/types/database";
 import { createClient } from "@/utils/supabase/server";
 
@@ -23,10 +30,23 @@ export interface LeaveActionResult {
 }
 
 export interface SubmitLeaveInput {
+  kind: LeaveEntryKind;
   type: LeaveTypeId;
   startDate: string;
   endDate: string;
   notes: string;
+}
+
+function dateRangeError(input: SubmitLeaveInput): string | null {
+  const todayKey = formatLeaveDateKey(new Date());
+  if (input.kind === "past") {
+    return input.endDate < todayKey
+      ? null
+      : "Past leave must end before today.";
+  }
+  return input.startDate >= todayKey
+    ? null
+    : "Pick dates from today onwards, or log it as past leave.";
 }
 
 export async function submitLeaveRequest(
@@ -51,6 +71,11 @@ export async function submitLeaveRequest(
     return { error: "Select a valid date range." };
   }
 
+  const rangeError = dateRangeError(input);
+  if (rangeError) {
+    return { error: rangeError };
+  }
+
   const workingDays = countWorkingDays(start, end);
   if (workingDays <= 0) {
     return { error: "Selected range has no working days." };
@@ -65,8 +90,9 @@ export async function submitLeaveRequest(
   const supabase = createClient(cookieStore);
 
   const notes = input.notes.trim();
-  const requiresApproval = Boolean(profile.manager_id);
-  const autoApproved = !requiresApproval;
+  const pastLeave = input.kind === "past";
+  // Past leave is always reviewed; without a manager it waits for org admins.
+  const autoApproved = !pastLeave && !profile.manager_id;
   const nowIso = new Date().toISOString();
 
   const { error: insertError } = await supabase.from("leave_requests").insert({
@@ -101,12 +127,13 @@ export async function submitLeaveRequest(
       end_date: input.endDate,
       working_days: workingDays,
       auto_approved: autoApproved,
+      logged_past: pastLeave,
     },
   });
 
   const employeeName = displayName(profile);
 
-  if (requiresApproval && profile.manager?.email) {
+  if (!autoApproved && profile.manager?.email) {
     await notifyManagerOfLeaveRequest({
       managerEmail: profile.manager.email,
       employeeName,
@@ -115,6 +142,7 @@ export async function submitLeaveRequest(
       endDate: input.endDate,
       workingDays,
       notes,
+      pastLeave,
     });
   }
 
@@ -128,6 +156,7 @@ export async function submitLeaveRequest(
       workingDays,
       notes,
       autoApproved,
+      pastLeave,
     });
   }
 

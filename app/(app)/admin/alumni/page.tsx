@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 export default async function AlumniAdminPage() {
   const profile = await getCurrentProfile();
 
-  if (!profile || !canViewPeopleDirectory(profile)) {
+  if (!profile || !canViewPeopleDirectory(profile) || !isOrgAdmin(profile)) {
     redirect("/dashboard");
   }
 

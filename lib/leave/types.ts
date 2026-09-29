@@ -54,6 +54,9 @@ export const LEAVE_TYPES: LeaveTypeOption[] = [
 
 export type LeaveStatus = "pending" | "approved" | "rejected";
 
+/** `request` books upcoming leave. `past` logs leave already taken for review. */
+export type LeaveEntryKind = "request" | "past";
+
 export interface LeaveBalanceSummary {
   used: number;
   pending: number;
@@ -68,6 +71,7 @@ export interface LeaveRequestDraft {
   notes: string;
   status: LeaveStatus;
   submittedAt: string;
+  loggedPast: boolean;
 }
 
 /** A leave request row as stored/queried from `public.leave_requests`. */
@@ -97,6 +101,7 @@ export interface ApprovalQueueRecord extends PendingApprovalRecord {
   managerResponseAt: string | null;
   annualUsed: number | null;
   annualPending: number | null;
+  loggedPast: boolean;
 }
 
 export interface TeamLeaveBalance {

@@ -10,6 +10,7 @@ import type { ProfileWithOrg } from "@/lib/types/database";
 
 const TITLE_BY_PATH: Record<string, string> = {
   "/dashboard": "Overview",
+  "/organogram": "Organogram",
   "/leave": "Leave",
   "/approvals": "Approve Leave",
   "/documents": "Documents",
@@ -21,7 +22,6 @@ const TITLE_BY_PATH: Record<string, string> = {
   "/admin/employees/new": "Add employee",
   "/admin/devices": "Devices",
   "/admin/organisation": "Organisation",
-  "/admin/organogram": "Organogram",
   "/admin/comms": "Comms",
   "/admin/comms/new": "Compose",
 };

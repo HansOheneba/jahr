@@ -544,7 +544,7 @@ export function WorkforceInsightsView({
               }
               accent={BLUE}
               icon={Network}
-              href="/admin/organogram"
+              href="/organogram"
             />
           </Enter>
         </div>

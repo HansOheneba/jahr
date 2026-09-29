@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { ExternalLink, FileText, Trash2, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -250,7 +251,12 @@ export function DocumentsManager({
         ) : null}
 
         {documents.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No documents yet.</p>
+          <EmptyState
+            size="compact"
+            kind="documents"
+            title="No documents yet"
+            description="Upload a file to keep it here."
+          />
         ) : (
           documents.map((doc) => {
             const removable =

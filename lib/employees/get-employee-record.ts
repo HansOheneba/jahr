@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { getCurrentProfile, loadProfileTags } from "@/lib/auth/get-profile";
-import type { LeaveTypeId } from "@/lib/leave/types";
+import { summarizeLeaveByType } from "@/lib/leave/balance";
+import type { LeaveStatus, LeaveTypeId } from "@/lib/leave/types";
 import type {
   AssetKind,
   AuditAction,
@@ -132,10 +133,12 @@ export async function getEmployeeRecord(
       .is("returned_at", null)
       .order("assigned_at", { ascending: false }),
     supabase
-      .from("leave_balances")
-      .select("leave_type, year, entitlement, used, pending")
+      .from("leave_requests")
+      .select("type, status, start_date, working_days")
       .eq("employee_id", targetId)
-      .eq("year", new Date().getFullYear()),
+      .in("status", ["pending", "approved"])
+      .gte("start_date", `${new Date().getFullYear()}-01-01`)
+      .lte("start_date", `${new Date().getFullYear()}-12-31`),
     supabase
       .from("audit_logs")
       .select("id, action, metadata, created_at")
@@ -158,12 +161,6 @@ export async function getEmployeeRecord(
     loadProfileTags(supabase, targetId),
   ]);
 
-  const { count: reportCount } = await supabase
-    .from("profiles")
-    .select("id", { count: "exact", head: true })
-    .eq("manager_id", targetId)
-    .eq("status", "active");
-
   const employeeProfile: EmployeeProfile = {
     ...(profile as Omit<EmployeeProfile, "business_unit" | "department" | "manager" | "team" | "isManager">),
     employee_category: profile.employee_category as EmployeeCategory,
@@ -182,7 +179,7 @@ export async function getEmployeeRecord(
     department: department.data,
     team: team.data,
     manager: manager.data,
-    isManager: (reportCount ?? 0) > 0,
+    isManager: (directReports.data ?? []).length > 0,
     tags,
   };
 
@@ -251,13 +248,15 @@ export async function getEmployeeRecord(
       ...note,
       kind: note.kind as HrNoteKind,
     })),
-    leaveBalances: (leaveBalances.data ?? []).map((row) => ({
-      leave_type: row.leave_type as LeaveTypeId,
-      year: row.year,
-      entitlement: Number(row.entitlement),
-      used: Number(row.used),
-      pending: Number(row.pending),
-    })),
+    leaveBalances: summarizeLeaveByType(
+      (leaveBalances.data ?? []).map((row) => ({
+        type: row.type as LeaveTypeId,
+        status: row.status as LeaveStatus,
+        startDate: row.start_date,
+        workingDays: Number(row.working_days),
+      })),
+      Number(profile.annual_leave_entitlement ?? 0),
+    ),
     activity: (activity.data ?? []).map((row) => ({
       id: row.id,
       action: row.action as AuditAction,

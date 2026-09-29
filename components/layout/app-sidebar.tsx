@@ -69,9 +69,12 @@ export function AppSidebar({
     { href: "/support", label: "Ideas & feedback", icon: Lightbulb },
   ];
 
-  const teamNav: NavItem[] = showTeamNav
-    ? [{ href: "/approvals", label: "Approve Leave", icon: CalendarCheck }]
-    : [];
+  const teamNav: NavItem[] = [
+    ...(showTeamNav
+      ? [{ href: "/approvals", label: "Approve Leave", icon: CalendarCheck }]
+      : []),
+    { href: "/organogram", label: "Organogram", icon: Network },
+  ];
 
   const adminNav: NavItem[] = [
     ...(showComms
@@ -79,10 +82,17 @@ export function AppSidebar({
       : []),
     ...(showPeopleDirectory
       ? [
-          { href: "/admin/employees", label: "Employees", icon: Users },
-          { href: "/admin/insights", label: "Insights", icon: ChartPie },
-          { href: "/admin/alumni", label: "Alumni", icon: GraduationCap },
-          { href: "/admin/organogram", label: "Organogram", icon: Network },
+          {
+            href: "/admin/employees",
+            label: showOrgAdmin ? "Employees" : "My team",
+            icon: Users,
+          },
+          ...(showOrgAdmin
+            ? [
+                { href: "/admin/insights", label: "Insights", icon: ChartPie },
+                { href: "/admin/alumni", label: "Alumni", icon: GraduationCap },
+              ]
+            : []),
         ]
       : []),
     ...(showPayrollNav

@@ -11,6 +11,10 @@ export default async function WorkforceInsightsPage() {
     redirect("/dashboard");
   }
 
+  if (!isOrgAdmin(profile)) {
+    redirect("/dashboard");
+  }
+
   const insights = await getWorkforceInsights();
 
   return (

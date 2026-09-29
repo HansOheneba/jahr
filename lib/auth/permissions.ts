@@ -1,4 +1,5 @@
 import type { AppRole } from "@/lib/types/database";
+import { firstRelation } from "@/utils/supabase/relations";
 
 export const FINANCE_TAG = "finance" as const;
 
@@ -55,6 +56,23 @@ export type TagBearer = {
 
 export function isPermissionTagSlug(value: string): value is PermissionTagSlug {
   return (PERMISSION_TAG_SLUGS as readonly string[]).includes(value);
+}
+
+export interface PermissionTagRow {
+  tag: { slug: string } | { slug: string }[] | null;
+}
+
+export function permissionTagsFromRows(
+  rows: readonly PermissionTagRow[] | null | undefined,
+): PermissionTagSlug[] {
+  const tags: PermissionTagSlug[] = [];
+  for (const row of rows ?? []) {
+    const slug = firstRelation(row.tag)?.slug;
+    if (slug && isPermissionTagSlug(slug)) {
+      tags.push(slug);
+    }
+  }
+  return tags;
 }
 
 export function hasTag(

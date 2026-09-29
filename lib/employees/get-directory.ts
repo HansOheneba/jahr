@@ -1,7 +1,11 @@
 import { cookies } from "next/headers";
-import { getCurrentProfile } from "@/lib/auth/get-profile";
 import {
-  isPermissionTagSlug,
+  getCurrentProfile,
+  PERMISSION_TAGS_EMBED,
+} from "@/lib/auth/get-profile";
+import {
+  permissionTagsFromRows,
+  type PermissionTagRow,
   type PermissionTagSlug,
 } from "@/lib/auth/permissions";
 import {
@@ -9,7 +13,9 @@ import {
   type AppRole,
   type EmploymentStatus,
 } from "@/lib/types/database";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
+import { firstRelation } from "@/utils/supabase/relations";
 
 export interface DirectoryEmployee {
   id: string;
@@ -61,13 +67,7 @@ export async function getDirectoryEmployees(options?: {
 
   let query = supabase
     .from("profiles")
-    .select(
-      `
-      id, email, first_name, last_name, preferred_name, job_title,
-      role, status, employee_number, office_location, gender, avatar_url,
-      leaving_reason, business_unit_id, department_id, manager_id
-    `,
-    )
+    .select(DIRECTORY_SELECT)
     .order("first_name", { ascending: true });
 
   if (options?.status) {
@@ -93,101 +93,116 @@ export async function getDirectoryEmployees(options?: {
     return [];
   }
 
-  const businessUnitIds = [
-    ...new Set(data.map((row) => row.business_unit_id).filter(Boolean)),
-  ] as string[];
-  const departmentIds = [
-    ...new Set(data.map((row) => row.department_id).filter(Boolean)),
-  ] as string[];
-  const managerIds = [
-    ...new Set(data.map((row) => row.manager_id).filter(Boolean)),
-  ] as string[];
+  const rows: DirectoryRow[] = data;
+  return rows.map(toDirectoryEmployee);
+}
 
-  const profileIds = data.map((row) => row.id);
+const ORGANOGRAM_SELECT = `
+  id, email, first_name, last_name, preferred_name, job_title,
+  role, status, gender, avatar_url, business_unit_id, department_id, manager_id,
+  business_unit:business_units ( name ),
+  department:departments ( name ),
+  manager:profiles!manager_id ( first_name, last_name, preferred_name ),
+  ${PERMISSION_TAGS_EMBED}
+`;
 
-  const [units, departments, managers, tagRows] = await Promise.all([
-    businessUnitIds.length
-      ? supabase
-          .from("business_units")
-          .select("id, name")
-          .in("id", businessUnitIds)
-      : Promise.resolve({ data: [] as Array<{ id: string; name: string }> }),
-    departmentIds.length
-      ? supabase
-          .from("departments")
-          .select("id, name")
-          .in("id", departmentIds)
-      : Promise.resolve({ data: [] as Array<{ id: string; name: string }> }),
-    managerIds.length
-      ? supabase
-          .from("profiles")
-          .select("id, first_name, last_name, preferred_name")
-          .in("id", managerIds)
-      : Promise.resolve({
-          data: [] as Array<{
-            id: string;
-            first_name: string;
-            last_name: string;
-            preferred_name: string | null;
-          }>,
-        }),
-    profileIds.length
-      ? supabase
-          .from("profile_permission_tags")
-          .select("profile_id, tag:permission_tags(slug)")
-          .in("profile_id", profileIds)
-      : Promise.resolve({
-          data: [] as Array<{
-            profile_id: string;
-            tag: { slug: string } | { slug: string }[] | null;
-          }>,
-        }),
-  ]);
+type OrganogramSourceRow = Omit<
+  DirectoryRow,
+  "employee_number" | "office_location" | "leaving_reason"
+>;
 
-  const unitMap = new Map((units.data ?? []).map((row) => [row.id, row.name]));
-  const deptMap = new Map(
-    (departments.data ?? []).map((row) => [row.id, row.name]),
-  );
-  const managerMap = new Map(
-    (managers.data ?? []).map((row) => [
-      row.id,
-      [row.preferred_name?.trim() || row.first_name, row.last_name]
-        .filter(Boolean)
-        .join(" "),
-    ]),
-  );
-
-  const tagsByProfile = new Map<string, PermissionTagSlug[]>();
-  for (const row of tagRows.data ?? []) {
-    const tag = Array.isArray(row.tag) ? row.tag[0] : row.tag;
-    const slug =
-      tag && typeof tag === "object" && "slug" in tag
-        ? String((tag as { slug: string }).slug)
-        : null;
-    if (!slug || !isPermissionTagSlug(slug)) continue;
-    const list = tagsByProfile.get(row.profile_id) ?? [];
-    list.push(slug);
-    tagsByProfile.set(row.profile_id, list);
+/**
+ * Active people for the company organogram.
+ * The service role is limited to chart columns so reporting-line RLS still
+ * hides national IDs, tax numbers, and similar fields on `profiles`.
+ */
+export async function getOrganogramEmployees(): Promise<DirectoryEmployee[]> {
+  const viewer = await getCurrentProfile();
+  if (!viewer) {
+    return [];
   }
 
-  return data.map((row) => ({
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("profiles")
+    .select(ORGANOGRAM_SELECT)
+    .eq("status", "active")
+    .order("first_name", { ascending: true });
+
+  if (error || !data) {
+    if (error) {
+      console.error("[getOrganogramEmployees]", error.message);
+    }
+    return [];
+  }
+
+  const rows: OrganogramSourceRow[] = data;
+  return rows.map((row) =>
+    toDirectoryEmployee({
+      ...row,
+      employee_number: null,
+      office_location: null,
+      leaving_reason: null,
+    }),
+  );
+}
+
+const DIRECTORY_SELECT = `
+  id, email, first_name, last_name, preferred_name, job_title,
+  role, status, employee_number, office_location, gender, avatar_url,
+  leaving_reason, business_unit_id, department_id, manager_id,
+  business_unit:business_units ( name ),
+  department:departments ( name ),
+  manager:profiles!manager_id ( first_name, last_name, preferred_name ),
+  ${PERMISSION_TAGS_EMBED}
+`;
+
+interface NamedRelation {
+  name: string;
+}
+
+interface DirectoryManagerRelation {
+  first_name: string;
+  last_name: string;
+  preferred_name: string | null;
+}
+
+type DirectoryRow = Omit<
+  DirectoryEmployee,
+  "tags" | "business_unit_name" | "department_name" | "manager_name"
+> & {
+  business_unit: NamedRelation | NamedRelation[] | null;
+  department: NamedRelation | NamedRelation[] | null;
+  manager: DirectoryManagerRelation | DirectoryManagerRelation[] | null;
+  profile_permission_tags: PermissionTagRow[] | null;
+};
+
+function managerDisplayName(
+  manager: DirectoryManagerRelation | null,
+): string | null {
+  if (!manager) return null;
+  return [manager.preferred_name?.trim() || manager.first_name, manager.last_name]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function toDirectoryEmployee({
+  business_unit,
+  department,
+  manager,
+  profile_permission_tags,
+  ...row
+}: DirectoryRow): DirectoryEmployee {
+  return {
     ...row,
-    role: row.role as AppRole,
-    tags: tagsByProfile.get(row.id) ?? [],
-    status: row.status as EmploymentStatus,
+    tags: permissionTagsFromRows(profile_permission_tags),
     gender: row.gender ?? null,
     avatar_url: row.avatar_url ?? null,
     leaving_reason: row.leaving_reason ?? null,
-    business_unit_name: row.business_unit_id
-      ? (unitMap.get(row.business_unit_id) ?? null)
-      : null,
-    department_name: row.department_id
-      ? (deptMap.get(row.department_id) ?? null)
-      : null,
-    manager_name: row.manager_id
-      ? (managerMap.get(row.manager_id) ?? null)
-      : null,
-  }));
+    business_unit_name: firstRelation(business_unit)?.name ?? null,
+    department_name: firstRelation(department)?.name ?? null,
+    manager_name: managerDisplayName(firstRelation(manager)),
+  };
 }
 
 export interface OrganogramNode {
@@ -204,6 +219,8 @@ export interface OrganogramNode {
   /** Staff roles drawn to the left of this person, not as reports below. */
   assistants: OrganogramNode[];
   children: OrganogramNode[];
+  /** Set when the viewer may open this person's employee record. */
+  profileHref: string | null;
 }
 
 const ORGANOGRAM_UNIT_ORDER = [
@@ -251,6 +268,9 @@ function compareOrganogramSiblings(
 
 export function buildOrganogram(
   employees: DirectoryEmployee[],
+  options?: {
+    profileHref?: (employee: DirectoryEmployee) => string | null;
+  },
 ): OrganogramNode[] {
   const nodes = new Map<string, OrganogramNode>();
 
@@ -273,6 +293,7 @@ export function buildOrganogram(
       businessUnitName: employee.business_unit_name,
       assistants: [],
       children: [],
+      profileHref: options?.profileHref?.(employee) ?? null,
     });
   }
 

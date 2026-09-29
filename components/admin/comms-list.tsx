@@ -9,6 +9,7 @@ import { MessageContent } from "@/components/communications/message-content";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { announcementDisplayLabel } from "@/lib/announcements/categories";
 import { describeAnnouncementAudience } from "@/lib/announcements/audience-label";
@@ -18,36 +19,6 @@ import { cn } from "@/lib/utils";
 interface CommsListProps {
   items: AnnouncementHistoryItem[];
   businessUnits: Array<{ id: string; name: string }>;
-}
-
-function EmptyState({
-  title,
-  description,
-  showCta,
-}: {
-  title: string;
-  description?: string;
-  showCta?: boolean;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
-      <div className="flex size-12 items-center justify-center rounded-md bg-secondary text-muted-foreground">
-        <Megaphone className="size-5" />
-      </div>
-      <h2 className="mt-4 text-sm font-medium">{title}</h2>
-      {description ? (
-        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-          {description}
-        </p>
-      ) : null}
-      {showCta ? (
-        <Link href="/admin/comms/new" className={cn(buttonVariants(), "mt-5")}>
-          <Megaphone />
-          New announcement
-        </Link>
-      ) : null}
-    </div>
-  );
 }
 
 function AnnouncementRow({
@@ -126,8 +97,16 @@ export function CommsList({ items, businessUnits }: CommsListProps) {
   if (items.length === 0) {
     return (
       <EmptyState
+        surface
+        kind="announcements"
         title="No announcements yet"
-        showCta
+        className="py-14"
+        action={
+          <Link href="/admin/comms/new" className={cn(buttonVariants())}>
+            <Megaphone />
+            New announcement
+          </Link>
+        }
       />
     );
   }
@@ -150,8 +129,11 @@ export function CommsList({ items, businessUnits }: CommsListProps) {
 
       {filtered.length === 0 ? (
         <EmptyState
+          surface
+          size="compact"
+          kind="search"
           title="No matching announcements"
-          description="No matches."
+          description="Try a different title or phrase."
         />
       ) : (
         <Card className="py-0">
