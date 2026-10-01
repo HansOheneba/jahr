@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -8,6 +9,11 @@ import {
 } from "react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import type { OrganogramNode } from "@/lib/employees/get-directory";
 import { PERMISSION_TAG_LABELS } from "@/lib/auth/permissions";
@@ -37,6 +43,8 @@ function institutionTone(name: string | null): string {
       return "bg-[color-mix(in_srgb,#FF7A59_14%,transparent)] text-[#C2410C]";
     case "JA Elements":
       return "bg-[color-mix(in_srgb,#2EC4B6_14%,transparent)] text-[#0F766E]";
+    case "Harry Hill Consulting":
+      return "bg-[color-mix(in_srgb,#6366F1_14%,transparent)] text-[#4338CA]";
     default:
       return "bg-secondary text-muted-foreground";
   }
@@ -160,6 +168,21 @@ function UnitLabel({ name }: { name: string }) {
   );
 }
 
+function PersonDetail({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 truncate text-right text-foreground">{value}</dd>
+    </div>
+  );
+}
+
 function PersonBox({
   node,
   delayMs,
@@ -171,73 +194,96 @@ function PersonBox({
   const jobTitle = node.jobTitle?.trim() || null;
   const department = node.departmentName?.trim() || null;
   const tags = formatTags(node.tags);
+  const [open, setOpen] = useState(false);
+  const timer = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timer.current) window.clearTimeout(timer.current);
+    };
+  }, []);
+
+  function showCard() {
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setOpen(true), 80);
+  }
+
+  function hideCard() {
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setOpen(false), 140);
+  }
+
   const className = cn(
-    "flex h-[138px] w-[148px] flex-col items-center rounded-xl border border-border bg-card px-2 py-2 text-center",
-    "shadow-[0_1px_2px_rgba(16,24,40,0.04)]",
-    node.profileHref
-      ? "group transition-[background-color,border-color,transform,box-shadow] duration-150 ease-out hover:border-[color-mix(in_srgb,var(--accent-blue)_32%,var(--border))] hover:bg-secondary/35 hover:shadow-[0_4px_12px_rgba(16,24,40,0.06)] active:scale-[0.98] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0070F3]/35"
-      : undefined,
+    "flex w-[92px] flex-col items-center gap-1.5 rounded-lg border border-border bg-card px-1.5 py-2 text-center",
+    "shadow-[0_1px_2px_rgba(16,24,40,0.04)] outline-none",
+    "transition-[background-color,border-color,box-shadow] duration-150 ease-out",
+    "hover:border-[color-mix(in_srgb,var(--accent-blue)_32%,var(--border))] hover:bg-secondary/35",
+    "focus-visible:ring-2 focus-visible:ring-[#0070F3]/35",
   );
 
-  const body = (
+  const face = (
     <>
-        <div
-          className={cn(
-            "inline-flex h-4 max-w-full shrink-0 items-center truncate rounded px-1.5 text-[9px] font-medium tracking-wide",
-            institutionTone(institution),
-          )}
-        >
-          {institution}
-        </div>
-        <UserAvatar
-          name={node.name}
-          src={node.avatarUrl}
-          gender={node.gender}
-          size="sm"
-          className="mt-1.5 shrink-0"
-        />
-        <div className="mt-1.5 flex min-h-0 w-full flex-1 flex-col">
-          <p
-            className="truncate text-xs font-medium tracking-tight leading-tight text-foreground"
-            title={node.name}
-          >
-            {node.name}
-          </p>
-          {jobTitle ? (
-            <p
-              className="mt-0.5 line-clamp-2 text-[10px] leading-[13px] text-muted-foreground"
-              title={jobTitle}
-            >
-              {jobTitle}
-            </p>
-          ) : null}
-          {department ? (
-            <p
-              className="mt-0.5 truncate text-[10px] leading-tight text-muted-foreground"
-              title={department}
-            >
-              {department}
-            </p>
-          ) : null}
-          <p
-            className="mt-auto truncate pt-1 text-[9px] font-medium tracking-wide text-accent-blue uppercase"
-            title={tags}
-          >
-            {tags}
-          </p>
-        </div>
+      <UserAvatar
+        name={node.name}
+        src={node.avatarUrl}
+        gender={node.gender}
+        className="size-8"
+      />
+      <p className="line-clamp-2 w-full text-[11px] font-medium leading-tight tracking-tight">
+        {node.name}
+      </p>
     </>
   );
 
   return (
     <Enter delayMs={delayMs}>
-      {node.profileHref ? (
-        <Link href={node.profileHref} className={className}>
-          {body}
-        </Link>
-      ) : (
-        <div className={className}>{body}</div>
-      )}
+      <Popover open={open} onOpenChange={setOpen} modal={false}>
+        <PopoverTrigger
+          nativeButton={false}
+          render={
+            node.profileHref ? (
+              <Link href={node.profileHref} className={className} />
+            ) : (
+              <div className={className} />
+            )
+          }
+          onMouseEnter={showCard}
+          onMouseLeave={hideCard}
+          onFocus={showCard}
+          onBlur={hideCard}
+        >
+          {face}
+        </PopoverTrigger>
+        <PopoverContent
+          side="top"
+          sideOffset={8}
+          className="w-60 gap-3 p-3"
+          onMouseEnter={showCard}
+          onMouseLeave={hideCard}
+        >
+          <div className="min-w-0">
+            <p className="text-sm font-medium leading-tight">{node.name}</p>
+            {jobTitle ? (
+              <p className="mt-0.5 text-xs text-muted-foreground">{jobTitle}</p>
+            ) : null}
+          </div>
+          <dl className="space-y-1 text-xs">
+            <PersonDetail label="Unit" value={institution} />
+            {department ? (
+              <PersonDetail label="Department" value={department} />
+            ) : null}
+            <PersonDetail label="Role" value={tags} />
+          </dl>
+          {node.profileHref ? (
+            <Link
+              href={node.profileHref}
+              className="text-xs font-medium text-primary"
+            >
+              View profile
+            </Link>
+          ) : null}
+        </PopoverContent>
+      </Popover>
     </Enter>
   );
 }
@@ -342,7 +388,7 @@ function AssistantNeck({
         ))}
       </div>
       <div
-        className="w-px min-h-[138px] self-stretch"
+        className="w-px self-stretch"
         style={{ background: tint(BLUE, 55) }}
         aria-hidden
       />

@@ -558,24 +558,100 @@ export function DevicesPageSkeleton() {
 export function OrganisationPageSkeleton() {
   return (
     <PageSkeletonFrame>
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-80 max-w-full" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-36" />
+          <Skeleton className="h-4 w-80 max-w-full" />
+        </div>
+        <Skeleton className="h-10 w-40 rounded-md" />
       </div>
-      <div className="flex flex-col gap-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
-          <CardShell key={index}>
-            <div className="space-y-1.5 border-b border-border px-6 py-4">
-              <Skeleton className="h-5 w-36" />
-              <Skeleton className="h-3.5 w-64 max-w-full" />
+          <div key={index} className="space-y-3 rounded-xl border border-border bg-card p-4">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-7 w-10" />
+              </div>
+              <Skeleton className="size-10 rounded-md" />
             </div>
-            <div className="flex flex-wrap gap-2 p-6">
-              {Array.from({ length: 4 }).map((_, chip) => (
-                <Skeleton key={chip} className="h-7 w-24 rounded-md" />
-              ))}
-            </div>
-          </CardShell>
+            <Skeleton className="h-3 w-32" />
+          </div>
         ))}
+      </div>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="space-y-3 rounded-xl bg-card p-5 ring-1 ring-border">
+              <div className="flex items-center gap-2.5">
+                <Skeleton className="size-8 rounded-md" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+              <Skeleton className="h-4 w-full max-w-xs" />
+              <Skeleton className="h-4 w-40" />
+              <div className="flex gap-1.5">
+                <Skeleton className="h-6 w-20 rounded-md" />
+                <Skeleton className="h-6 w-16 rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </PageSkeletonFrame>
+  );
+}
+
+export function OrganisationUnitPageSkeleton() {
+  return (
+    <PageSkeletonFrame>
+      <div className="space-y-5">
+        <Skeleton className="h-4 w-28" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <Skeleton className="size-10 rounded-md" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-72 max-w-full" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+          </div>
+          <Skeleton className="h-10 w-36 rounded-md" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3"
+          >
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-6 w-8" />
+            </div>
+            <Skeleton className="size-8 rounded-md" />
+          </div>
+        ))}
+      </div>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="space-y-4 rounded-xl bg-card p-5 ring-1 ring-border">
+              <div className="flex items-center gap-2.5">
+                <Skeleton className="size-8 rounded-md" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+              <Skeleton className="h-4 w-24" />
+            </div>
+          ))}
+        </div>
       </div>
     </PageSkeletonFrame>
   );

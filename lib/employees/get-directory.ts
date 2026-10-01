@@ -226,6 +226,7 @@ export interface OrganogramNode {
 const ORGANOGRAM_UNIT_ORDER = [
   "JA Group",
   "JA Wealth",
+  "Harry Hill Consulting",
   "JA Digital",
   "JA Realty",
   "JA Elements",
