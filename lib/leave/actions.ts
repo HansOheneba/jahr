@@ -18,7 +18,8 @@ import {
   countWorkingDays,
   formatLeaveDateKey,
 } from "@/lib/leave/working-days";
-import { displayName } from "@/lib/types/database";
+import { displayName, isOrgAdmin } from "@/lib/types/database";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 
 export interface LeaveActionResult {
@@ -183,77 +184,118 @@ export async function respondToLeaveRequest(
     return { error: "You need to be signed in to respond to leave requests." };
   }
 
+  const admin = createAdminClient();
+  const { data: existing, error: loadError } = await admin
+    .from("leave_requests")
+    .select(
+      "id, employee_id, manager_id, type, start_date, end_date, working_days, status",
+    )
+    .eq("id", input.requestId)
+    .maybeSingle();
+
+  if (loadError) {
+    return { error: loadError.message };
+  }
+
+  if (!existing) {
+    return { error: "This leave request no longer exists." };
+  }
+
+  const allowed =
+    isOrgAdmin(profile) ||
+    (existing.manager_id !== null && existing.manager_id === profile.id);
+  if (!allowed) {
+    return { error: "You can't respond to this request." };
+  }
+
+  if (existing.status !== "pending") {
+    revalidateLeaveSurfaces();
+    return { error: "This request is already decided." };
+  }
+
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
   const managerNotes = input.managerNotes?.trim() || null;
+  const status = input.approved ? "approved" : "rejected";
 
-  const { data, error } = await supabase
+  const { data: updated, error: updateError } = await admin
     .from("leave_requests")
     .update({
-      status: input.approved ? "approved" : "rejected",
+      status,
       manager_notes: managerNotes,
       manager_response_at: new Date().toISOString(),
     })
     .eq("id", input.requestId)
-    .select(
-      `
-      id,
-      employee_id,
-      type,
-      start_date,
-      end_date,
-      working_days,
-      employee:profiles!leave_requests_employee_id_fkey (
-        email,
-        first_name,
-        last_name,
-        preferred_name
-      )
-    `,
-    )
+    .eq("status", "pending")
+    .select("id, employee_id, type, start_date, end_date, working_days, status")
     .maybeSingle();
 
-  if (error) {
-    return { error: error.message };
+  if (updateError) {
+    return { error: updateError.message };
   }
 
-  if (!data) {
-    return { error: "Not authorised to respond to this request." };
+  if (!updated || updated.status !== status) {
+    return { error: "The decision did not save. Try again." };
   }
 
-  const employeeRelation = data.employee;
-  const employee = Array.isArray(employeeRelation)
-    ? employeeRelation[0]
-    : employeeRelation;
+  const { data: employee } = await admin
+    .from("profiles")
+    .select("email, first_name, last_name, preferred_name")
+    .eq("id", updated.employee_id)
+    .maybeSingle();
 
   await supabase.from("audit_logs").insert({
     actor_id: profile.id,
-    subject_id: data.employee_id,
+    subject_id: updated.employee_id,
     action: input.approved ? "approved_leave" : "rejected_leave",
     metadata: {
-      request_id: data.id,
-      type: data.type,
-      start_date: data.start_date,
-      end_date: data.end_date,
-      working_days: Number(data.working_days),
+      request_id: updated.id,
+      type: updated.type,
+      start_date: updated.start_date,
+      end_date: updated.end_date,
+      working_days: Number(updated.working_days),
       manager_notes: managerNotes,
     },
   });
 
-  if (employee?.email) {
-    await notifyEmployeeOfLeaveDecision({
-      employeeEmail: employee.email,
-      employeeName: displayName(employee),
-      type: data.type as LeaveTypeId,
-      startDate: data.start_date,
-      endDate: data.end_date,
-      workingDays: Number(data.working_days),
-      approved: input.approved,
-      managerNotes,
-    });
+  const emailed = employee?.email
+    ? await notifyEmployeeOfLeaveDecision({
+        employeeEmail: employee.email,
+        employeeName: displayName(employee),
+        type: updated.type as LeaveTypeId,
+        startDate: updated.start_date,
+        endDate: updated.end_date,
+        workingDays: Number(updated.working_days),
+        approved: input.approved,
+        managerNotes,
+      })
+    : false;
+
+  revalidateLeaveSurfaces();
+
+  if (!employee?.email) {
+    return {
+      success: true,
+      error: input.approved
+        ? "Leave approved. No email is on file."
+        : "Leave declined. No email is on file.",
+    };
   }
 
+  if (!emailed) {
+    return {
+      success: true,
+      error: input.approved
+        ? "Leave approved. The notification email did not send."
+        : "Leave declined. The notification email did not send.",
+    };
+  }
+
+  return { success: true };
+}
+
+function revalidateLeaveSurfaces(): void {
   revalidatePath("/approvals");
   revalidatePath("/leave");
-  return { success: true };
+  revalidatePath("/dashboard");
 }

@@ -5,16 +5,12 @@ import {
 } from "@/emails/leave";
 import { EMAIL_BRAND, getPortalUrl } from "@/lib/email/config";
 import { sendEmail } from "@/lib/email/resend";
-import { LEAVE_TYPES, type LeaveTypeId } from "@/lib/leave/types";
+import { leaveTypeLabel, type LeaveTypeId } from "@/lib/leave/types";
 import {
   formatLeaveDate,
   workingHoursFromDays,
 } from "@/lib/leave/working-days";
 import { parseISO } from "date-fns";
-
-function leaveTypeLabel(type: LeaveTypeId): string {
-  return LEAVE_TYPES.find((option) => option.id === type)?.label ?? type;
-}
 
 function formatRange(startDate: string, endDate: string): string {
   const from = parseISO(startDate);
@@ -154,12 +150,12 @@ export async function notifyEmployeeOfLeaveDecision(input: {
   workingDays: number;
   approved: boolean;
   managerNotes: string | null;
-}): Promise<void> {
+}): Promise<boolean> {
   const typeLabel = leaveTypeLabel(input.type);
   const status = input.approved ? "approved" : "declined";
   const range = formatRange(input.startDate, input.endDate);
 
-  await sendEmail({
+  return sendEmail({
     to: input.employeeEmail,
     subject: `Leave ${status} - ${typeLabel}`,
     text: [

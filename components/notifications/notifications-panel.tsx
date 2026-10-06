@@ -9,6 +9,7 @@ import {
   ClipboardList,
   FileText,
   Megaphone,
+  Wallet,
   X,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -104,7 +105,9 @@ function SystemIcon({ kind }: { kind: NotificationKind }) {
           ? FileText
           : kind === "announcement"
             ? Megaphone
-            : Bell;
+            : kind === "petty_cash"
+              ? Wallet
+              : Bell;
 
   return (
     <div className="flex size-9 items-center justify-center rounded-[10px] bg-[#EEF2F7] text-[#667085]">

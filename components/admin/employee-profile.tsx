@@ -33,7 +33,7 @@ import {
 } from "@/lib/types/employee";
 import type { EmploymentStatus } from "@/lib/types/database";
 import { displayName } from "@/lib/types/database";
-import { LEAVE_TYPES } from "@/lib/leave/types";
+import { leaveTypeLabel } from "@/lib/leave/types";
 import { cn } from "@/lib/utils";
 
 type ProfileTab = "profile" | "compensation" | "documents" | "more";
@@ -520,9 +520,7 @@ export function EmployeeProfile({
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {record.leaveBalances.map((balance) => {
-                  const label =
-                    LEAVE_TYPES.find((type) => type.id === balance.leave_type)
-                      ?.label ?? balance.leave_type;
+                  const label = leaveTypeLabel(balance.leave_type);
                   return (
                     <div
                       key={`${balance.leave_type}-${balance.year}`}

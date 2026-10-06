@@ -127,8 +127,10 @@ export function displayName(profile: {
 }
 
 export {
+  canAccessPettyCash,
   canApproveLeave,
   canManagePayroll,
+  canManagePettyCash,
   canPublishComms,
   canViewEmployeeDetails,
   canViewPeopleDirectory,

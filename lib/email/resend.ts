@@ -41,11 +41,11 @@ export interface SendEmailInput {
 }
 
 /** Transactional email. Logs failures; does not throw into leave/comms flows. */
-export async function sendEmail(input: SendEmailInput): Promise<void> {
+export async function sendEmail(input: SendEmailInput): Promise<boolean> {
   const client = getClient();
   if (!client) {
     console.warn("[email] RESEND_API_KEY missing - skipped send to", input.to);
-    return;
+    return false;
   }
 
   try {
@@ -76,11 +76,13 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
         to: input.to,
         subject: input.subject,
       });
-      return;
+      return false;
     }
 
     console.info("[email] sent", { to: input.to, id: data?.id });
+    return true;
   } catch (error) {
     console.error("[email] Failed to send:", error);
+    return false;
   }
 }

@@ -1,4 +1,4 @@
-import { LEAVE_TYPES } from "@/lib/leave/types";
+import { leaveTypeLabel } from "@/lib/leave/types";
 
 export const DASHBOARD_COLORS = {
   leave: "#2EC4B6",
@@ -65,6 +65,4 @@ export interface DashboardAnnouncement {
   attachments: import("@/lib/communications/types").AnnouncementAttachmentSummary[];
 }
 
-export function leaveTypeLabel(type: string): string {
-  return LEAVE_TYPES.find((option) => option.id === type)?.label ?? type;
-}
+export { leaveTypeLabel };

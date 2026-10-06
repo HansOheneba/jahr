@@ -179,7 +179,7 @@ export function PayrollRegisterExplorer({
         />
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="hidden grid-cols-[7.5rem_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_7rem] gap-4 border-b border-border px-4 py-3 text-left text-xs text-muted-foreground lg:grid">
+          <div className="hidden grid-cols-[7.5rem_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_7rem] gap-4 border-b border-[#E7ECF2] bg-[#F6F8FB] px-4 py-2.5 text-left text-xs font-medium text-[#667085] lg:grid">
             <span>Reference</span>
             <span>Employee</span>
             <span>Period</span>

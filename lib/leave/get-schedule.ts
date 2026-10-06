@@ -66,7 +66,7 @@ const PREVIEW_SCHEDULE: ScheduleLeaveEntry[] = [
   },
   {
     id: "sched-3",
-    type: "casual",
+    type: "unpaid",
     status: "pending",
     startDate: "2026-08-10",
     endDate: "2026-08-11",

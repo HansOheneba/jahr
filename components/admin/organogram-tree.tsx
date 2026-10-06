@@ -333,36 +333,55 @@ function UnitCluster({
 function ChildBranches({
   nodes,
   depth,
+  parentUnit,
 }: {
   nodes: OrganogramNode[];
   depth: number;
+  parentUnit: string;
 }) {
   const groups = groupByUnit(nodes);
-  const showClusterLabels = nodes.length > 1;
+  const sameUnitAsParent =
+    groups.length === 1 && groups[0].label === parentUnit;
+
+  if (sameUnitAsParent) {
+    const people = groups[0].nodes;
+    if (people.length === 1) {
+      return <TreeNode node={people[0]} depth={depth} index={0} />;
+    }
+
+    return (
+      <div className="flex items-start">
+        {people.map((child, childIndex) => (
+          <ConnectorColumn
+            key={child.id}
+            isFirst={childIndex === 0}
+            isLast={childIndex === people.length - 1}
+            only={false}
+          >
+            <TreeNode node={child} depth={depth} index={childIndex} />
+          </ConnectorColumn>
+        ))}
+      </div>
+    );
+  }
+
+  if (groups.length === 1) {
+    return <UnitCluster group={groups[0]} depth={depth} />;
+  }
 
   return (
     <div className="flex items-start">
-      {groups.map((group, groupIndex) => {
-        const isFirst = groupIndex === 0;
-        const isLast = groupIndex === groups.length - 1;
-        const only = groups.length === 1;
-
-        return (
-          <ConnectorColumn
-            key={group.label}
-            isFirst={isFirst}
-            isLast={isLast}
-            only={only}
-            wide={showClusterLabels}
-          >
-            {showClusterLabels ? (
-              <UnitCluster group={group} depth={depth} />
-            ) : (
-              <TreeNode node={group.nodes[0]} depth={depth} index={0} />
-            )}
-          </ConnectorColumn>
-        );
-      })}
+      {groups.map((group, groupIndex) => (
+        <ConnectorColumn
+          key={group.label}
+          isFirst={groupIndex === 0}
+          isLast={groupIndex === groups.length - 1}
+          only={false}
+          wide
+        >
+          <UnitCluster group={group} depth={depth} />
+        </ConnectorColumn>
+      ))}
     </div>
   );
 }
@@ -425,7 +444,11 @@ function TreeNode({
       ) : null}
 
       {childCount > 0 ? (
-        <ChildBranches nodes={node.children} depth={depth + 1} />
+        <ChildBranches
+          nodes={node.children}
+          depth={depth + 1}
+          parentUnit={unitLabel(node.businessUnitName)}
+        />
       ) : null}
     </div>
   );

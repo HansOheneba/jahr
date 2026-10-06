@@ -2,6 +2,7 @@ import type { AppRole } from "@/lib/types/database";
 import { firstRelation } from "@/utils/supabase/relations";
 
 export const FINANCE_TAG = "finance" as const;
+export const OPERATIONS_TAG = "operations" as const;
 
 export const PERMISSION_TAG_SLUGS = [
   "super_admin",
@@ -12,6 +13,7 @@ export const PERMISSION_TAG_SLUGS = [
   "business_unit_md",
   "comms",
   FINANCE_TAG,
+  OPERATIONS_TAG,
 ] as const;
 
 export type PermissionTagSlug = (typeof PERMISSION_TAG_SLUGS)[number];
@@ -25,6 +27,7 @@ export const PERMISSION_TAG_LABELS: Record<PermissionTagSlug, string> = {
   business_unit_md: "Business unit MD",
   comms: "Comms",
   finance: "Finance",
+  operations: "Operations",
 };
 
 /** Tags that grant the org-admin surface (payroll, hire, amend, etc.). */
@@ -88,6 +91,20 @@ export function isOrgAdmin(bearer: TagBearer): boolean {
 
 export function canManagePayroll(bearer: TagBearer): boolean {
   return hasTag(bearer, FINANCE_TAG) || isOrgAdmin(bearer);
+}
+
+/** Petty cash desk. Operations is not an org-admin role. */
+export function canAccessPettyCash(bearer: TagBearer): boolean {
+  return (
+    hasTag(bearer, OPERATIONS_TAG) ||
+    hasTag(bearer, FINANCE_TAG) ||
+    isOrgAdmin(bearer)
+  );
+}
+
+/** Create funds, record cash, and change petty cash settings. */
+export function canManagePettyCash(bearer: TagBearer): boolean {
+  return hasTag(bearer, OPERATIONS_TAG) || isOrgAdmin(bearer);
 }
 
 export function isOrgLeader(bearer: TagBearer): boolean {

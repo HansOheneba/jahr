@@ -92,7 +92,7 @@ const PREVIEW_LOGS: LeaveDecisionLog[] = [
     id: "preview-log-1",
     reference: "#LVPREV02",
     employeeName: "Esi Owusu",
-    type: "casual",
+    type: "annual",
     status: "approved",
     startDate: "2026-04-10",
     endDate: "2026-04-10",

@@ -18,11 +18,16 @@ import type { Profile, ProfileWithOrg } from "@/lib/types/database";
 export const PERMISSION_TAGS_EMBED =
   "profile_permission_tags!profile_permission_tags_profile_id_fkey ( tag:permission_tags ( slug ) )";
 
+/**
+ * `manager:manager_id` is the person this profile reports to.
+ * `profiles!manager_id` is the reverse side (their direct reports) and comes
+ * back as an empty array when they have none, which drops the manager email.
+ */
 const CURRENT_PROFILE_SELECT = `
   *,
   business_unit:business_units ( id, name, slug ),
   department:departments ( id, name, slug ),
-  manager:profiles!manager_id ( id, first_name, last_name, email, job_title ),
+  manager:manager_id ( id, first_name, last_name, email, job_title ),
   ${PERMISSION_TAGS_EMBED}
 `;
 

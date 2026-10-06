@@ -39,18 +39,25 @@ export const LEAVE_TYPES: LeaveTypeOption[] = [
     deductsBalance: false,
   },
   {
-    id: "casual",
-    label: "Casual leave",
-    description: "Short personal leave",
-    deductsBalance: false,
-  },
-  {
     id: "unpaid",
     label: "Unpaid leave",
     description: "Leave without pay",
     deductsBalance: false,
   },
 ];
+
+/** Older requests may still use types that are no longer offered. */
+const RETIRED_LEAVE_LABELS: Partial<Record<LeaveTypeId, string>> = {
+  casual: "Casual leave",
+};
+
+export function leaveTypeLabel(type: string): string {
+  return (
+    LEAVE_TYPES.find((option) => option.id === type)?.label ??
+    RETIRED_LEAVE_LABELS[type as LeaveTypeId] ??
+    type
+  );
+}
 
 export type LeaveStatus = "pending" | "approved" | "rejected";
 

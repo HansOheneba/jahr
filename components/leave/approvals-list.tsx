@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { respondToLeaveRequest } from "@/lib/leave/actions";
 import {
-  LEAVE_TYPES,
+  leaveTypeLabel,
   type ApprovalQueueRecord,
   type LeaveDecisionLog,
   type TeamLeaveBalance,
@@ -37,7 +37,7 @@ import { useAsyncAction } from "@/lib/hooks/use-async-action";
 type TabId = "open" | "closed";
 
 function typeLabel(type: ApprovalQueueRecord["type"]): string {
-  return LEAVE_TYPES.find((option) => option.id === type)?.label ?? type;
+  return leaveTypeLabel(type);
 }
 
 function statusBadge(
@@ -99,8 +99,13 @@ export function ApprovalsList({
   const [declineNotes, setDeclineNotes] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [decidedIds, setDecidedIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
 
-  const rows = tab === "open" ? open : closed;
+  const openRows = open.filter((row) => !decidedIds.has(row.id));
+  const rows = tab === "open" ? openRows : closed;
   const normalizedQuery = query.trim().toLowerCase();
   const visible = useMemo(
     () => rows.filter((row) => matchesSearch(row, normalizedQuery)),
@@ -109,6 +114,7 @@ export function ApprovalsList({
 
   function respond(requestId: string, approved: boolean, managerNotes?: string) {
     setError(null);
+    setNotice(null);
     setBusyId(requestId);
     void run(async () => {
       try {
@@ -118,14 +124,19 @@ export function ApprovalsList({
           managerNotes,
         });
 
-        if (result.error) {
-          setError(result.error);
-          return;
+        if (result.success) {
+          setDecidedIds((current) => new Set(current).add(requestId));
+          setNotice(
+            result.error ??
+              (approved ? "Leave approved." : "Leave declined."),
+          );
+          setDecliningId(null);
+          setDeclineNotes("");
+          setExpandedId(null);
+        } else {
+          setError(result.error ?? "The decision did not save.");
         }
 
-        setDecliningId(null);
-        setDeclineNotes("");
-        setExpandedId(null);
         router.refresh();
       } finally {
         setBusyId(null);
@@ -186,7 +197,7 @@ export function ApprovalsList({
           <div className="flex gap-1">
             {(
               [
-                { id: "open", label: "Open applications", count: open.length },
+                { id: "open", label: "Open applications", count: openRows.length },
                 {
                   id: "closed",
                   label: "Closed applications",
@@ -234,6 +245,9 @@ export function ApprovalsList({
           </div>
         </div>
 
+        {notice ? (
+          <p className="border-b border-border px-4 py-3 text-sm">{notice}</p>
+        ) : null}
         {error ? (
           <p className="border-b border-border px-4 py-3 text-sm text-destructive">
             {error}

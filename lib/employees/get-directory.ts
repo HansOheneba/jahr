@@ -102,7 +102,7 @@ const ORGANOGRAM_SELECT = `
   role, status, gender, avatar_url, business_unit_id, department_id, manager_id,
   business_unit:business_units ( name ),
   department:departments ( name ),
-  manager:profiles!manager_id ( first_name, last_name, preferred_name ),
+  manager:manager_id ( first_name, last_name, preferred_name ),
   ${PERMISSION_TAGS_EMBED}
 `;
 
@@ -153,7 +153,7 @@ const DIRECTORY_SELECT = `
   leaving_reason, business_unit_id, department_id, manager_id,
   business_unit:business_units ( name ),
   department:departments ( name ),
-  manager:profiles!manager_id ( first_name, last_name, preferred_name ),
+  manager:manager_id ( first_name, last_name, preferred_name ),
   ${PERMISSION_TAGS_EMBED}
 `;
 

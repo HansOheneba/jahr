@@ -10,7 +10,7 @@ import {
 } from "@/lib/types/employee";
 import { PERMISSION_TAG_LABELS } from "@/lib/auth/permissions";
 import { displayName } from "@/lib/types/database";
-import { LEAVE_TYPES } from "@/lib/leave/types";
+import { leaveTypeLabel } from "@/lib/leave/types";
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
@@ -165,9 +165,7 @@ export function ProfileSections({
             </p>
           ) : (
             record.leaveBalances.map((balance) => {
-              const label =
-                LEAVE_TYPES.find((type) => type.id === balance.leave_type)
-                  ?.label ?? balance.leave_type;
+              const label = leaveTypeLabel(balance.leave_type);
               return (
                 <div
                   key={`${balance.leave_type}-${balance.year}`}

@@ -4,6 +4,7 @@ import type { ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Banknote,
   Building2,
   CalendarCheck,
   CalendarDays,
@@ -27,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { Separator } from "@/components/ui/separator";
 import {
+  canAccessPettyCash,
   canApproveLeave,
   canManagePayroll,
   canPublishComms,
@@ -59,6 +61,7 @@ export function AppSidebar({
   const showPeopleDirectory = canViewPeopleDirectory(profile);
   const showTeamNav = canApproveLeave(profile);
   const showComms = canPublishComms(profile);
+  const showPettyCash = canAccessPettyCash(profile);
   const isDrawer = variant === "drawer";
 
   const employeeNav: NavItem[] = [
@@ -75,6 +78,10 @@ export function AppSidebar({
       : []),
     { href: "/organogram", label: "Organogram", icon: Network },
   ];
+
+  const operationsNav: NavItem[] = showPettyCash
+    ? [{ href: "/operations/petty-cash", label: "Petty cash", icon: Banknote }]
+    : [];
 
   const adminNav: NavItem[] = [
     ...(showComms
@@ -180,6 +187,17 @@ export function AppSidebar({
           <>
             <Separator className="mx-1" />
             <NavSection label="Team" items={teamNav} pathname={pathname} />
+          </>
+        ) : null}
+
+        {operationsNav.length > 0 ? (
+          <>
+            <Separator className="mx-1" />
+            <NavSection
+              label="Operations"
+              items={operationsNav}
+              pathname={pathname}
+            />
           </>
         ) : null}
 

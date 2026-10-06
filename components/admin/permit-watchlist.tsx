@@ -195,7 +195,7 @@ export function PermitWatchlist({
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="hidden grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_7.5rem_6.5rem_3rem] gap-4 border-b border-border px-4 py-3 text-left text-xs text-muted-foreground lg:grid">
+        <div className="hidden grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_7.5rem_6.5rem_3rem] gap-4 border-b border-[#E7ECF2] bg-[#F6F8FB] px-4 py-2.5 text-left text-xs font-medium text-[#667085] lg:grid">
           <span>Employee</span>
           <span>Office</span>
           <span>Immigration</span>

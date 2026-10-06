@@ -1,15 +1,19 @@
 import { cache } from "react";
 import { announcementTypeLabel } from "@/lib/announcements/categories";
 import { getAnnouncementsForViewer } from "@/lib/announcements/get-for-viewer";
+import { getPettyCashNotifications } from "@/lib/petty-cash/notifications";
 import type { NotificationItem } from "@/lib/notifications/types";
 
 /** Live notification feed for the header bell (no demo data). */
 export const getNotificationsForViewer = cache(async (
   limit = 30,
 ): Promise<NotificationItem[]> => {
-  const announcements = await getAnnouncementsForViewer(limit);
+  const [announcements, pettyCash] = await Promise.all([
+    getAnnouncementsForViewer(limit),
+    getPettyCashNotifications(),
+  ]);
 
-  return announcements.map((item) => {
+  const announcementItems = announcements.map((item) => {
     const typeLabel = announcementTypeLabel(item.announcement_type);
     const preview = item.body.trim().replace(/\s+/g, " ").slice(0, 120);
 
@@ -29,4 +33,6 @@ export const getNotificationsForViewer = cache(async (
       href: `/announcements/${item.id}`,
     };
   });
+
+  return [...pettyCash, ...announcementItems].slice(0, limit);
 });

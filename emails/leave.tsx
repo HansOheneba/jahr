@@ -6,15 +6,11 @@ import {
   EmailNote,
 } from "./shared";
 import { EMAIL_BRAND, getPortalUrl } from "../lib/email/config";
-import { LEAVE_TYPES, type LeaveTypeId } from "../lib/leave/types";
+import { leaveTypeLabel, type LeaveTypeId } from "../lib/leave/types";
 import {
   formatLeaveDate,
   workingHoursFromDays,
 } from "../lib/leave/working-days";
-
-function leaveTypeLabel(type: LeaveTypeId): string {
-  return LEAVE_TYPES.find((option) => option.id === type)?.label ?? type;
-}
 
 function formatRange(startDate: string, endDate: string): string {
   const from = parseISO(startDate);

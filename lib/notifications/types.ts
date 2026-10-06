@@ -4,7 +4,8 @@ export type NotificationKind =
   | "performance_review"
   | "document"
   | "announcement"
-  | "reminder";
+  | "reminder"
+  | "petty_cash";
 
 export type NotificationActor = {
   name: string;
