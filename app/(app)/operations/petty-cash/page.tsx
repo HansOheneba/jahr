@@ -1,20 +1,23 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Banknote, CalendarCheck } from "lucide-react";
-import { FundCard } from "@/components/petty-cash/fund-card";
+import { ArrowUpRight, Banknote, ClipboardCheck, Wallet } from "lucide-react";
+import { DASHBOARD_COLORS } from "@/components/dashboard/shared";
+import { FundList } from "@/components/petty-cash/fund-list";
+import { FundSpotlight } from "@/components/petty-cash/fund-spotlight";
+import {
+  OverviewMetrics,
+  type OverviewMetric,
+} from "@/components/petty-cash/overview-metrics";
 import { RecentTransactions } from "@/components/petty-cash/recent-list";
 import { SpendPanel } from "@/components/petty-cash/spend-panel";
-import { CreateFundButton, EditFundButton, PettyCashToolbar } from "@/components/petty-cash/toolbar";
-import { buttonVariants } from "@/components/ui/button";
+import { CreateFundButton, PettyCashToolbar } from "@/components/petty-cash/toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { canManagePettyCash } from "@/lib/auth/permissions";
 import { formatPettyCashDate } from "@/lib/petty-cash/labels";
-import { formatPettyCashMoney, floatFillPercent, roundMoney } from "@/lib/petty-cash/money";
+import { floatFillPercent, formatPettyCashMoney, roundMoney } from "@/lib/petty-cash/money";
 import { getPettyCashBundle } from "@/lib/petty-cash/queries";
 import { buildOverview } from "@/lib/petty-cash/summary";
 import type { PettyCashFund } from "@/lib/petty-cash/types";
-import { cn } from "@/lib/utils";
 
 export default async function PettyCashPage({
   searchParams,
@@ -34,19 +37,73 @@ export default async function PettyCashPage({
   const scopedFund =
     (fundId ? bundle.funds.find((fund) => fund.id === fundId) : null) ??
     (bundle.funds.length === 1 ? bundle.funds[0] : null);
-  const pendingOut = overview.mixedCurrencies
+  const mixed = overview.mixedCurrencies;
+  const pendingOut = mixed
     ? 0
     : roundMoney(overview.funds.reduce((sum, fund) => sum + fund.pendingOut, 0));
-  const needsReplenishment = scopedFund
-    ? scopedFund.needsReplenishment
-    : overview.replenishmentNeeded > 0;
   const replenishmentAmount = scopedFund
     ? scopedFund.replenishmentAmount
     : overview.replenishmentNeeded;
   const defaultFundId = scopedFund?.id || bundle.funds[0]?.id || "";
+  const fundQuery = scopedFund ? `?fund=${scopedFund.id}` : "";
+  const pendingOutCount = bundle.transactions.filter((row) => {
+    if (row.status !== "pending_approval" || row.direction !== "out") return false;
+    if (scopedFund) return row.fundId === scopedFund.id;
+    return overview.funds.some((fund) => fund.id === row.fundId);
+  }).length;
+  const count = cashCountCopy(scopedFund ?? null, overview.funds);
+
+  const metrics: OverviewMetric[] = [
+    {
+      label: "Available cash",
+      value: mixed ? "Multiple currencies" : formatPettyCashMoney(overview.available, currency),
+      hint: availableHint(scopedFund ?? null, overview.funds.length, mixed),
+      href: `/operations/petty-cash/transactions${fundQuery}`,
+      icon: Wallet,
+      accent: DASHBOARD_COLORS.leave,
+      figure: !mixed,
+      progress:
+        scopedFund && !mixed
+          ? floatFillPercent(scopedFund.availableBalance, scopedFund.targetBalance)
+          : undefined,
+    },
+    {
+      label: "Pending out",
+      value: mixed ? "Multiple currencies" : formatPettyCashMoney(pendingOut, currency),
+      hint: pendingHint(pendingOutCount),
+      href: `/operations/petty-cash/transactions${fundQuery ? `${fundQuery}&` : "?"}status=pending_approval`,
+      icon: ArrowUpRight,
+      accent: DASHBOARD_COLORS.people,
+      figure: !mixed,
+    },
+    {
+      label: "Recommended top-up",
+      value: mixed
+        ? "Multiple currencies"
+        : formatPettyCashMoney(replenishmentAmount, currency),
+      hint: mixed
+        ? "Separate currencies"
+        : replenishmentAmount > 0
+          ? "To reach the target float"
+          : "Float is at target",
+      href: `/operations/petty-cash/replenishments${fundQuery}`,
+      icon: Banknote,
+      accent: DASHBOARD_COLORS.payroll,
+      figure: !mixed,
+    },
+    {
+      label: "Last reconciliation",
+      value: count.value,
+      hint: count.hint,
+      href: `/operations/petty-cash/reconciliations${fundQuery}`,
+      icon: ClipboardCheck,
+      accent: DASHBOARD_COLORS.devices,
+      figure: false,
+    },
+  ];
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {bundle.funds.length === 0 ? (
         <EmptyState
           kind="payroll"
@@ -66,84 +123,31 @@ export default async function PettyCashPage({
         />
       ) : (
         <>
-          <div className="grid gap-3 lg:grid-cols-5">
-            <section className="flex flex-col rounded-xl border border-border bg-card p-5 lg:col-span-3">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Petty cash</p>
-                  <h1 className="mt-1 truncate text-base font-medium tracking-tight">
-                    {scopedFund ? scopedFund.name : "All funds"}
-                  </h1>
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                    {heroMeta(scopedFund, overview.funds.length)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Available cash</p>
-                  <p
-                    className={cn(
-                      "mt-1 font-medium tracking-tight tabular-nums",
-                      overview.mixedCurrencies ? "text-xl" : "text-3xl",
-                    )}
-                  >
-                    {overview.mixedCurrencies
-                      ? "Multiple currencies"
-                      : formatPettyCashMoney(overview.available, currency)}
-                  </p>
-                </div>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="min-w-0 space-y-0.5">
+              <h1 className="truncate text-xl font-medium tracking-tight">
+                {scopedFund ? scopedFund.name : "All funds"}
+              </h1>
+              <p className="truncate text-sm text-muted-foreground">
+                {heroMeta(scopedFund, overview.funds.length)}
+              </p>
+            </div>
+            {canManage ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <PettyCashToolbar
+                  canManage={canManage}
+                  funds={bundle.funds}
+                  categories={bundle.categories}
+                  vendors={bundle.vendors}
+                  settings={bundle.settings}
+                  defaultFundId={defaultFundId}
+                  expenseOnly
+                />
               </div>
-              {scopedFund ? (
-                <FloatLine fund={scopedFund} />
-              ) : null}
-              {canManage ? (
-                <div className="mt-5 flex flex-wrap items-center gap-2">
-                  <PettyCashToolbar
-                    canManage={canManage}
-                    funds={bundle.funds}
-                    categories={bundle.categories}
-                    vendors={bundle.vendors}
-                    settings={bundle.settings}
-                    defaultFundId={defaultFundId}
-                    reconcile={false}
-                  />
-                  {scopedFund ? (
-                    <EditFundButton
-                      fund={scopedFund}
-                      settings={bundle.settings}
-                      people={bundle.people}
-                      departments={bundle.departments}
-                      viewerId={profile.id}
-                    />
-                  ) : null}
-                </div>
-              ) : null}
-            </section>
-
-            <AttentionCard
-              canManage={canManage}
-              needsReplenishment={needsReplenishment && !overview.mixedCurrencies}
-              replenishmentAmount={replenishmentAmount}
-              currency={currency}
-              fund={scopedFund ?? null}
-            />
+            ) : null}
           </div>
 
-          {bundle.funds.length > 1 ? (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {bundle.funds.map((fund) => (
-                <FundCard
-                  key={fund.id}
-                  fund={fund}
-                  selected={fund.id === fundId}
-                  canManage={canManage}
-                  settings={bundle.settings}
-                  people={bundle.people}
-                  departments={bundle.departments}
-                  viewerId={profile.id}
-                />
-              ))}
-            </div>
-          ) : null}
+          <OverviewMetrics items={metrics} />
 
           <div className="grid gap-3 lg:grid-cols-5">
             <div className="lg:col-span-3">
@@ -160,12 +164,32 @@ export default async function PettyCashPage({
             </div>
             <div className="lg:col-span-2">
               <SpendPanel
-                expenses={overview.monthOut}
-                pending={pendingOut}
-                replenishment={overview.replenishmentNeeded}
                 currency={currency}
-                mixedCurrencies={overview.mixedCurrencies}
+                mixedCurrencies={mixed}
                 categories={overview.categories}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-3 lg:grid-cols-5">
+            <div className="lg:col-span-3">
+              <FundList
+                funds={bundle.funds}
+                selectedId={scopedFund?.id ?? ""}
+                canManage={canManage}
+              />
+            </div>
+            <div className="lg:col-span-2">
+              <FundSpotlight
+                title={count.title}
+                body={count.body}
+                canManage={canManage}
+                reconcileHref={`/operations/petty-cash/reconciliations${fundQuery}`}
+                funds={bundle.funds}
+                categories={bundle.categories}
+                vendors={bundle.vendors}
+                settings={bundle.settings}
+                defaultFundId={defaultFundId}
               />
             </div>
           </div>
@@ -181,105 +205,93 @@ function heroMeta(fund: PettyCashFund | null | undefined, fundCount: number): st
   return fund.custodians.map((person) => person.name).join(", ");
 }
 
-function FloatLine({ fund }: { fund: PettyCashFund }) {
-  const fill = floatFillPercent(fund.availableBalance, fund.targetBalance);
-  return (
-    <div className="mt-4">
-      <div
-        className="h-1.5 rounded-full bg-secondary"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(fill)}
-        aria-label="Current balance compared with target float"
-      >
-        <div
-          className="h-1.5 rounded-full"
-          style={{
-            width: `${fill}%`,
-            backgroundColor: fund.needsReplenishment ? "#F6B93B" : "#2EC4B6",
-          }}
-        />
-      </div>
-      <p className="mt-2 text-xs text-muted-foreground tabular-nums">
-        {Math.round(fill)}% of {formatPettyCashMoney(fund.targetBalance, fund.currency)} target float
-      </p>
-    </div>
-  );
+function availableHint(
+  fund: PettyCashFund | null,
+  fundCount: number,
+  mixed: boolean,
+): string {
+  if (mixed) return "Separate currencies";
+  if (!fund) return fundCount === 1 ? "1 fund" : `${fundCount} funds`;
+  const fill = Math.round(floatFillPercent(fund.availableBalance, fund.targetBalance));
+  return `${fill}% of ${formatPettyCashMoney(fund.targetBalance, fund.currency)} target float`;
 }
 
-function AttentionCard({
-  canManage,
-  needsReplenishment,
-  replenishmentAmount,
-  currency,
-  fund,
-}: {
-  canManage: boolean;
-  needsReplenishment: boolean;
-  replenishmentAmount: number;
-  currency: string;
-  fund: PettyCashFund | null;
-}) {
-  const reconcileHref = fund
-    ? `/operations/petty-cash/reconciliations?fund=${fund.id}`
-    : "/operations/petty-cash/reconciliations";
-  const replenishHref = fund
-    ? `/operations/petty-cash/replenishments?fund=${fund.id}`
-    : "/operations/petty-cash/replenishments";
-
-  return (
-    <section
-      className={cn(
-        "flex flex-col justify-between gap-5 rounded-xl p-5 lg:col-span-2",
-        needsReplenishment ? "bg-[#F6B93B] text-[#171717]" : "bg-[#1f2353] text-white",
-      )}
-    >
-      <div>
-        <div
-          className={cn(
-            "flex size-9 items-center justify-center rounded-md",
-            needsReplenishment ? "bg-black/10" : "bg-white/15",
-          )}
-        >
-          {needsReplenishment ? (
-            <Banknote className="size-4" />
-          ) : (
-            <CalendarCheck className="size-4" />
-          )}
-        </div>
-        <h2 className="mt-4 text-sm font-medium">
-          {needsReplenishment ? "Replenishment required" : "Cash count"}
-        </h2>
-        <p className={cn("mt-1 text-sm", needsReplenishment ? "text-[#171717]/80" : "text-white/80")}>
-          {needsReplenishment
-            ? `Top up ${formatPettyCashMoney(replenishmentAmount, currency)} to reach the target float.`
-            : reconciliationCopy(fund)}
-        </p>
-      </div>
-      {canManage ? (
-        <div className="flex flex-wrap gap-2">
-          {needsReplenishment ? (
-            <Link href={replenishHref} className={cn(buttonVariants(), "bg-[#171717] text-white hover:bg-[#171717]/90")}>
-              Request replenishment
-            </Link>
-          ) : null}
-          <Link
-            href={reconcileHref}
-            className={cn(buttonVariants(), "bg-white text-[#171717] hover:bg-white/90")}
-          >
-            Reconcile
-          </Link>
-        </div>
-      ) : null}
-    </section>
-  );
+function pendingHint(count: number): string {
+  if (count === 0) return "No requests waiting";
+  if (count === 1) return "1 request waiting";
+  return `${count} requests waiting`;
 }
 
-function reconciliationCopy(fund: PettyCashFund | null): string {
-  if (!fund) return "Count the cash on hand and record any variance.";
+function cashCountCopy(
+  fund: PettyCashFund | null,
+  funds: PettyCashFund[],
+): { title: string; body: string; value: string; hint: string } {
+  if (fund) return cashCountForFund(fund);
+
+  const missing = funds.filter((item) => !item.lastReconciliation).length;
+  if (missing === funds.length) {
+    return {
+      title: "No cash count yet",
+      body: "Count the cash on hand.",
+      value: "None",
+      hint: "Not counted yet",
+    };
+  }
+  if (missing > 0) {
+    return {
+      title: "Cash count",
+      body:
+        missing === 1
+          ? "1 fund has not been counted."
+          : `${missing} funds have not been counted.`,
+      value: String(funds.length - missing),
+      hint: "Funds counted",
+    };
+  }
+
+  const latest = [...funds].sort((a, b) =>
+    (b.lastReconciliation?.date ?? "").localeCompare(a.lastReconciliation?.date ?? ""),
+  )[0];
+  const date = latest?.lastReconciliation
+    ? formatPettyCashDate(latest.lastReconciliation.date)
+    : "None";
+  return {
+    title: "Last cash count",
+    body: `Latest count ${date}.`,
+    value: date,
+    hint: "Across all funds",
+  };
+}
+
+function cashCountForFund(fund: PettyCashFund): {
+  title: string;
+  body: string;
+  value: string;
+  hint: string;
+} {
   const last = fund.lastReconciliation;
-  if (!last) return "This fund has not been reconciled.";
-  if (last.status === "reviewed") return `Last reviewed ${formatPettyCashDate(last.date)}.`;
-  return `Waiting for review, ${formatPettyCashDate(last.date)}.`;
+  if (!last) {
+    return {
+      title: "No cash count yet",
+      body: "Count the cash on hand.",
+      value: "None",
+      hint: "Not counted yet",
+    };
+  }
+  const date = formatPettyCashDate(last.date);
+  if (last.status === "submitted") {
+    return {
+      title: "Cash count needs review",
+      body: `Submitted ${date}.`,
+      value: date,
+      hint: "Waiting for review",
+    };
+  }
+  return {
+    title: "Last cash count",
+    body: last.variance === 0 ? `Reviewed ${date}. Balanced.` : `Reviewed ${date}.`,
+    value: date,
+    hint: last.variance === 0 ? "Balanced" : "Reviewed",
+  };
 }
+

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { FundSheet } from "@/components/petty-cash/fund-sheet";
 import { TransactionSheet } from "@/components/petty-cash/transaction-sheet";
@@ -50,6 +51,7 @@ export function PettyCashToolbar({
     <div>
       <div className="flex flex-wrap gap-2">
         <Button type="button" onClick={() => setExpenseOpen(true)} disabled={!hasActiveFund}>
+          <Plus />
           Record expense
         </Button>
         {reconcile && !expenseOnly ? (

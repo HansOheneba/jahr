@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import { categoryColor } from "@/lib/petty-cash/category-color";
+import { ArrowDownLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { TRANSACTION_TYPE_LABELS } from "@/lib/petty-cash/labels";
 import { formatPettyCashMoney } from "@/lib/petty-cash/money";
 import type { LedgerRow } from "@/lib/petty-cash/types";
@@ -10,54 +8,74 @@ import { cn } from "@/lib/utils";
 export function RecentTransactions({ rows }: { rows: LedgerRow[] }) {
   return (
     <section className="rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between gap-3 px-5 pt-5">
-        <h2 className="text-sm font-medium">Latest transactions</h2>
+      <div className="flex items-start justify-between gap-3 px-5 py-4">
+        <div className="space-y-0.5">
+          <h2 className="text-sm font-medium">Recent transactions</h2>
+          <p className="text-xs text-muted-foreground">Latest activity</p>
+        </div>
         <Link
           href="/operations/petty-cash/transactions"
-          aria-label="View ledger"
-          className={cn(buttonVariants({ size: "icon-sm" }))}
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ArrowUpRight />
+          View all
+          <ArrowRight className="size-3.5" />
         </Link>
       </div>
-      <div className="mt-2 px-2 pb-2">
+      <div className="border-t border-border px-2 py-1">
         {rows.map((row) => {
-          const sign = row.direction === "in" ? "+" : "\u2212";
+          const incoming = row.direction === "in";
+          const date = dateParts(row.transactionDate);
+          const detail = [
+            row.categoryName ?? TRANSACTION_TYPE_LABELS[row.transactionType],
+            row.transactionNumber,
+          ]
+            .filter(Boolean)
+            .join(" · ");
           return (
             <Link
               key={row.id}
               href={`/operations/petty-cash/transactions/${row.id}`}
-              className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors duration-150 hover:bg-muted/50"
+              className="flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors duration-150 hover:bg-secondary/60"
             >
-              <span className="w-14 shrink-0 text-xs text-muted-foreground">
-                {shortDate(row.transactionDate)}
+              <span className="w-12 shrink-0 text-xs leading-tight text-muted-foreground">
+                <span className="block">{date.primary}</span>
+                {date.secondary ? <span className="block">{date.secondary}</span> : null}
+              </span>
+              <span
+                className="flex size-8 shrink-0 items-center justify-center rounded-md"
+                style={
+                  incoming
+                    ? {
+                        background: "color-mix(in srgb, #16A34A 12%, white)",
+                        color: "#16A34A",
+                      }
+                    : {
+                        background: "color-mix(in srgb, #DC2626 12%, white)",
+                        color: "#DC2626",
+                      }
+                }
+              >
+                {incoming ? (
+                  <ArrowDownLeft className="size-3.5" />
+                ) : (
+                  <ArrowUpRight className="size-3.5" />
+                )}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">{row.description}</span>
-                <span className="mt-0.5 flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-                  <span className="truncate">
-                    {TRANSACTION_TYPE_LABELS[row.transactionType]}
-                  </span>
-                  {row.categoryName ? (
-                    <span className="inline-flex min-w-0 items-center gap-1.5">
-                      <span
-                        className="size-1.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: categoryColor(row.categoryName) }}
-                      />
-                      <span className="truncate">{row.categoryName}</span>
-                    </span>
-                  ) : null}
+                <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                  {detail}
                 </span>
               </span>
               <span
                 className={cn(
                   "shrink-0 text-sm font-medium tabular-nums",
-                  row.direction === "in" && "text-[#166534]",
+                  incoming ? "text-[#166534]" : "text-[#DC2626]",
                 )}
               >
-                {sign} {formatPettyCashMoney(row.amount, row.currency)}
+                {incoming ? "+" : "\u2212"} {formatPettyCashMoney(row.amount, row.currency)}
               </span>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
             </Link>
           );
         })}
@@ -67,22 +85,25 @@ export function RecentTransactions({ rows }: { rows: LedgerRow[] }) {
           href="/operations/petty-cash/transactions"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
-          See more
-          <ArrowRight className="size-4" />
+          See all transactions
+          <ArrowRight className="size-3.5" />
         </Link>
       </div>
     </section>
   );
 }
 
-function shortDate(value: string): string {
+function dateParts(value: string): { primary: string; secondary: string } {
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  if (value === today) return "Today";
+  if (value === today) return { primary: "Today", secondary: "" };
   const [year, month, day] = value.split("-").map(Number);
-  if (!year || !month || !day) return value;
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-  }).format(new Date(year, month - 1, day));
+  if (!year || !month || !day) return { primary: value, secondary: "" };
+  return {
+    primary: new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+    }).format(new Date(year, month - 1, day)),
+    secondary: String(year),
+  };
 }
