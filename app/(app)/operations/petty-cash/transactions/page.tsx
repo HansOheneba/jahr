@@ -66,7 +66,7 @@ export default async function PettyCashTransactionsPage({
           <EmptyState
             kind="search"
             surface
-            title="No matching transactions"
+            title="Adjust the filters"
             description="Nothing in the ledger matches these filters."
             action={
               <Link
@@ -79,10 +79,10 @@ export default async function PettyCashTransactionsPage({
           />
         ) : (
           <EmptyState
-            kind="payroll"
+            kind="cash"
             surface
-            title="No transactions yet"
-            description="Record your first petty cash transaction to start building the ledger."
+            title="Record an expense"
+            description="Posted, pending, and draft rows show up here."
             action={
               canManage ? <PettyCashToolbar {...toolbarProps} expenseOnly /> : undefined
             }

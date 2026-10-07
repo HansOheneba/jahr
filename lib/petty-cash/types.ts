@@ -40,6 +40,7 @@ export interface PettyCashFund {
 export interface PettyCashCategory {
   id: string;
   name: string;
+  description: string | null;
   parentId: string | null;
   parentName: string | null;
   isActive: boolean;

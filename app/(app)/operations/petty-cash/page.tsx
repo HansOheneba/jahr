@@ -108,8 +108,8 @@ export default async function PettyCashPage({
         <EmptyState
           kind="payroll"
           surface
-          title="No petty cash funds yet"
-          description="Create a fund to start recording cash."
+          title="Create a fund"
+          description="Name the float people spend from."
           action={
             canManage ? (
               <CreateFundButton
@@ -153,10 +153,23 @@ export default async function PettyCashPage({
             <div className="lg:col-span-3">
               {overview.recent.length === 0 ? (
                 <EmptyState
-                  kind="payroll"
+                  kind="cash"
                   surface
-                  title="No petty cash transactions yet"
-                  description="Once transactions are recorded, they will appear here."
+                  title="Record an expense"
+                  description="Expenses and cash received show up here."
+                  action={
+                    canManage ? (
+                      <PettyCashToolbar
+                        canManage={canManage}
+                        funds={bundle.funds}
+                        categories={bundle.categories}
+                        vendors={bundle.vendors}
+                        settings={bundle.settings}
+                        defaultFundId={defaultFundId}
+                        expenseOnly
+                      />
+                    ) : null
+                  }
                 />
               ) : (
                 <RecentTransactions rows={overview.recent} />
@@ -231,10 +244,10 @@ function cashCountCopy(
   const missing = funds.filter((item) => !item.lastReconciliation).length;
   if (missing === funds.length) {
     return {
-      title: "No cash count yet",
+      title: "Cash count",
       body: "Count the cash on hand.",
       value: "None",
-      hint: "Not counted yet",
+      hint: "Not counted",
     };
   }
   if (missing > 0) {
@@ -272,10 +285,10 @@ function cashCountForFund(fund: PettyCashFund): {
   const last = fund.lastReconciliation;
   if (!last) {
     return {
-      title: "No cash count yet",
+      title: "Cash count",
       body: "Count the cash on hand.",
       value: "None",
-      hint: "Not counted yet",
+      hint: "Not counted",
     };
   }
   const date = formatPettyCashDate(last.date);

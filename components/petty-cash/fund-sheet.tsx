@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/petty-cash/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,6 +75,9 @@ export function FundSheet({
   const [custodianIds, setCustodianIds] = useState<string[]>([]);
   const [departmentId, setDepartmentId] = useState("none");
   const [status, setStatus] = useState("active");
+  const [pendingStatus, setPendingStatus] = useState<"suspended" | "closed" | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -116,6 +120,19 @@ export function FundSheet({
   ];
 
   function handleSave() {
+    if (
+      fund &&
+      status !== fund.status &&
+      (status === "suspended" || status === "closed")
+    ) {
+      setPendingStatus(status);
+      return;
+    }
+    persist();
+  }
+
+  function persist() {
+    setPendingStatus(null);
     void run(async () => {
       const formData = new FormData();
       if (fund) formData.set("id", fund.id);
@@ -142,6 +159,7 @@ export function FundSheet({
   }
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader>
@@ -248,9 +266,7 @@ export function FundSheet({
                   </li>
                 ))}
               </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">No custodian yet.</p>
-            )}
+            ) : null}
             <div className="flex flex-col gap-2">
               {viewerCanJoin && !viewerIsCustodian ? (
                 <Button
@@ -346,6 +362,23 @@ export function FundSheet({
         </div>
       </SheetContent>
     </Sheet>
+    <ConfirmDialog
+      open={pendingStatus !== null}
+      title={pendingStatus === "closed" ? "Close fund?" : "Suspend fund?"}
+      description={
+        pendingStatus === "closed"
+          ? "This fund will no longer accept new transactions. Existing transactions stay on the ledger."
+          : "This fund will be paused and will not accept new transactions until it is active again."
+      }
+      confirmLabel={pendingStatus === "closed" ? "Close" : "Suspend"}
+      destructive
+      pending={pending}
+      onOpenChange={(next) => {
+        if (!next && !pending) setPendingStatus(null);
+      }}
+      onConfirm={persist}
+    />
+    </>
   );
 }
 

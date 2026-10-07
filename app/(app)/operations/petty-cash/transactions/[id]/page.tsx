@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { StatusBadge } from "@/components/petty-cash/status-badge";
 import { TransactionActions } from "@/components/petty-cash/transaction-actions";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
 import { canManagePettyCash } from "@/lib/auth/permissions";
 import {
@@ -110,7 +111,7 @@ export default async function PettyCashTransactionPage({
       <section className="rounded-xl border border-border bg-card p-6">
         <h2 className="text-sm font-medium">Receipts</h2>
         {receipts.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">No receipt attached.</p>
+          <EmptyState kind="documents" size="compact" title="Receipts show up here" />
         ) : (
           <ul className="mt-4 flex flex-col gap-4">
             {receipts.map((receipt) => (
@@ -146,7 +147,7 @@ export default async function PettyCashTransactionPage({
       <section className="rounded-xl border border-border bg-card p-6">
         <h2 className="text-sm font-medium">Activity</h2>
         {activity.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">No activity yet.</p>
+          <EmptyState kind="inbox" size="compact" title="Changes show up here" />
         ) : (
           <ol className="mt-4 flex flex-col gap-3">
             {activity.map((entry) => (

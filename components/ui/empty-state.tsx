@@ -13,7 +13,8 @@ export type EmptyIllustrationKind =
   | "search"
   | "inbox"
   | "permit"
-  | "org";
+  | "org"
+  | "cash";
 
 function Frame({
   children,
@@ -311,6 +312,24 @@ function PermitArt() {
   );
 }
 
+function CashArt() {
+  return (
+    <>
+      <circle cx="68" cy="42" r="14" fill="#FFF6E0" stroke="#F6B93B" strokeWidth="1.5" />
+      <circle cx="68" cy="42" r="8" stroke="#E09A12" strokeWidth="1.25" />
+      <path d="M68 36.5v11" stroke="#E09A12" strokeWidth="1.25" strokeLinecap="round" />
+      <rect x="44" y="60" width="112" height="50" rx="8" fill="white" stroke="#E3E8EF" />
+      <path d="M44 76h112" stroke="#E3E8EF" />
+      <rect x="88" y="66" width="24" height="18" rx="4" fill="#171717" />
+      <circle cx="100" cy="75" r="3" fill="#F6B93B" />
+      <rect x="56" y="86" width="26" height="14" rx="2" fill="#E7F6EF" />
+      <rect x="88" y="86" width="26" height="14" rx="2" fill="#FFF4D6" />
+      <rect x="120" y="86" width="26" height="14" rx="2" fill="#EAF3FF" />
+      <Spark cx="146" cy="36" />
+    </>
+  );
+}
+
 function OrgArt() {
   return (
     <>
@@ -339,6 +358,7 @@ const ART: Record<EmptyIllustrationKind, () => ReactNode> = {
   inbox: InboxArt,
   permit: PermitArt,
   org: OrgArt,
+  cash: CashArt,
 };
 
 export function EmptyIllustration({

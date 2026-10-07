@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -197,7 +198,12 @@ export function ReconcilePanel({
 
       <section className="flex flex-col gap-3">
         {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No reconciliations yet.</p>
+          <EmptyState
+            kind="cash"
+            surface
+            size="compact"
+            title="Counts show up here"
+          />
         ) : (
           rows.map((row) => (
             <article key={row.id} className="rounded-xl border border-border bg-card p-4">

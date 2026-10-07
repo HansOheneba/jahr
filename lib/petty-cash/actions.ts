@@ -1013,31 +1013,139 @@ export async function updatePettyCashSettings(
   return {};
 }
 
+function duplicateLabel(message: string | undefined, label: string): string | null {
+  if (!message) return null;
+  if (message.includes("unique") || message.includes("duplicate")) return label;
+  return null;
+}
+
+export async function setFundStatus(
+  formData: FormData,
+): Promise<PettyCashActionResult> {
+  const { error, profile, supabase } = await context(true);
+  if (error || !profile || !supabase) return { error: error ?? "Unable to save." };
+
+  const id = text(formData, "id");
+  const status = text(formData, "status");
+  if (!id) return { error: "Choose a fund." };
+  if (status !== "active" && status !== "suspended" && status !== "closed") {
+    return { error: "Choose a fund status." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("petty_cash_funds")
+    .update({ status })
+    .eq("id", id);
+  if (updateError) return { error: readableError(updateError.message) };
+
+  await audit(supabase, profile.id, {
+    entityType: "fund",
+    entityId: id,
+    action: "fund_updated",
+    newValues: { status },
+  });
+  revalidatePettyCash();
+  return { id };
+}
+
 export async function saveCategory(
   formData: FormData,
 ): Promise<PettyCashActionResult> {
   const { error, profile, supabase } = await context(true);
   if (error || !profile || !supabase) return { error: error ?? "Unable to save." };
 
+  const id = text(formData, "id");
   const name = text(formData, "name");
   const parentId = text(formData, "parentId");
+  const description = text(formData, "description");
+  const isActive = text(formData, "isActive") !== "false";
   if (!name) return { error: "Enter a category name." };
+  if (parentId && parentId === id) return { error: "Choose a group." };
+
+  if (parentId) {
+    const { data: parent, error: parentError } = await supabase
+      .from("petty_cash_categories")
+      .select("id, parent_id")
+      .eq("id", parentId)
+      .maybeSingle();
+    if (parentError || !parent || parent.parent_id) {
+      return { error: "Choose a group." };
+    }
+  }
+
+  const payload = {
+    name,
+    description: description || null,
+    is_active: isActive,
+  };
+
+  if (id) {
+    const { data: existing, error: existingError } = await supabase
+      .from("petty_cash_categories")
+      .select("id, parent_id, is_active")
+      .eq("id", id)
+      .maybeSingle();
+    if (existingError || !existing) return { error: "Category not found." };
+    if (existing.parent_id && !parentId) return { error: "Choose a group." };
+
+    const nextParent = existing.parent_id ? parentId : null;
+    const { error: updateError } = await supabase
+      .from("petty_cash_categories")
+      .update({ ...payload, parent_id: nextParent })
+      .eq("id", id);
+    if (updateError) {
+      return {
+        error:
+          duplicateLabel(
+            updateError.message,
+            existing.parent_id
+              ? "A category with that name already exists in this group."
+              : "A group with that name already exists.",
+          ) ?? readableError(updateError.message),
+      };
+    }
+
+    if (!existing.parent_id && existing.is_active !== isActive) {
+      const { error: childError } = await supabase
+        .from("petty_cash_categories")
+        .update({ is_active: isActive })
+        .eq("parent_id", id);
+      if (childError) return { error: readableError(childError.message) };
+    }
+
+    await audit(supabase, profile.id, {
+      entityType: "category",
+      entityId: id,
+      action: "category_updated",
+      newValues: { ...payload, parent_id: nextParent },
+    });
+    revalidatePettyCash();
+    return { id };
+  }
 
   const { data, error: insertError } = await supabase
     .from("petty_cash_categories")
-    .insert({ name, parent_id: parentId || null })
+    .insert({ ...payload, parent_id: parentId || null })
     .select("id")
     .single();
 
   if (insertError || !data) {
-    return { error: readableError(insertError?.message ?? "Unable to add the category.") };
+    return {
+      error:
+        duplicateLabel(
+          insertError?.message,
+          parentId
+            ? "A category with that name already exists in this group."
+            : "A group with that name already exists.",
+        ) ?? readableError(insertError?.message ?? "Unable to add the category."),
+    };
   }
 
   await audit(supabase, profile.id, {
     entityType: "category",
     entityId: data.id as string,
     action: "category_created",
-    newValues: { name },
+    newValues: { name, parent_id: parentId || null },
   });
   revalidatePettyCash();
   return { id: data.id as string };
@@ -1066,31 +1174,99 @@ export async function setCategoryActive(
   return { id };
 }
 
+export async function setCategoryGroupActive(
+  formData: FormData,
+): Promise<PettyCashActionResult> {
+  const { error, profile, supabase } = await context(true);
+  if (error || !profile || !supabase) return { error: error ?? "Unable to save." };
+
+  const id = text(formData, "id");
+  const isActive = text(formData, "isActive") === "true";
+  if (!id) return { error: "Choose a group." };
+
+  const { data: group, error: groupError } = await supabase
+    .from("petty_cash_categories")
+    .select("id, parent_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (groupError || !group || group.parent_id) return { error: "Choose a group." };
+
+  const { data: children, error: childError } = await supabase
+    .from("petty_cash_categories")
+    .select("id")
+    .eq("parent_id", id);
+  if (childError) return { error: readableError(childError.message) };
+
+  const ids = [id, ...(children ?? []).map((child) => child.id as string)];
+  const { error: updateError } = await supabase
+    .from("petty_cash_categories")
+    .update({ is_active: isActive })
+    .in("id", ids);
+  if (updateError) return { error: readableError(updateError.message) };
+
+  await audit(supabase, profile.id, {
+    entityType: "category",
+    entityId: id,
+    action: isActive ? "category_activated" : "category_deactivated",
+    newValues: { group: true, count: ids.length },
+  });
+  revalidatePettyCash();
+  return { id };
+}
+
 export async function saveVendor(
   formData: FormData,
 ): Promise<PettyCashActionResult> {
   const { error, profile, supabase } = await context(true);
   if (error || !profile || !supabase) return { error: error ?? "Unable to save." };
 
+  const id = text(formData, "id");
   const name = text(formData, "name");
+  const isActive = text(formData, "isActive") !== "false";
   if (!name) return { error: "Enter a vendor name." };
+
+  const payload = {
+    name,
+    phone: text(formData, "phone") || null,
+    email: text(formData, "email") || null,
+    notes: text(formData, "notes") || null,
+    is_active: isActive,
+  };
+
+  if (id) {
+    const { error: updateError } = await supabase
+      .from("petty_cash_vendors")
+      .update(payload)
+      .eq("id", id);
+    if (updateError) {
+      return {
+        error:
+          duplicateLabel(updateError.message, "A vendor with that name already exists.") ??
+          readableError(updateError.message),
+      };
+    }
+    await audit(supabase, profile.id, {
+      entityType: "vendor",
+      entityId: id,
+      action: "vendor_updated",
+      newValues: payload,
+    });
+    revalidatePettyCash();
+    return { id };
+  }
 
   const { data, error: insertError } = await supabase
     .from("petty_cash_vendors")
-    .insert({
-      name,
-      phone: text(formData, "phone") || null,
-      email: text(formData, "email") || null,
-      notes: text(formData, "notes") || null,
-    })
+    .insert(payload)
     .select("id")
     .single();
 
   if (insertError || !data) {
-    if (insertError?.message.includes("unique") || insertError?.message.includes("duplicate")) {
-      return { error: "A vendor with that name already exists." };
-    }
-    return { error: readableError(insertError?.message ?? "Unable to add the vendor.") };
+    return {
+      error:
+        duplicateLabel(insertError?.message, "A vendor with that name already exists.") ??
+        readableError(insertError?.message ?? "Unable to add the vendor."),
+    };
   }
 
   await audit(supabase, profile.id, {
@@ -1101,4 +1277,29 @@ export async function saveVendor(
   });
   revalidatePettyCash();
   return { id: data.id as string };
+}
+
+export async function setVendorActive(
+  formData: FormData,
+): Promise<PettyCashActionResult> {
+  const { error, profile, supabase } = await context(true);
+  if (error || !profile || !supabase) return { error: error ?? "Unable to save." };
+
+  const id = text(formData, "id");
+  const isActive = text(formData, "isActive") === "true";
+  if (!id) return { error: "Choose a vendor." };
+
+  const { error: updateError } = await supabase
+    .from("petty_cash_vendors")
+    .update({ is_active: isActive })
+    .eq("id", id);
+  if (updateError) return { error: readableError(updateError.message) };
+
+  await audit(supabase, profile.id, {
+    entityType: "vendor",
+    entityId: id,
+    action: isActive ? "vendor_activated" : "vendor_deactivated",
+  });
+  revalidatePettyCash();
+  return { id };
 }

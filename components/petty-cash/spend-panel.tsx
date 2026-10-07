@@ -1,6 +1,7 @@
 import { categoryColor } from "@/lib/petty-cash/category-color";
 import { formatPettyCashMoney } from "@/lib/petty-cash/money";
 import type { CategorySpend } from "@/lib/petty-cash/summary";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export function SpendPanel({
   currency,
@@ -62,9 +63,11 @@ export function SpendPanel({
               </ul>
             </div>
           ) : (
-            <p className="mt-4 text-sm text-muted-foreground">
-              No posted expenses this month.
-            </p>
+            <EmptyState
+              kind="cash"
+              size="compact"
+              title="This month's expenses show up here"
+            />
           )}
         </>
       )}

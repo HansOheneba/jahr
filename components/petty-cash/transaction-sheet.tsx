@@ -133,18 +133,26 @@ export function TransactionSheet({
     value: item.id,
     label: item.name,
   }));
-  const categoryItems = useMemo(
-    () =>
+  const categoryItems = useMemo(() => {
+    const activeGroupIds = new Set(
       categories
-        .filter((category) => category.isActive && category.parentId)
-        .map((category) => ({
-          value: category.id,
-          label: category.parentName
-            ? `${category.parentName} / ${category.name}`
-            : category.name,
-        })),
-    [categories],
-  );
+        .filter((category) => category.isActive && !category.parentId)
+        .map((category) => category.id),
+    );
+    return categories
+      .filter(
+        (category) =>
+          category.isActive &&
+          category.parentId != null &&
+          activeGroupIds.has(category.parentId),
+      )
+      .map((category) => ({
+        value: category.id,
+        label: category.parentName
+          ? `${category.parentName} / ${category.name}`
+          : category.name,
+      }));
+  }, [categories]);
   const vendorItems = [
     { value: "none", label: "No vendor" },
     ...vendors

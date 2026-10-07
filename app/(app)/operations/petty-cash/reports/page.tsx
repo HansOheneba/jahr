@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { categoryTone } from "@/lib/petty-cash/category-color";
 import { getCurrentProfile } from "@/lib/auth/get-profile";
+import { canManagePettyCash } from "@/lib/auth/permissions";
+import { cn } from "@/lib/utils";
 import {
   currencyDisplay,
   formatPettyCashMoney,
@@ -18,6 +22,7 @@ export default async function PettyCashReportsPage({
 }) {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/dashboard");
+  const canManage = canManagePettyCash(profile);
 
   const params = await searchParams;
   const bundle = await getPettyCashBundle();
@@ -124,9 +129,18 @@ export default async function PettyCashReportsPage({
                   Expense summary, {currencyDisplay(currency)}
                 </h2>
                 {categories.length === 0 ? (
-                  <p className="px-4 py-6 text-sm text-muted-foreground">
-                    No posted expenses in this range.
-                  </p>
+                  <EmptyState
+                    kind="cash"
+                    size="compact"
+                    title="Expenses in this range show up here"
+                    action={
+                      canManage ? (
+                        <Link href="/operations/petty-cash" className={cn(buttonVariants())}>
+                          Record an expense
+                        </Link>
+                      ) : null
+                    }
+                  />
                 ) : (
                   <table className="w-full text-sm">
                     <thead className="bg-[#F6F8FB] text-left text-xs font-medium text-[#667085]">

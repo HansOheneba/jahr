@@ -70,6 +70,7 @@ interface FundRow {
 interface CategoryRow {
   id: string;
   name: string;
+  description: string | null;
   parent_id: string | null;
   is_active: boolean;
 }
@@ -140,7 +141,10 @@ export async function getPettyCashBundle(): Promise<PettyCashBundle> {
     await Promise.all([
       client.from("petty_cash_settings").select("*").maybeSingle(),
       client.from("petty_cash_funds").select("*").order("name"),
-      client.from("petty_cash_categories").select("id, name, parent_id, is_active").order("name"),
+      client
+        .from("petty_cash_categories")
+        .select("id, name, description, parent_id, is_active")
+        .order("name"),
       client.from("petty_cash_vendors").select("id, name, phone, email, notes, is_active").order("name"),
       client.rpc("petty_cash_people"),
       client.from("departments").select("id, name").eq("is_active", true).order("name"),
@@ -197,6 +201,7 @@ export async function getPettyCashBundle(): Promise<PettyCashBundle> {
   const categories: PettyCashCategory[] = categoryRows.map((category) => ({
     id: category.id,
     name: category.name,
+    description: category.description,
     parentId: category.parent_id,
     parentName: category.parent_id
       ? (categoryName.get(category.parent_id) ?? null)
